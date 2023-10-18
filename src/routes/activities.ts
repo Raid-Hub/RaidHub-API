@@ -6,9 +6,11 @@ export const activitiesRouter = express.Router()
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
     const membershipId = req.params.destinyMembershipId
 
-    await openPostgresClient(async poolClient => {
-        // poolClient.query("SELECT")
-    })
+    await openPostgresClient(async client => {
+        const data = await client.query("SELECT * FROM raw_pgcr")
 
-    res.send(`Activities for membership ID ${membershipId}`)
+        console.log(data)
+
+        res.send(`Activities for membership ID: ${data.rows.map(r => r["_id"])}`)
+    })
 })
