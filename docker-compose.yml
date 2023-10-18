@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+    postgres:
+        container_name: raidhub-api-postgres-on-docker
+        image: postgres:latest
+        ports:
+            - "${POSTGRES_PORT}:5432"
+        expose:
+            - "5432"
+        environment:
+            POSTGRES_DB: "${POSTGRES_DB}"
+            POSTGRES_USER: "${POSTGRES_USER}"
+            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+        volumes:
+            - ./raidhub-api-db:/var/lib/postgresql/data
+            - ./dev/db/init:/docker-entrypoint-initdb.d
+
+volumes:
+    raidhub-api-db:

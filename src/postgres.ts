@@ -4,9 +4,9 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const pool = new Pool({
-    user: process.env.USER,
-    password: process.env.PASSWORD,
-    database: process.env.DBNAME,
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
     ssl: false
 })
 
