@@ -7,10 +7,13 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
     const membershipId = req.params.destinyMembershipId
 
     await openPostgresClient(async client => {
-        const data = await client.query("SELECT * FROM raw_pgcr")
+        const data = await client.query(
+            "SELECT activities.* FROM activities JOIN activity_players ON activities.activity_id = activity_players.activity_id WHERE activity_players.membership_id = $1",
+            [membershipId]
+        )
 
         console.log(data)
 
-        res.send(`Activities for membership ID: ${data.rows.map(r => r["_id"])}`)
+        res.status(200).json(data.rows)
     })
 })
