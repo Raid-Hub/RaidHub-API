@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model raw_pgcr {
+  id       Int  @id @default(autoincrement())
+  raw_json Json
+}
+
+model Activity {
+  activityId    String   @id @map("activity_id")
+  raidHash      String   @map("raid_hash")
+  flawless      Boolean
+  completed     Boolean
+  fresh         Boolean?
+  playerCount   Int      @map("player_count")
+  dateStarted   DateTime @map("date_started")
+  dateCompleted DateTime @map("date_completed")
+  players       Player[]
+
+  @@map("activity")
+}
+
+model Player {
+  membershipId                String             @id @map("membership_id")
+  membershipType              Int?                @map("membership_type")
+  iconPath                    String?             @map("icon_path")
+  displayName                 String?             @map("display_name")
+  bungieGlobalDisplayName     String?            @map("bungie_global_display_name")
+  bungieGlobalDisplayNameCode String?            @map("bungie_global_display_name_code")
+  lastSeen                    DateTime           @map("last_seen")
+  activities                  Activity[]
+  rankings                    LeaderboardEntry[]
+  sherpas                     Int                @default(0) @map("sherpas")
+  lowmanSherpas               Int                @default(0) @map("lowman_sherpas")
+
+  @@map("player")
+}
+
+model Leaderboard {
+  id      String             @id
+  entries LeaderboardEntry[]
+
+  @@map("leaderboard")
+}
+
+model LeaderboardEntry {
+  id            Int         @id @default(autoincrement())
+  rank          Int
+  leaderboardId String      @map("leaderboard_id")
+  Leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id])
+  players       Player[]
+
+  @@map("leaderboard_entry")
+}
