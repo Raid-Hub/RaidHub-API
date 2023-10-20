@@ -10,9 +10,6 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v3
-
             - name: SSH to VPS and Restart Server
               uses: appleboy/ssh-action@master
               with:
