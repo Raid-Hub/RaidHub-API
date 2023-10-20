@@ -19,4 +19,4 @@ jobs:
                   script: |
                       cd ~/../RaidHub/RaidHub-API/
                       git pull origin github-actions
-                      yarn && yarn restart
+                      cat .env
