@@ -3,7 +3,7 @@ name: Deploy to VPS on Push
 on:
     push:
         branches:
-            - github-actions
+            - main
 
 jobs:
     deploy:
@@ -14,11 +14,10 @@ jobs:
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USERNAME }}
-                  password: ${{ secrets.VPS_PASSWORD }}
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   script: |
                       cd ~/../RaidHub/RaidHub-API/
-                      git pull origin github-actions
+                      git pull origin main
                       source ~/.nvm/nvm.sh
                       nvm use 20
                       yarn && yarn restart
