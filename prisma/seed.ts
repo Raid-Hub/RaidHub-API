@@ -140,7 +140,7 @@ async function main() {
     let i = 0
     const PGCR_THREADS = 10
     const arr = Array.from(pgcrQueue).sort((a, b) => Number(a) - Number(b))
-    console.log(`Addding ${arr.length} activities`)
+    console.log(`Adding ${arr.length} activities`)
     while (i < pgcrQueue.size) {
         const ids = arr.splice(0, PGCR_THREADS)
 
@@ -166,31 +166,33 @@ async function main() {
         for (const pgcr of fetchedPGCRs) {
             await Promise.all(
                 Array.from(pgcr.players.values()).map(async p => {
+                    const destinyUserInfo = p[0].player.destinyUserInfo
+                    const didFinish = p.some(
+                        e =>
+                            e.values.completed?.basic.value &&
+                            e.values.completionReason?.basic.value === 0
+                    )
                     const data = {
                         lastSeen: pgcr.dateCompleted,
                         playerActivities: {
                             create: {
-                                finishedRaid: p.some(
-                                    e =>
-                                        e.values.completed?.basic.value &&
-                                        e.values.completionReason?.basic.value === 0
-                                ),
+                                finishedRaid: didFinish,
                                 activityId: pgcr.activityId
                             }
                         },
-                        ...(p[0].player.destinyUserInfo.membershipType !== 0
+                        ...(destinyUserInfo.membershipType !== 0
                             ? {
-                                  membershipType: p[0].player.destinyUserInfo.membershipType,
-                                  iconPath: p[0].player.destinyUserInfo.iconPath,
-                                  displayName: p[0].player.destinyUserInfo.displayName,
+                                  membershipType: destinyUserInfo.membershipType,
+                                  iconPath: destinyUserInfo.iconPath,
+                                  displayName: destinyUserInfo.displayName,
                                   bungieGlobalDisplayName:
-                                      p[0].player.destinyUserInfo.bungieGlobalDisplayName ?? null,
-                                  bungieGlobalDisplayNameCode: p[0].player.destinyUserInfo
-                                      .bungieGlobalDisplayNameCode
-                                      ? fixBungieCode(
-                                            p[0].player.destinyUserInfo.bungieGlobalDisplayNameCode
-                                        )
-                                      : null
+                                      destinyUserInfo.bungieGlobalDisplayName ?? null,
+                                  bungieGlobalDisplayNameCode:
+                                      destinyUserInfo.bungieGlobalDisplayNameCode
+                                          ? fixBungieCode(
+                                                destinyUserInfo.bungieGlobalDisplayNameCode
+                                            )
+                                          : null
                               }
                             : null)
                     }
@@ -198,11 +200,19 @@ async function main() {
                         .upsert({
                             create: {
                                 ...data,
-                                membershipId: p[0].player.destinyUserInfo.membershipId
+                                clears: didFinish ? 1 : 0,
+                                membershipId: destinyUserInfo.membershipId
                             },
-                            update: data,
+                            update: {
+                                ...data,
+                                clears: didFinish
+                                    ? {
+                                          increment: 1
+                                      }
+                                    : undefined
+                            },
                             where: {
-                                membershipId: p[0].player.destinyUserInfo.membershipId
+                                membershipId: destinyUserInfo.membershipId
                             }
                         })
                         .then(d =>

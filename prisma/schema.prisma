@@ -41,6 +41,7 @@ model Player {
   bungieGlobalDisplayNameCode String?            @map("bungie_global_display_name_code")
   lastSeen                    DateTime           @map("last_seen")
   rankings                    LeaderboardEntry[] @relation("leaderboard_entry_player")
+  clears                      Int                @default(0) @map("clears")
   sherpas                     Int                @default(0) @map("sherpas")
   lowmanSherpas               Int                @default(0) @map("lowman_sherpas")
   playerActivities            PlayerActivities[] @relation("player_activity")

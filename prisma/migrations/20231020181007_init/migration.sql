@@ -29,6 +29,7 @@ CREATE TABLE "player" (
     "bungie_global_display_name" TEXT,
     "bungie_global_display_name_code" TEXT,
     "last_seen" TIMESTAMP(3) NOT NULL,
+    "clears" INTEGER NOT NULL DEFAULT 0,
     "sherpas" INTEGER NOT NULL DEFAULT 0,
     "lowman_sherpas" INTEGER NOT NULL DEFAULT 0,
 

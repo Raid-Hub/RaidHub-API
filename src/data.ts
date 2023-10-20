@@ -15,8 +15,6 @@ export const enum Raid {
     CROTAS_END = 12
 }
 
-export type ListedRaid = Exclude<Raid, Raid.NA>
-
 export const enum Difficulty {
     NA = -1,
     NORMAL = 0,
@@ -124,3 +122,59 @@ export const RaidHashes = {
         [Difficulty.MASTER]: ["1507509200"] as const
     }
 } satisfies Record<ListedRaid, Partial<Record<Difficulty, readonly string[]>>>
+
+export const ListedRaids = [
+    Raid.CROTAS_END,
+    Raid.ROOT_OF_NIGHTMARES,
+    Raid.KINGS_FALL,
+    Raid.VOW_OF_THE_DISCIPLE,
+    Raid.VAULT_OF_GLASS,
+    Raid.DEEP_STONE_CRYPT,
+    Raid.GARDEN_OF_SALVATION,
+    Raid.LAST_WISH,
+    Raid.CROWN_OF_SORROW,
+    Raid.SCOURGE_OF_THE_PAST,
+    Raid.SPIRE_OF_STARS,
+    Raid.EATER_OF_WORLDS,
+    Raid.LEVIATHAN
+] as const
+export type ListedRaid = (typeof ListedRaids)[number]
+
+export const SunsetRaids = [
+    Raid.LEVIATHAN,
+    Raid.EATER_OF_WORLDS,
+    Raid.SPIRE_OF_STARS,
+    Raid.SCOURGE_OF_THE_PAST,
+    Raid.CROWN_OF_SORROW
+] as const
+export type SunsetRaid = (typeof SunsetRaids)[number]
+
+export const MasterRaids = [
+    Raid.VAULT_OF_GLASS,
+    Raid.VOW_OF_THE_DISCIPLE,
+    Raid.KINGS_FALL,
+    Raid.ROOT_OF_NIGHTMARES,
+    Raid.CROTAS_END
+] as const
+export type MasterRaid = (typeof MasterRaids)[number]
+
+export const PrestigeRaids = [Raid.LEVIATHAN, Raid.EATER_OF_WORLDS, Raid.SPIRE_OF_STARS] as const
+export type PrestigeRaid = (typeof PrestigeRaids)[number]
+
+export const ContestRaids = [
+    Raid.CROWN_OF_SORROW,
+    Raid.GARDEN_OF_SALVATION,
+    Raid.DEEP_STONE_CRYPT,
+    Raid.VAULT_OF_GLASS,
+    Raid.VOW_OF_THE_DISCIPLE,
+    Raid.KINGS_FALL,
+    Raid.ROOT_OF_NIGHTMARES,
+    Raid.CROTAS_END
+] as const
+export type ContestRaid = (typeof ContestRaids)[number]
+
+export const ReprisedRaidDifficultyPairings = [
+    [Raid.VAULT_OF_GLASS, Difficulty.CHALLENGE_VOG],
+    [Raid.KINGS_FALL, Difficulty.CHALLENGE_KF],
+    [Raid.CROTAS_END, Difficulty.CHALLENGE_CROTA]
+] as const

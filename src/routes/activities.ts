@@ -34,45 +34,63 @@ async function getPlayerActivities({
 }) {
     count = count ?? 250
     page = page ?? 1
-    const activities = await prisma.activity.findMany({
-        where: {
-            playerActivities: {
-                some: {
-                    membershipId: membershipId
-                }
-            }
-        },
-        take: count + 1,
-        skip: (page - 1) * count,
-        orderBy: {
-            dateCompleted: "desc"
-        },
-        include: {
-            playerActivities: {
-                select: {
-                    finishedRaid: true,
-                    player: {
-                        select: {
-                            membershipId: true
-                        }
+    const [activities, playerActivities] = await Promise.all([
+        prisma.activity.findMany({
+            where: {
+                playerActivities: {
+                    some: {
+                        membershipId: membershipId
                     }
                 }
+            },
+            take: count + 1,
+            skip: (page - 1) * count,
+            orderBy: {
+                dateCompleted: "desc"
             }
-        }
-    })
+        }),
+        prisma.playerActivities.findMany({
+            where: {
+                membershipId: membershipId
+            },
+            take: count + 1,
+            skip: (page - 1) * count,
+            orderBy: {
+                activity: {
+                    dateCompleted: "desc"
+                }
+            }
+        })
+    ])
 
     return {
         hasMore: !!activities[count],
-        activities: Object.fromEntries(
-            activities.slice(0, count).map(({ playerActivities, ...activity }) => [
-                activity.activityId,
-                {
-                    ...activity,
-                    players: Object.fromEntries(
-                        playerActivities.map(ap => [ap.player.membershipId, ap.finishedRaid])
-                    )
-                }
-            ])
-        )
+        playerActivities,
+        activities
     }
 }
+
+// include: {
+//     playerActivities: {
+//         select: {
+//             finishedRaid: true,
+//             player: {
+//                 select: {
+//                     membershipId: true
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// activities: Object.fromEntries(
+//     activities.slice(0, count).map(({ playerActivities, ...activity }) => [
+//         activity.activityId,
+//         {
+//             ...activity,
+//             players: Object.fromEntries(
+//                 playerActivities.map(ap => [ap.player.membershipId, ap.finishedRaid])
+//             )
+//         }
+//     ])
+// )

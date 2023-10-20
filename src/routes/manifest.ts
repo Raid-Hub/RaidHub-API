@@ -1,5 +1,16 @@
 import express, { Request, Response } from "express"
-import { Difficulty, ListedRaid, Raid, RaidHashes } from "../data"
+import {
+    ContestRaids,
+    Difficulty,
+    ListedRaid,
+    ListedRaids,
+    MasterRaids,
+    PrestigeRaids,
+    Raid,
+    RaidHashes,
+    ReprisedRaidDifficultyPairings,
+    SunsetRaids
+} from "../data"
 import { success } from "../util"
 
 export const manifestRouter = express.Router()
@@ -32,27 +43,42 @@ const difficulties: Record<Difficulty, string> = {
     [Difficulty.CONTEST]: "Contest"
 }
 
-manifestRouter.get("/", async (req: Request, res: Response) => {
-    const hashes = Object.fromEntries(
-        Object.entries(
-            RaidHashes as unknown as Record<ListedRaid, Partial<Record<Difficulty, string[]>>>
-        )
-            .map(([raid, difficultyDict]) =>
-                Object.entries(difficultyDict).map(([difficulty, hashes]) =>
-                    hashes.map(
-                        hash =>
-                            [
-                                hash,
-                                {
-                                    raid: parseInt(raid) as ListedRaid,
-                                    difficulty: parseInt(difficulty) as Difficulty
-                                }
-                            ] as const
-                    )
+const hashes = Object.fromEntries(
+    Object.entries(
+        RaidHashes as unknown as Record<ListedRaid, Partial<Record<Difficulty, string[]>>>
+    )
+        .map(([raid, difficultyDict]) =>
+            Object.entries(difficultyDict).map(([difficulty, hashes]) =>
+                hashes.map(
+                    hash =>
+                        [
+                            hash,
+                            {
+                                raid: parseInt(raid) as ListedRaid,
+                                difficulty: parseInt(difficulty) as Difficulty
+                            }
+                        ] as const
                 )
             )
-            .flat(2)
-    )
+        )
+        .flat(2)
+)
 
-    return res.status(200).json(success({ raids, difficulties, hashes }))
+manifestRouter.get("/", async (req: Request, res: Response) => {
+    return res.status(200).json(
+        success({
+            raids,
+            difficulties,
+            hashes,
+            listed: ListedRaids,
+            sunset: SunsetRaids,
+            contest: ContestRaids,
+            master: MasterRaids,
+            prestige: PrestigeRaids,
+            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
+                raid,
+                difficulty
+            }))
+        })
+    )
 })
