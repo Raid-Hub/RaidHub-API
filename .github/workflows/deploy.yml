@@ -9,10 +9,6 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Use Node.js 20
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 20
             - name: SSH to VPS and Restart Server
               uses: appleboy/ssh-action@master
               with:
@@ -21,6 +17,6 @@ jobs:
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   script: |
                       cd ~/../RaidHub/RaidHub-API/
-                      nvm use 20
+                      ls -a
                       git pull origin github-actions
                       yarn && yarn restart
