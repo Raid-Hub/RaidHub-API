@@ -11,6 +11,8 @@
         "restart": "yarn stop && yarn build && yarn start",
         "db:start": "docker-compose -f docker-compose.yml up -d",
         "db:stop": "docker-compose -f docker-compose.yml down",
+        "db:push": "prisma db push",
+        "db:migrate": "prisma migrate dev",
         "db:seed": "ts-node ./prisma/seed.ts"
     },
     "repository": {

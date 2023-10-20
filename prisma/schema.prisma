@@ -10,38 +10,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model raw_pgcr {
-  id       Int  @id @default(autoincrement())
-  raw_json Json
+model RawPGCR {
+  id      String @id
+  rawJson Json   @map("raw_json")
+
+  @@index([id])
+  @@map("raw_pgcr")
 }
 
 model Activity {
-  activityId    String   @id @map("activity_id")
-  raidHash      String   @map("raid_hash")
-  flawless      Boolean
-  completed     Boolean
-  fresh         Boolean?
-  playerCount   Int      @map("player_count")
-  dateStarted   DateTime @map("date_started")
-  dateCompleted DateTime @map("date_completed")
-  players       Player[]
+  activityId       String   @id @map("activity_id")
+  raidHash         String   @map("raid_hash")
+  flawless         Boolean?
+  completed        Boolean
+  fresh            Boolean?
+  playerCount      Int      @map("player_count")
+  dateStarted      DateTime @map("date_started")
+  dateCompleted    DateTime @map("date_completed")
+  completedPlayers Player[] @relation("complete")
+  allPlayers       Player[] @relation("all")
 
+  @@index([activityId])
   @@map("activity")
 }
 
 model Player {
   membershipId                String             @id @map("membership_id")
-  membershipType              Int?                @map("membership_type")
-  iconPath                    String?             @map("icon_path")
-  displayName                 String?             @map("display_name")
+  membershipType              Int?               @map("membership_type")
+  iconPath                    String?            @map("icon_path")
+  displayName                 String?            @map("display_name")
   bungieGlobalDisplayName     String?            @map("bungie_global_display_name")
   bungieGlobalDisplayNameCode String?            @map("bungie_global_display_name_code")
   lastSeen                    DateTime           @map("last_seen")
-  activities                  Activity[]
+  completedActivities         Activity[]         @relation("complete")
+  allActivities               Activity[]         @relation("all")
   rankings                    LeaderboardEntry[]
   sherpas                     Int                @default(0) @map("sherpas")
   lowmanSherpas               Int                @default(0) @map("lowman_sherpas")
 
+  @@index([membershipId])
+  @@index([displayName])
+  @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode])
   @@map("player")
 }
 
@@ -49,6 +58,7 @@ model Leaderboard {
   id      String             @id
   entries LeaderboardEntry[]
 
+  @@index([id])
   @@map("leaderboard")
 }
 
@@ -59,5 +69,6 @@ model LeaderboardEntry {
   Leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id])
   players       Player[]
 
+  @@index([id])
   @@map("leaderboard_entry")
 }

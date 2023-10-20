@@ -2,7 +2,8 @@ import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 import {
     DestinyHistoricalStatsPeriodGroup,
-    DestinyPostGameCarnageReportData
+    DestinyPostGameCarnageReportData,
+    DestinyPostGameCarnageReportEntry
 } from "bungie-net-core/models"
 import { DestinyActivityModeType } from "bungie-net-core/enums"
 import {
@@ -16,6 +17,7 @@ import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
 dotenv.config()
 const prisma = new PrismaClient()
 
+// interface with bungie api
 const bungieClient: BungieClientProtocol = {
     async fetch<T>(config: BungieFetchConfig) {
         const headers = { ...config.headers, ["X-API-KEY"]: process.env.DEV_BUNGIE_API_KEY! }
@@ -37,7 +39,7 @@ const bungieClient: BungieClientProtocol = {
 async function main() {
     const name = process.argv[2]
     if (!name) {
-        console.error("Missing username to seed. Try yarn seed Username#0001")
+        console.error("Missing username to seed. Try yarn db:seed Username#0001")
         process.exit(1)
     }
 
@@ -48,6 +50,7 @@ async function main() {
         process.exit(1)
     }
 
+    // Find the we are going to seed
     const user = await searchDestinyPlayerByBungieName(
         bungieClient,
         {
@@ -82,20 +85,22 @@ async function main() {
     const pgcrs = await prisma.activity
         .findMany({
             where: {
-                players: {
+                allPlayers: {
                     some: {
                         membershipId: user.membershipId
                     }
                 }
+            },
+            select: {
+                activityId: true
             }
         })
         .then(data => new Set(data.map(r => r.activityId)))
 
-    console.log(`PGCRs already in database: ${pgcrs.size ? Array.from(pgcrs).join(", ") : "None"}`)
+    console.log(`PGCRs already in database: ${pgcrs.size}`)
 
     const COUNT = 250
     const THREADS = 3
-    const allActivities = new Map<string, DestinyHistoricalStatsPeriodGroup>()
     const pgcrQueue = new Set<string>()
 
     await Promise.all(
@@ -116,100 +121,182 @@ async function main() {
                 ).then(activities => activities.flat())
 
                 console.log(`Found ${activities.length} activities on characterId ${characterId}`)
-                if (activities.length < THREADS * COUNT) {
-                    break
-                }
-                activities.forEach(a => {
+
+                activities.filter(Boolean).forEach(a => {
                     const id = a.activityDetails.instanceId
-                    allActivities.set(id, a)
                     if (!pgcrs.has(id)) {
                         pgcrQueue.add(id)
                     }
                 })
 
                 page += THREADS
+
+                if (activities.length < THREADS * COUNT) {
+                    break
+                }
             }
+            return
         })
     )
 
     let i = 0
-    const arr = Array.from(pgcrQueue)
-    while (i < arr.length) {
-        const ids = arr.splice(0, 10)
+    const PGCR_THREADS = 10
+    const arr = Array.from(pgcrQueue).sort((a, b) => Number(a) - Number(b))
+    console.log(`Addding ${arr.length} activities`)
+    while (i < pgcrQueue.size) {
+        const ids = arr.splice(0, PGCR_THREADS)
 
         const fetchedPGCRs = await Promise.all(
             ids.map(async activityId => {
-                // console.log(`Loading activity ${activityId}`)
+                console.log(`Loading activity ${activityId}`)
                 return getPostGameCarnageReport(bungieClient, { activityId }).then(res =>
                     processCarnageReport(res.Response)
                 )
             })
         )
-        i += 10
 
-        await prisma.activity.createMany({
-            data: fetchedPGCRs.map(pgcr => ({
-                ...pgcr,
-                players: undefined
-            })),
-            skipDuplicates: true
-        })
-        // .then(({ count }) => console.log(`Inserted ${count} entries`))
+        await prisma.activity
+            .createMany({
+                data: fetchedPGCRs.map(pgcr => ({
+                    ...pgcr,
+                    players: undefined
+                })),
+                skipDuplicates: true
+            })
+            .then(({ count }) => console.log(`Inserted ${count} entries`))
 
         for (const pgcr of fetchedPGCRs) {
             await Promise.all(
-                Array.from(pgcr.players.values()).map(p => {
+                Array.from(pgcr.players.values()).map(async p => {
                     const data = {
                         lastSeen: pgcr.dateCompleted,
-                        activities: {
+                        allActivities: {
                             connect: {
                                 activityId: pgcr.activityId
                             }
                         },
-                        ...(p.membershipType !== 0
+
+                        // spaghetti code to only update the right values...
+                        ...(p.some(
+                            e =>
+                                e.values.completed?.basic.value &&
+                                e.values.completionReason?.basic.value === 0
+                        )
                             ? {
-                                  membershipType: p.membershipType,
-                                  iconPath: p.iconPath,
-                                  displayName: p.displayName,
-                                  bungieGlobalDisplayName: p.bungieGlobalDisplayName ?? null,
-                                  bungieGlobalDisplayNameCode: p.bungieGlobalDisplayNameCode
-                                      ? String(p.bungieGlobalDisplayNameCode)
+                                  completedActivities: {
+                                      connect: {
+                                          activityId: pgcr.activityId
+                                      }
+                                  }
+                              }
+                            : null),
+                        ...(p[0].player.destinyUserInfo.membershipType !== 0
+                            ? {
+                                  membershipType: p[0].player.destinyUserInfo.membershipType,
+                                  iconPath: p[0].player.destinyUserInfo.iconPath,
+                                  displayName: p[0].player.destinyUserInfo.displayName,
+                                  bungieGlobalDisplayName:
+                                      p[0].player.destinyUserInfo.bungieGlobalDisplayName ?? null,
+                                  bungieGlobalDisplayNameCode: p[0].player.destinyUserInfo
+                                      .bungieGlobalDisplayNameCode
+                                      ? fixBungieCode(
+                                            p[0].player.destinyUserInfo.bungieGlobalDisplayNameCode
+                                        )
                                       : null
                               }
                             : null)
                     }
-                    return prisma.player.upsert({
-                        create: {
-                            ...data,
-                            membershipId: p.membershipId
-                        },
-                        update: data,
-                        where: {
-                            membershipId: p.membershipId
-                        }
-                    })
+                    return prisma.player
+                        .upsert({
+                            create: {
+                                ...data,
+                                membershipId: p[0].player.destinyUserInfo.membershipId
+                            },
+                            update: data,
+                            where: {
+                                membershipId: p[0].player.destinyUserInfo.membershipId
+                            }
+                        })
+                        .then(d =>
+                            console.log(
+                                `Updated or created user ${
+                                    d.bungieGlobalDisplayName ?? d.displayName ?? d.membershipId
+                                }`
+                            )
+                        )
                 })
             )
         }
+
+        i += PGCR_THREADS
     }
 }
 
-function processCarnageReport(report: DestinyPostGameCarnageReportData) {
-    const players = new Map(
-        report.entries.map(e => [e.player.destinyUserInfo.membershipId, e.player.destinyUserInfo])
+async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
+    await prisma.rawPGCR
+        .create({
+            data: {
+                id: report.activityDetails.instanceId,
+                rawJson: JSON.stringify(report)
+            }
+        })
+        .catch(console.error)
+
+    const players = new Map<string, DestinyPostGameCarnageReportEntry[]>()
+
+    report.entries.forEach(e => {
+        if (players.has(e.player.destinyUserInfo.membershipId)) {
+            players.get(e.player.destinyUserInfo.membershipId)!.push(e)
+        } else {
+            players.set(e.player.destinyUserInfo.membershipId, [e])
+        }
+    })
+
+    const complete = report.entries.some(
+        e => e.values.completed?.basic.value && e.values.completionReason?.basic.value === 0
     )
+    const fresh = isFresh(report)
+    const startDate = new Date(report.period)
 
     return {
         activityId: report.activityDetails.instanceId,
         raidHash: String(report.activityDetails.directorActivityHash),
-        completed: false,
-        flawless: false,
-        fresh: true,
+        completed: complete,
+        flawless:
+            complete && report.entries.every(e => e.values.deaths?.basic.value === 0) && fresh,
+        fresh: fresh,
         playerCount: players.size,
-        dateStarted: new Date(report.period),
-        dateCompleted: new Date(report.period),
+        dateStarted: startDate,
+        dateCompleted: new Date(
+            startDate.getTime() +
+                report.entries[0]?.values.activityDurationSeconds.basic.value * 1000
+        ),
         players
     }
+}
+
+const beyondLightStart = new Date("November 10, 2020 9:00:00 AM PST").getTime()
+const witchQueenStart = new Date("February 22, 2022 9:00:00 AM PST").getTime()
+const hauntedStart = new Date("May 24, 2022 10:00:00 AM PDT").getTime()
+/**
+ * Pre beyond light, startingPhaseIndex is accurate. During beyond light, we don't know anything.
+ * During risen, some fresh runs are marked as checkpoints due to wipes.
+ * After that, activityWasStartedFromBeginning is accurate
+ */
+function isFresh(pgcr: DestinyPostGameCarnageReportData): boolean | null {
+    const start = new Date(pgcr.period).getTime()
+
+    if (start < witchQueenStart) {
+        return start < beyondLightStart ? pgcr.startingPhaseIndex === 0 : null
+    } else {
+        return pgcr.activityWasStartedFromBeginning || (start < hauntedStart ? null : false)
+    }
+}
+
+function fixBungieCode(code: number) {
+    const str = String(code)
+    const missingZeroes = 4 - str.length
+    return `${"0".repeat(missingZeroes)}${str}`
 }
 
 main()
