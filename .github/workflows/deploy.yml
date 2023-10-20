@@ -18,5 +18,5 @@ jobs:
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   script: |
                       cd ~/../RaidHub/RaidHub-API/
-                      git pull origin main
+                      git pull origin github-actions
                       yarn restart
