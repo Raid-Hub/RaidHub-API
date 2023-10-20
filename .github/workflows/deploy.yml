@@ -8,8 +8,11 @@ on:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-
         steps:
+            - name: Use Node.js 20
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 20
             - name: SSH to VPS and Restart Server
               uses: appleboy/ssh-action@master
               with:
