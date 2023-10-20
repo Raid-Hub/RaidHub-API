@@ -82,13 +82,11 @@ async function main() {
 
     console.log(`Found characters ${characters.join(", ")}`)
 
-    const pgcrs = await prisma.activity
+    const pgcrs = await prisma.playerActivities
         .findMany({
             where: {
-                allPlayers: {
-                    some: {
-                        membershipId: user.membershipId
-                    }
+                player: {
+                    membershipId: user.membershipId
                 }
             },
             select: {
@@ -170,26 +168,16 @@ async function main() {
                 Array.from(pgcr.players.values()).map(async p => {
                     const data = {
                         lastSeen: pgcr.dateCompleted,
-                        allActivities: {
-                            connect: {
+                        playerActivities: {
+                            create: {
+                                finishedRaid: p.some(
+                                    e =>
+                                        e.values.completed?.basic.value &&
+                                        e.values.completionReason?.basic.value === 0
+                                ),
                                 activityId: pgcr.activityId
                             }
                         },
-
-                        // spaghetti code to only update the right values...
-                        ...(p.some(
-                            e =>
-                                e.values.completed?.basic.value &&
-                                e.values.completionReason?.basic.value === 0
-                        )
-                            ? {
-                                  completedActivities: {
-                                      connect: {
-                                          activityId: pgcr.activityId
-                                      }
-                                  }
-                              }
-                            : null),
                         ...(p[0].player.destinyUserInfo.membershipType !== 0
                             ? {
                                   membershipType: p[0].player.destinyUserInfo.membershipType,

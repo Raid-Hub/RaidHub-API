@@ -31,25 +31,24 @@ async function getPlayerActivities({
 }) {
     count = count ?? 250
     page = page ?? 1
-    const foundActivities = await prisma.player.findUnique({
-        where: { membershipId },
-        select: {
-            allActivities: {
-                take: count + 1,
-                skip: (page - 1) * count,
-                orderBy: {
-                    dateCompleted: "desc"
-                },
-                where: {
-                    flawless: true
-                },
-                include: {
-                    allPlayers: {
-                        select: {
-                            membershipId: true
-                        }
-                    },
-                    completedPlayers: {
+    const activities = await prisma.activity.findMany({
+        where: {
+            playerActivities: {
+                some: {
+                    membershipId: membershipId
+                }
+            }
+        },
+        take: count + 1,
+        skip: (page - 1) * count,
+        orderBy: {
+            dateCompleted: "desc"
+        },
+        include: {
+            playerActivities: {
+                select: {
+                    finishedRaid: true,
+                    player: {
                         select: {
                             membershipId: true
                         }
@@ -59,17 +58,16 @@ async function getPlayerActivities({
         }
     })
 
-    const activities = foundActivities ? foundActivities.allActivities : []
-
     return {
         hasMore: !!activities[count],
         activities: Object.fromEntries(
-            activities.slice(0, count).map(activity => [
+            activities.slice(0, count).map(({ playerActivities, ...activity }) => [
                 activity.activityId,
                 {
                     ...activity,
-                    allPlayers: activity.allPlayers.map(p => p.membershipId),
-                    completedPlayers: activity.completedPlayers.map(p => p.membershipId)
+                    players: Object.fromEntries(
+                        playerActivities.map(ap => [ap.player.membershipId, ap.finishedRaid])
+                    )
                 }
             ])
         )
