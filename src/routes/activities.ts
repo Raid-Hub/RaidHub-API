@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express"
-import { success } from "../util"
+import { failure, success } from "../util"
 import { prisma } from "../database"
 
 export const activitiesRouter = express.Router()
@@ -15,9 +15,12 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
         count = undefined
     }
 
-    const data = await getPlayerActivities({ membershipId, page, count })
-
-    return res.status(200).json(success(data))
+    try {
+        const data = await getPlayerActivities({ membershipId, page, count })
+        res.status(200).json(success(data))
+    } catch (e) {
+        res.status(500).json(failure(e, "Internal server error"))
+    }
 })
 
 async function getPlayerActivities({

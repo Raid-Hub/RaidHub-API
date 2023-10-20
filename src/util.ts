@@ -7,7 +7,7 @@ export function success<T>(data: T, message?: string) {
     }
 }
 
-export function failure<T>(data: T, message: string) {
+export function failure<T>(data: T, message?: string) {
     return {
         minted: Date.now(),
         message,
