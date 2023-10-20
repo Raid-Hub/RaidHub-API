@@ -55,6 +55,9 @@ async function getPlayerActivities({
             },
             take: count + 1,
             skip: (page - 1) * count,
+            select: {
+                finishedRaid: true
+            },
             orderBy: {
                 activity: {
                     dateCompleted: "desc"
@@ -65,8 +68,10 @@ async function getPlayerActivities({
 
     return {
         hasMore: !!activities[count],
-        playerActivities,
-        activities
+        activities: activities.slice(0, count).map((a, i) => ({
+            ...a,
+            didMemberComplete: playerActivities[i].finishedRaid
+        }))
     }
 }
 
