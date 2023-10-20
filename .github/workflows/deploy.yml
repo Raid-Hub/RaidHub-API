@@ -14,9 +14,9 @@ jobs:
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USERNAME }}
+                  password: ${{ secrets.VPS_PASSWORD }}
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   script: |
                       cd ~/../RaidHub/RaidHub-API/
-                      ls -a
                       git pull origin github-actions
                       yarn && yarn restart
