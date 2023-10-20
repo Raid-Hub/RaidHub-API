@@ -1,16 +1,101 @@
 import express, { Request, Response } from "express"
-import { openPostgresClient } from "../postgres"
+import { failure, success } from "../util"
+import { prisma } from "../database"
 
 export const activitiesRouter = express.Router()
 
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
     const membershipId = req.params.destinyMembershipId
+    let page: number | undefined = Number(req.query.page)
+    if (Number.isNaN(page)) {
+        page = undefined
+    }
+    let count: number | undefined = Number(req.query.count)
+    if (Number.isNaN(count)) {
+        count = undefined
+    }
 
-    await openPostgresClient(async client => {
-        const data = await client.query("SELECT * FROM raw_pgcr")
-
-        console.log(data)
-
-        res.send(`Activities for membership ID: ${data.rows.map(r => r["_id"])}`)
-    })
+    try {
+        const data = await getPlayerActivities({ membershipId, page, count })
+        res.status(200).json(success(data))
+    } catch (e) {
+        res.status(500).json(failure(e, "Internal server error"))
+    }
 })
+
+async function getPlayerActivities({
+    membershipId,
+    page,
+    count
+}: {
+    membershipId: string
+    page?: number
+    count?: number
+}) {
+    count = count ?? 250
+    page = page ?? 1
+    const [activities, playerActivities] = await Promise.all([
+        prisma.activity.findMany({
+            where: {
+                playerActivities: {
+                    some: {
+                        membershipId: membershipId
+                    }
+                }
+            },
+            take: count + 1,
+            skip: (page - 1) * count,
+            orderBy: {
+                dateCompleted: "desc"
+            }
+        }),
+        prisma.playerActivities.findMany({
+            where: {
+                membershipId: membershipId
+            },
+            take: count + 1,
+            skip: (page - 1) * count,
+            select: {
+                finishedRaid: true
+            },
+            orderBy: {
+                activity: {
+                    dateCompleted: "desc"
+                }
+            }
+        })
+    ])
+
+    return {
+        hasMore: !!activities[count],
+        activities: activities.slice(0, count).map((a, i) => ({
+            ...a,
+            didMemberComplete: playerActivities[i].finishedRaid
+        }))
+    }
+}
+
+// include: {
+//     playerActivities: {
+//         select: {
+//             finishedRaid: true,
+//             player: {
+//                 select: {
+//                     membershipId: true
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// activities: Object.fromEntries(
+//     activities.slice(0, count).map(({ playerActivities, ...activity }) => [
+//         activity.activityId,
+//         {
+//             ...activity,
+//             players: Object.fromEntries(
+//                 playerActivities.map(ap => [ap.player.membershipId, ap.finishedRaid])
+//             )
+//         }
+//     ])
+// )
