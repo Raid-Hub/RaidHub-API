@@ -8,3 +8,5 @@ raidhub-api-db
 
 #ignore intelliJ IDE configs
 .idea/
+
+test.js
