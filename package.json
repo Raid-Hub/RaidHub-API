@@ -26,9 +26,11 @@
     },
     "homepage": "https://github.com/Raid-Hub/RaidHub-API#readme",
     "devDependencies": {
+        "@types/cors": "^2.8.15",
         "@types/express": "^4.17.20",
         "@types/node": "^20.8.7",
         "bungie-net-core": "^2.1.1",
+        "cors": "^2.8.5",
         "nodemon": "^3.0.1",
         "pm2": "^5.3.0",
         "prettier": "^3.0.3",
