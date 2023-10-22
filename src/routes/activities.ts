@@ -62,7 +62,7 @@ async function getPlayerActivities({
                           dateCompleted: "desc"
                       }
                   }),
-                  prisma.playerActivities.findMany({
+                  prisma.playerActivity.findMany({
                       where: {
                           membershipId: membershipId
                       },
@@ -122,7 +122,7 @@ async function getFirstPageOfActivities(membershipId: string) {
                     dateCompleted: "desc"
                 }
             }),
-            prisma.playerActivities.findMany({
+            prisma.playerActivity.findMany({
                 where: {
                     membershipId: membershipId,
                     activity: {

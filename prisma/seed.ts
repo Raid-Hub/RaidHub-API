@@ -82,7 +82,7 @@ async function main() {
 
     console.log(`Found characters ${characters.join(", ")}`)
 
-    const pgcrs = await prisma.playerActivities
+    const pgcrs = await prisma.playerActivity
         .findMany({
             where: {
                 player: {

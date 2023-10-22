@@ -4,11 +4,19 @@ import { pgcrRouter } from "./routes/pgcr"
 import { manifestRouter } from "./routes/manifest"
 import cors from "cors"
 import { activityRouter } from "./routes/activity"
+import { leaderboardRouter } from "./routes/leaderboard"
 
 const port = Number(process.env.PORT || 8000)
 
 const app = express()
-const allowedOrigins = ["http://localhost", "https://127.0.0.1", "https://*.raidhub.app"]
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://127.0.0.1:3000",
+    "https://127.0.0.1:3001",
+    "https://raidhub.app",
+    "https://*.raidhub.app"
+]
 app.use(
     cors({
         origin: allowedOrigins
@@ -19,6 +27,7 @@ app.use("/activities", activitiesRouter)
 app.use("/pgcr", pgcrRouter)
 app.use("/activity", activityRouter)
 app.use("/manifest", manifestRouter)
+app.use("/leaderboard", leaderboardRouter)
 
 app.listen(port, () => {
     console.log("Express server started on port: " + port)
