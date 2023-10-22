@@ -12,6 +12,7 @@ import {
     SunsetRaids
 } from "../data"
 import { success } from "../util"
+import { LeaderboardsForRaid } from "./leaderboard"
 
 export const manifestRouter = express.Router()
 
@@ -78,7 +79,8 @@ manifestRouter.get("/", async (req: Request, res: Response) => {
             reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
                 raid,
                 difficulty
-            }))
+            })),
+            activityLeaderboards: LeaderboardsForRaid
         })
     )
 })

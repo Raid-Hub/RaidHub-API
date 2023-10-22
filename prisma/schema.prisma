@@ -18,15 +18,15 @@ model RawPGCR {
 }
 
 model Activity {
-  activityId         String             @id @unique(sort: Desc) @map("activity_id")
-  raidHash           String             @map("raid_hash")
+  activityId         String                     @id @unique(sort: Desc) @map("activity_id")
+  raidHash           String                     @map("raid_hash")
   flawless           Boolean?
   completed          Boolean
   fresh              Boolean?
-  playerCount        Int                @map("player_count")
-  dateStarted        DateTime           @map("date_started")
-  dateCompleted      DateTime           @map("date_completed")
-  playerActivities   PlayerActivity[] @relation("player_activity")
+  playerCount        Int                        @map("player_count")
+  dateStarted        DateTime                   @map("date_started")
+  dateCompleted      DateTime                   @map("date_completed")
+  playerActivities   PlayerActivity[]           @relation("player_activity")
   leaderboardEntries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
 
   @@index(dateCompleted(sort: Desc), name: "date_index")
@@ -34,16 +34,16 @@ model Activity {
 }
 
 model Player {
-  membershipId                String             @id @unique @map("membership_id")
-  membershipType              Int?               @map("membership_type")
-  iconPath                    String?            @map("icon_path")
-  displayName                 String?            @map("display_name")
-  bungieGlobalDisplayName     String?            @map("bungie_global_display_name")
-  bungieGlobalDisplayNameCode String?            @map("bungie_global_display_name_code")
-  lastSeen                    DateTime           @map("last_seen")
-  clears                      Int                @default(0) @map("clears")
-  sherpas                     Int                @default(0) @map("sherpas")
-  lowmanSherpas               Int                @default(0) @map("lowman_sherpas")
+  membershipId                String           @id @unique @map("membership_id")
+  membershipType              Int?             @map("membership_type")
+  iconPath                    String?          @map("icon_path")
+  displayName                 String?          @map("display_name")
+  bungieGlobalDisplayName     String?          @map("bungie_global_display_name")
+  bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
+  lastSeen                    DateTime         @map("last_seen")
+  clears                      Int              @default(0) @map("clears")
+  sherpas                     Int              @default(0) @map("sherpas")
+  lowmanSherpas               Int              @default(0) @map("lowman_sherpas")
   playerActivities            PlayerActivity[] @relation("player_activity")
 
   @@index(displayName, name: "dispay_name_index")
@@ -66,19 +66,19 @@ model PlayerActivity {
 }
 
 model ActivityLeaderboard {
-  id      String             @id @unique
+  id      String                     @id @unique
   entries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
 
   @@map("leaderboard")
 }
 
 model ActivityLeaderboardEntry {
-  id            Int         @id @default(autoincrement())
-  rank          Int         @unique(sort: Asc)
-  leaderboardId String      @map("leaderboard_id")
+  id            Int                 @id @default(autoincrement())
+  rank          Int                 @unique(sort: Asc)
+  leaderboardId String              @map("leaderboard_id")
   leaderboard   ActivityLeaderboard @relation(fields: [leaderboardId], references: [id], name: "activity_leaderboard_entry_fk")
-  activityId    String      @map("activity_id")
-  activity      Activity    @relation(fields: [activityId], references: [activityId], name: "activity_leaderboard_entry_fk")
+  activityId    String              @map("activity_id")
+  activity      Activity            @relation(fields: [activityId], references: [activityId], name: "activity_leaderboard_entry_fk")
 
   @@index(leaderboardId, name: "activity_leaderboard_entry_leaderboard_id_index")
   @@index(activityId, name: "activity_leaderboard_entry_activity_id_index")

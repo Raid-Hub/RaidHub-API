@@ -132,7 +132,7 @@ const UrlPathsToRaid = {
 } satisfies Record<string, ListedRaid>
 
 type Board = "normal" | "prestige" | "pc" | "challenge" | "master"
-const LeaderboardsForRaid = {
+export const LeaderboardsForRaid = {
     [Raid.LEVIATHAN]: {
         normal: "0",
         prestige: "0",

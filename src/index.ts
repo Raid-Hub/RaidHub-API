@@ -5,6 +5,7 @@ import { manifestRouter } from "./routes/manifest"
 import cors from "cors"
 import { activityRouter } from "./routes/activity"
 import { leaderboardRouter } from "./routes/leaderboard"
+import { playerRouter } from "./routes/player"
 
 const port = Number(process.env.PORT || 8000)
 
@@ -28,6 +29,7 @@ app.use("/pgcr", pgcrRouter)
 app.use("/activity", activityRouter)
 app.use("/manifest", manifestRouter)
 app.use("/leaderboard", leaderboardRouter)
+app.use("/player", playerRouter)
 
 app.listen(port, () => {
     console.log("Express server started on port: " + port)
