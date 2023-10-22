@@ -1,12 +1,17 @@
-import express, { Request, Response } from "express"
+import express, { NextFunction, Request, Response } from "express"
 import { failure, includedIn, success } from "../util"
 import { ListedRaid, Raid } from "../data"
 import { prisma } from "../database"
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 export const leaderboardRouter = express.Router()
 const raidRouter = express.Router({ mergeParams: true })
 const worldfirstRouter = express.Router({ mergeParams: true })
+
+const cacheMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    // cache for 5 minutes
+    res.setHeader("Cache-Control", "max-age=300")
+    next()
+}
 
 leaderboardRouter.use("/:raid", raidRouter)
 leaderboardRouter.param("raid", (req, res, next) => {
@@ -19,6 +24,9 @@ leaderboardRouter.param("raid", (req, res, next) => {
     }
 })
 raidRouter.use("/worldfirst", worldfirstRouter)
+
+worldfirstRouter.use(cacheMiddleware)
+
 worldfirstRouter.get("/:category", async (req: Request, res) => {
     const category = req.params.category
     const page = req.query.page ? Number(req.query.page) : undefined

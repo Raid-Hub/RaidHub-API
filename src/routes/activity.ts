@@ -1,9 +1,17 @@
-import express, { Request, Response } from "express"
+import express, { NextFunction, Request, Response } from "express"
 import { failure, success } from "../util"
 import { prisma } from "../database"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 export const activityRouter = express.Router()
+
+const cacheMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    // cache for 5 minutes
+    res.setHeader("Cache-Control", "max-age=300")
+    next()
+}
+
+activityRouter.use(cacheMiddleware)
 
 activityRouter.get("/:activityId", async (req: Request, res: Response) => {
     const activityId = req.params.activityId
