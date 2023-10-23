@@ -8,17 +8,21 @@ pgcrRouter.get("/:activityId", async (req: Request, res: Response) => {
     const activityId = req.params.activityId
 
     try {
-        const data = await getActivity(activityId)
+        const data = await getPGCR(activityId)
+        console.log(data)
+
         return res.status(200).json(success(data))
     } catch (e) {
         res.status(500).json(failure(e, "Internal server error"))
     }
 })
 
-async function getActivity(activityId: string) {
-    return prisma.rawPGCR.findUniqueOrThrow({
+async function getPGCR(activityId: string) {
+    const data = await prisma.rawPGCR.findUniqueOrThrow({
         where: {
             id: activityId
         }
     })
+    // @ts-ignore
+    return JSON.parse(data.rawJson)
 }

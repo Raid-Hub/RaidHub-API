@@ -15,3 +15,7 @@ export function failure<T>(data: T, message?: string) {
         success: false
     }
 }
+
+export function includedIn<T>(arr: readonly T[], element: any): element is T {
+    return arr.includes(element)
+}
