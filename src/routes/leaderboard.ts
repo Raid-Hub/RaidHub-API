@@ -1,7 +1,8 @@
 import express, { NextFunction, Request, Response } from "express"
 import { failure, includedIn, success } from "../util"
-import { ListedRaid, Raid } from "../data"
+import { ListedRaid, MasterRaid, PrestigeRaid, PrestigeRaids, Raid } from "../data/raids"
 import { prisma } from "../database"
+import { MasterReleases, PCLeviathanRelease, ReleaseDate } from "../data/raceDates"
 
 export const leaderboardRouter = express.Router()
 const raidRouter = express.Router({ mergeParams: true })
@@ -44,6 +45,8 @@ worldfirstRouter.get("/:category", async (req: Request, res) => {
             const leaderboard = await getActivityLeaderboard(
                 // @ts-ignore
                 LeaderboardsForRaid[raid][category],
+                category,
+                raid,
                 {
                     page,
                     count
@@ -60,7 +63,12 @@ worldfirstRouter.get("/:category", async (req: Request, res) => {
     }
 })
 
-async function getActivityLeaderboard(id: string, opts: { page?: number; count?: number }) {
+async function getActivityLeaderboard(
+    id: string,
+    board: string,
+    raid: ListedRaid,
+    opts: { page?: number; count?: number }
+) {
     const count = Math.max(0, Math.floor(Math.min(opts.count ?? 50, 100)))
     const page = Math.max(1, Math.floor(opts.page ?? 1))
 
@@ -80,6 +88,7 @@ async function getActivityLeaderboard(id: string, opts: { page?: number; count?:
                     activity: {
                         select: {
                             activityId: true,
+                            raidHash: true,
                             dateStarted: true,
                             dateCompleted: true,
                             playerActivities: {
@@ -103,8 +112,28 @@ async function getActivityLeaderboard(id: string, opts: { page?: number; count?:
         }
     })
 
+    let date = undefined
+    switch (board) {
+        case "normal":
+            date = ReleaseDate[raid]
+            break
+        case "prestige":
+            date = PrestigeRaids[raid as PrestigeRaid]
+            break
+        case "pc":
+            date = PCLeviathanRelease
+            break
+        case "challenge":
+            date = ReleaseDate[raid]
+            break
+        case "master":
+            date = MasterReleases[raid as MasterRaid]
+            break
+    }
+
     return {
         params: { count, page },
+        date,
         entries: data.entries.map(e => ({
             rank: e.rank,
             activityId: e.activity.activityId,
@@ -176,7 +205,7 @@ export const LeaderboardsForRaid = {
         master: "0"
     },
     [Raid.ROOT_OF_NIGHTMARES]: {
-        normal: "0",
+        normal: "wf_ron",
         master: "0"
     },
     [Raid.CROTAS_END]: {
@@ -185,3 +214,18 @@ export const LeaderboardsForRaid = {
         master: "0"
     }
 } satisfies Record<ListedRaid, Partial<Record<Board, string>>>
+export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, Board> = {
+    [Raid.LEVIATHAN]: "normal",
+    [Raid.EATER_OF_WORLDS]: "normal",
+    [Raid.SPIRE_OF_STARS]: "normal",
+    [Raid.LAST_WISH]: "normal",
+    [Raid.SCOURGE_OF_THE_PAST]: "normal",
+    [Raid.CROWN_OF_SORROW]: "normal",
+    [Raid.GARDEN_OF_SALVATION]: "normal",
+    [Raid.DEEP_STONE_CRYPT]: "normal",
+    [Raid.VAULT_OF_GLASS]: "challenge",
+    [Raid.VOW_OF_THE_DISCIPLE]: "normal",
+    [Raid.KINGS_FALL]: "challenge",
+    [Raid.ROOT_OF_NIGHTMARES]: "normal",
+    [Raid.CROTAS_END]: "challenge"
+}

@@ -10,9 +10,9 @@ import {
     RaidHashes,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
-} from "../data"
+} from "../data/raids"
 import { success } from "../util"
-import { LeaderboardsForRaid } from "./leaderboard"
+import { LeaderboardsForRaid, WorldFirstLeaderboardsForRaid } from "./leaderboard"
 
 export const manifestRouter = express.Router()
 
@@ -44,7 +44,7 @@ const difficulties: Record<Difficulty, string> = {
     [Difficulty.CONTEST]: "Contest"
 }
 
-const hashes = Object.fromEntries(
+export const AllRaidHashes = Object.fromEntries(
     Object.entries(
         RaidHashes as unknown as Record<ListedRaid, Partial<Record<Difficulty, string[]>>>
     )
@@ -70,7 +70,7 @@ manifestRouter.get("/", async (req: Request, res: Response) => {
         success({
             raids,
             difficulties,
-            hashes,
+            hashes: AllRaidHashes,
             listed: ListedRaids,
             sunset: SunsetRaids,
             contest: ContestRaids,
@@ -80,7 +80,8 @@ manifestRouter.get("/", async (req: Request, res: Response) => {
                 raid,
                 difficulty
             })),
-            activityLeaderboards: LeaderboardsForRaid
+            activityLeaderboards: LeaderboardsForRaid,
+            worldFirstBoards: WorldFirstLeaderboardsForRaid
         })
     )
 })

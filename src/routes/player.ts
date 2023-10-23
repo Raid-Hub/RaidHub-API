@@ -2,6 +2,8 @@ import express, { NextFunction, Request, Response } from "express"
 import { failure, success } from "../util"
 import { prisma } from "../database"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
+import { isContest, isDayOne, isWeekOne } from "../data/raceDates"
+import { AllRaidHashes } from "./manifest"
 
 export const playerRouter = express.Router()
 
@@ -53,6 +55,13 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
             select: {
                 rank: true,
                 activityId: true,
+                activity: {
+                    select: {
+                        raidHash: true,
+                        dateCompleted: true,
+                        dateStarted: true
+                    }
+                },
                 leaderboardId: true
             }
         })
@@ -61,7 +70,18 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
     return {
         player,
         activityLeaderboardEntries: Object.fromEntries(
-            activityLeaderboardEntries.map(({ leaderboardId, ...entry }) => [leaderboardId, entry])
+            activityLeaderboardEntries.map(({ leaderboardId, ...entry }) => {
+                const { raid } = AllRaidHashes[entry.activity.raidHash]
+                return [
+                    leaderboardId,
+                    {
+                        ...entry,
+                        dayOne: isDayOne(raid, entry.activity.dateCompleted),
+                        contest: isContest(raid, entry.activity.dateStarted),
+                        weekOne: isWeekOne(raid, entry.activity.dateCompleted)
+                    }
+                ]
+            })
         )
     }
 }

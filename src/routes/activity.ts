@@ -2,6 +2,8 @@ import express, { NextFunction, Request, Response } from "express"
 import { failure, success } from "../util"
 import { prisma } from "../database"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
+import { AllRaidHashes } from "./manifest"
+import { isContest, isDayOne, isWeekOne } from "../data/raceDates"
 
 export const activityRouter = express.Router()
 
@@ -47,8 +49,16 @@ async function getActivity({ activityId }: { activityId: string }) {
         }
     })
 
+    const { raid } = AllRaidHashes[activity.raidHash]
+    const dayOne = isDayOne(raid, activity.dateCompleted)
+    const contest = isContest(raid, activity.dateStarted)
+    const weekOne = isWeekOne(raid, activity.dateCompleted)
+
     return {
         ...activity,
+        dayOne,
+        contest,
+        weekOne,
         players: Object.fromEntries(playerActivities.map(pa => [pa.membershipId, pa.finishedRaid]))
     }
 }
