@@ -18,7 +18,7 @@ model RawPGCR {
 }
 
 model Activity {
-  activityId         String                     @id @unique(sort: Desc) @map("activity_id")
+  activityId         String                     @id @map("activity_id")
   raidHash           String                     @map("raid_hash")
   flawless           Boolean?
   completed          Boolean
@@ -29,6 +29,7 @@ model Activity {
   playerActivities   PlayerActivity[]           @relation("player_activity")
   leaderboardEntries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
 
+  @@index(activityId, type: Hash)
   @@index(dateCompleted(sort: Desc), name: "date_index")
   @@map("activity")
 }
@@ -46,7 +47,8 @@ model Player {
   lowmanSherpas               Int              @default(0) @map("lowman_sherpas")
   playerActivities            PlayerActivity[] @relation("player_activity")
 
-  @@index(displayName, name: "dispay_name_index")
+  @@index(membershipId, type: Hash)
+  @@index(displayName, name: "dispay_name_index", type: Hash)
   @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode], name: "bungie_name_index")
   @@map("player")
 }
@@ -60,8 +62,8 @@ model PlayerActivity {
   player       Player   @relation(fields: [membershipId], references: [membershipId], "player_activity")
 
   @@unique([activityId, membershipId], name: "activity_player_index")
-  @@index(activityId, name: "activity_id_index")
-  @@index(membershipId, name: "membership_id_index")
+  @@index(activityId, name: "activity_id_index", type: Hash)
+  @@index(membershipId, name: "membership_id_index", type: Hash)
   @@map("player_activity")
 }
 
@@ -81,6 +83,6 @@ model ActivityLeaderboardEntry {
   activity      Activity            @relation(fields: [activityId], references: [activityId], name: "activity_leaderboard_entry_fk")
 
   @@index(leaderboardId, name: "activity_leaderboard_entry_leaderboard_id_index")
-  @@index(activityId, name: "activity_leaderboard_entry_activity_id_index")
+  @@index(activityId, name: "activity_leaderboard_entry_activity_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
 }
