@@ -76,12 +76,13 @@ model ActivityLeaderboard {
 
 model ActivityLeaderboardEntry {
   id            Int                 @id @default(autoincrement())
-  rank          Int                 @unique(sort: Asc)
+  rank          Int                 
   leaderboardId String              @map("leaderboard_id")
-  leaderboard   ActivityLeaderboard @relation(fields: [leaderboardId], references: [id], name: "activity_leaderboard_entry_fk")
+  leaderboard   ActivityLeaderboard @relation(fields: [leaderboardId], references: [id], name: "activity_leaderboard_entry_fk", onDelete: Cascade)
   activityId    String              @map("activity_id")
   activity      Activity            @relation(fields: [activityId], references: [activityId], name: "activity_leaderboard_entry_fk")
 
+  @@unique([id,rank], name: "activity_leaderboard_entry_unique_index")
   @@index(leaderboardId, name: "activity_leaderboard_entry_leaderboard_id_index")
   @@index(activityId, name: "activity_leaderboard_entry_activity_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
