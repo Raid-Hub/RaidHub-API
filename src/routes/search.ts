@@ -37,9 +37,12 @@ async function searchForPlayer(query: string, count?: number) {
             take: count
         })
         return {
-            term: {
-                bungieGlobalDisplayName: displayName,
-                bungieGlobalDisplayNameCode: code
+            params: {
+                count: take,
+                term: {
+                    bungieGlobalDisplayName: displayName,
+                    bungieGlobalDisplayNameCode: code
+                }
             },
             results: result ? [result] : []
         }
@@ -64,7 +67,7 @@ async function searchForPlayer(query: string, count?: number) {
             orderBy: {
                 clears: "desc"
             },
-            take: count
+            take: take
         })
 
         return {
