@@ -12,8 +12,15 @@
         "types": ["node"],
         "lib": ["es6", "esnext"],
         "resolveJsonModule": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "baseUrl": "./src",
+        "paths": {
+            "~/data/*": ["data/*"],
+            "~/routes/*": ["routes/*"],
+            "~/util": ["util"],
+            "~/prisma": ["prisma"]
+        }
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules", "tests/*", "scripts/*"]
 }

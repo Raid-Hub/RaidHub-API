@@ -10,3 +10,5 @@ raidhub-api-db
 .idea/
 
 test.js
+
+*.log

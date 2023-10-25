@@ -46,7 +46,6 @@ model Player {
   playerActivities            PlayerActivity[] @relation("player_activity")
 
   @@index(membershipId, type: Hash)
-  @@index(displayName, name: "display_name_index", type: Hash)
   @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode], name: "bungie_name_index")
   @@map("player")
 }

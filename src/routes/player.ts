@@ -1,11 +1,11 @@
-import express, { NextFunction, Request, Response } from "express"
-import { failure, success } from "../util"
-import { prisma } from "../database"
+import { Router } from "express"
+import { failure, success } from "~/util"
+import { prisma } from "~/prisma"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import { isContest, isDayOne, isWeekOne } from "../data/raceDates"
+import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
 
-export const playerRouter = express.Router()
+export const playerRouter = Router()
 
 playerRouter.get("/:membershipId", async (req, res) => {
     const membershipId = req.params.membershipId

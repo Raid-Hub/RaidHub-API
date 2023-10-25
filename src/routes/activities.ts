@@ -1,23 +1,19 @@
-import express, { Request, Response } from "express"
-import { failure, success } from "../util"
-import { prisma } from "../database"
-import { NextFunction } from "connect"
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import { isContest, isDayOne, isWeekOne } from "../data/raceDates"
+import { NextFunction, Request, Response, Router } from "express"
+import { failure, success } from "~/util"
+import { prisma } from "~/prisma"
+import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
 
-export const activitiesRouter = express.Router()
+export const activitiesRouter = Router()
 
-const cacheCursoredReqsMiddleware = (req: Request, res: Response, next: NextFunction) => {
+activitiesRouter.use((req, res, next) => {
     if (req.query.cursor) {
         // Set cache headers to last for 24 hours (in seconds)
         res.setHeader("Cache-Control", "max-age=86400")
     }
 
     next()
-}
-
-activitiesRouter.use(cacheCursoredReqsMiddleware)
+})
 
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
     const membershipId = req.params.destinyMembershipId
@@ -37,6 +33,37 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
 
 const COUNT = 250
 
+const activityQuery = (membershipId: string) =>
+    ({
+        where: {
+            playerActivities: {
+                some: {
+                    membershipId: membershipId
+                }
+            }
+        },
+        orderBy: {
+            dateCompleted: "desc"
+        },
+        take: COUNT + 1
+    }) as const
+
+const playerActivityQuery = (membershipId: string) =>
+    ({
+        where: {
+            membershipId: membershipId
+        },
+        take: COUNT + 1,
+        select: {
+            finishedRaid: true
+        },
+        orderBy: {
+            activity: {
+                dateCompleted: "desc"
+            }
+        }
+    }) as const
+
 async function getPlayerActivities({
     membershipId,
     cursor
@@ -49,38 +76,17 @@ async function getPlayerActivities({
         cursor
             ? [
                   prisma.activity.findMany({
-                      where: {
-                          playerActivities: {
-                              some: {
-                                  membershipId: membershipId
-                              }
-                          }
-                      },
-                      take: COUNT + 1,
                       cursor: {
                           activityId: cursor
                       },
-                      orderBy: {
-                          dateCompleted: "desc"
-                      }
+                      ...activityQuery(membershipId)
                   }),
                   prisma.playerActivity.findMany({
-                      where: {
-                          membershipId: membershipId
-                      },
-                      take: COUNT + 1,
+                      ...playerActivityQuery(membershipId),
                       cursor: {
                           activity_player_index: {
                               activityId: cursor,
                               membershipId: membershipId
-                          }
-                      },
-                      select: {
-                          finishedRaid: true
-                      },
-                      orderBy: {
-                          activity: {
-                              dateCompleted: "desc"
                           }
                       }
                   })
@@ -110,28 +116,24 @@ async function getFirstPageOfActivities(membershipId: string) {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
 
+    const { where: where1, ...query1 } = activityQuery(membershipId)
+    const { where: where2, ...query2 } = playerActivityQuery(membershipId)
+
     const getActivites = (cutoff: Date) =>
         Promise.all([
             prisma.activity.findMany({
+                ...query1,
                 where: {
-                    playerActivities: {
-                        some: {
-                            membershipId: membershipId
-                        }
-                    },
                     dateCompleted: {
                         gte: cutoff,
                         lte: today
-                    }
-                },
-                take: COUNT + 1,
-                orderBy: {
-                    dateCompleted: "desc"
+                    },
+                    ...where1
                 }
             }),
             prisma.playerActivity.findMany({
                 where: {
-                    membershipId: membershipId,
+                    ...where2,
                     activity: {
                         dateCompleted: {
                             gte: cutoff,
@@ -139,15 +141,7 @@ async function getFirstPageOfActivities(membershipId: string) {
                         }
                     }
                 },
-                take: COUNT + 1,
-                select: {
-                    finishedRaid: true
-                },
-                orderBy: {
-                    activity: {
-                        dateCompleted: "desc"
-                    }
-                }
+                ...query2
             })
         ])
 
