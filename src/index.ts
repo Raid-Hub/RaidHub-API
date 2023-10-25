@@ -1,3 +1,4 @@
+import dotenv from "dotenv"
 import express from "express"
 import { activitiesRouter } from "./routes/activities"
 import { pgcrRouter } from "./routes/pgcr"
@@ -6,6 +7,8 @@ import cors from "cors"
 import { activityRouter } from "./routes/activity"
 import { leaderboardRouter } from "./routes/leaderboard"
 import { playerRouter } from "./routes/player"
+
+dotenv.config()
 
 const port = Number(process.env.PORT || 8000)
 

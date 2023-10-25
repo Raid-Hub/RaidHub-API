@@ -1,8 +1,8 @@
-import express, { Request, Response } from "express"
-import { failure, success } from "../util"
-import { prisma } from "../database"
+import { Request, Response, Router } from "express"
+import { failure, success } from "~/util"
+import { prisma } from "~/prisma"
 
-export const pgcrRouter = express.Router()
+export const pgcrRouter = Router()
 
 pgcrRouter.get("/:activityId", async (req: Request, res: Response) => {
     const activityId = req.params.activityId
@@ -11,7 +11,7 @@ pgcrRouter.get("/:activityId", async (req: Request, res: Response) => {
         const data = await getPGCR(activityId)
         console.log(data)
 
-        return res.status(200).json(success(data))
+        res.status(200).json(success(data))
     } catch (e) {
         res.status(500).json(failure(e, "Internal server error"))
     }

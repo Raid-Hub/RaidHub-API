@@ -1,19 +1,17 @@
-import express, { NextFunction, Request, Response } from "express"
-import { failure, success } from "../util"
-import { prisma } from "../database"
+import { Request, Response, Router } from "express"
+import { failure, success } from "~/util"
+import { prisma } from "~/prisma"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { AllRaidHashes } from "./manifest"
-import { isContest, isDayOne, isWeekOne } from "../data/raceDates"
+import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
 
-export const activityRouter = express.Router()
+export const activityRouter = Router()
 
-const cacheMiddleware = (req: Request, res: Response, next: NextFunction) => {
+activityRouter.use((req, res, next) => {
     // cache for 5 minutes
     res.setHeader("Cache-Control", "max-age=300")
     next()
-}
-
-activityRouter.use(cacheMiddleware)
+})
 
 activityRouter.get("/:activityId", async (req: Request, res: Response) => {
     const activityId = req.params.activityId

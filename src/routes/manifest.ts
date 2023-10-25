@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express"
+import { Request, Response, Router } from "express"
 import {
     ContestRaids,
     Difficulty,
@@ -10,11 +10,12 @@ import {
     RaidHashes,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
-} from "../data/raids"
-import { success } from "../util"
-import { LeaderboardsForRaid, WorldFirstLeaderboardsForRaid } from "./leaderboard"
+} from "~/data/raids"
+import { success } from "~/util"
+import { LeaderboardsForRaid } from "./leaderboard"
+import { WorldFirstLeaderboardsForRaid } from "./leaderboard/worldfirst"
 
-export const manifestRouter = express.Router()
+export const manifestRouter = Router()
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
