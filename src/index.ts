@@ -7,6 +7,7 @@ import cors from "cors"
 import { activityRouter } from "./routes/activity"
 import { leaderboardRouter } from "./routes/leaderboard"
 import { playerRouter } from "./routes/player"
+import { searchRouter } from "./routes/search"
 
 dotenv.config()
 
@@ -33,6 +34,7 @@ app.use("/activity", activityRouter)
 app.use("/manifest", manifestRouter)
 app.use("/leaderboard", leaderboardRouter)
 app.use("/player", playerRouter)
+app.use("/search", searchRouter)
 
 app.listen(port, () => {
     console.log("Express server started on port: " + port)
