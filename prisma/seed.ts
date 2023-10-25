@@ -172,11 +172,36 @@ async function main() {
                             e.values.completed?.basic.value &&
                             e.values.completionReason?.basic.value === 0
                     )
+                    const activityDuration = p[0].values.activityDurationSeconds?.basic.value ?? 0
+                    const maxActivityDuration =
+                        activityDuration === 32767 ? Infinity : activityDuration
+                    const { kills, deaths, assists, timePlayedSeconds } = p.reduce(
+                        (curr, nxt) => ({
+                            kills: curr.kills + (nxt.values.kills?.basic.value ?? 0),
+                            deaths: curr.deaths + (nxt.values.deaths?.basic.value ?? 0),
+                            assists: curr.assists + (nxt.values.assists?.basic.value ?? 0),
+                            timePlayedSeconds: Math.min(
+                                curr.timePlayedSeconds +
+                                    (nxt.values.timePlayedSeconds?.basic.value ?? 0),
+                                maxActivityDuration
+                            )
+                        }),
+                        {
+                            kills: 0,
+                            deaths: 0,
+                            assists: 0,
+                            timePlayedSeconds: 0
+                        }
+                    )
                     const data = {
                         lastSeen: pgcr.dateCompleted,
                         playerActivities: {
                             create: {
                                 finishedRaid: didFinish,
+                                kills,
+                                deaths,
+                                assists,
+                                timePlayedSeconds,
                                 activityId: pgcr.activityId
                             }
                         },
