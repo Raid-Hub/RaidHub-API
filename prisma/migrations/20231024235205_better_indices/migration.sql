@@ -38,7 +38,13 @@ CREATE UNIQUE INDEX "activity_leaderboard_entry_id_rank_key" ON "activity_leader
 CREATE INDEX "player_membership_id_idx" ON "player" USING HASH ("membership_id");
 
 -- CreateIndex
-CREATE INDEX "dispay_name_index" ON "player" USING HASH ("display_name");
+CREATE INDEX bungie_global_name_index ON "player" (lower("bungie_global_display_name"));
+
+-- CreateIndex
+CREATE INDEX bungie_global_code_index ON "player" (lower("bungie_global_display_name"));
+
+-- CreateIndex
+CREATE INDEX dispay_name_index ON "player" (lower("display_name"));
 
 -- CreateIndex
 CREATE INDEX "activity_id_index" ON "player_activity" USING HASH ("activity_id");
