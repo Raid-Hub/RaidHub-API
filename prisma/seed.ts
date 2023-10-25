@@ -211,7 +211,7 @@ async function main() {
                                   iconPath: destinyUserInfo.iconPath,
                                   displayName: destinyUserInfo.displayName,
                                   bungieGlobalDisplayName:
-                                      destinyUserInfo.bungieGlobalDisplayName ?? null,
+                                      destinyUserInfo.bungieGlobalDisplayName || null,
                                   bungieGlobalDisplayNameCode:
                                       destinyUserInfo.bungieGlobalDisplayNameCode
                                           ? fixBungieCode(

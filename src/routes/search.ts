@@ -31,7 +31,7 @@ async function searchForPlayer(query: string, count?: number) {
                     mode: "insensitive"
                 },
                 bungieGlobalDisplayNameCode: {
-                    equals: code
+                    contains: code
                 }
             },
             take: count
