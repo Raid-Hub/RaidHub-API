@@ -4,6 +4,12 @@ import { prisma } from "~/prisma"
 
 export const searchRouter = Router()
 
+searchRouter.use((_, res, next) => {
+    // cache for 10 mins
+    res.setHeader("Cache-Control", "max-age=600")
+    next()
+})
+
 searchRouter.get("", async (req, res) => {
     const query = req.query.query
     let count: number | undefined = Number(req.query.count)

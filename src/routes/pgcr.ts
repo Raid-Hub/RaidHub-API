@@ -4,6 +4,12 @@ import { prisma } from "~/prisma"
 
 export const pgcrRouter = Router()
 
+pgcrRouter.use((_, res, next) => {
+    // cache for 1 hour
+    res.setHeader("Cache-Control", "max-age=3600")
+    next()
+})
+
 pgcrRouter.get("/:activityId", async (req: Request, res: Response) => {
     const activityId = req.params.activityId
 

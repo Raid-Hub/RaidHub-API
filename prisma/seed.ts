@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 import {
+    BungieNetResponse,
     DestinyHistoricalStatsPeriodGroup,
     DestinyPostGameCarnageReportData,
     DestinyPostGameCarnageReportEntry
@@ -138,8 +139,9 @@ async function main() {
     )
 
     let i = 0
-    const PGCR_THREADS = 10
+    const PGCR_THREADS = 50
     const arr = Array.from(pgcrQueue).sort((a, b) => Number(a) - Number(b))
+
     console.log(`Adding ${arr.length} activities`)
     while (i < pgcrQueue.size) {
         const ids = arr.splice(0, PGCR_THREADS)
@@ -147,8 +149,22 @@ async function main() {
         const fetchedPGCRs = await Promise.all(
             ids.map(async activityId => {
                 console.log(`Loading activity ${activityId}`)
-                return getPostGameCarnageReport(bungieClient, { activityId }).then(res =>
-                    processCarnageReport(res.Response)
+                return (
+                    fetch(
+                        `${
+                            process.env.DEV_PROXY_URL || "https://stats.bungie.net"
+                        }/Platform/Destiny2/Stats/PostGameCarnageReport/${activityId}/`,
+                        {
+                            headers: {
+                                "x-api-key": process.env.DEV_BUNGIE_API_KEY!
+                            }
+                        }
+                    )
+                        .then(res => res.json())
+                        // @ts-ignore
+                        .then((res: BungieNetResponse<DestinyPostGameCarnageReportData>) =>
+                            processCarnageReport(res.Response)
+                        )
                 )
             })
         )

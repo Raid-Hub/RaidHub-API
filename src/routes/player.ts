@@ -15,27 +15,16 @@ playerRouter.get("/:membershipId", async (req, res) => {
         res.status(200).json(success(data))
     } catch (e) {
         if (e instanceof PrismaClientKnownRequestError) {
-            if (e.code === "P2025") {
-                res.status(404).json(
-                    failure(
-                        {
-                            code: 404
-                        },
-                        `No player found with id ${membershipId}`
-                    )
-                )
-            } else {
-                res.status(500).json(failure(e, "Internal server error"))
-            }
-        } else {
             res.status(500).json(failure(e, "Internal server error"))
+        } else {
+            res.status(404).json(failure(e))
         }
     }
 })
 
 async function getPlayer({ membershipId }: { membershipId: string }) {
     const [player, activityLeaderboardEntries] = await Promise.all([
-        prisma.player.findUniqueOrThrow({
+        prisma.player.findUnique({
             where: {
                 membershipId
             }
@@ -66,6 +55,10 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
             }
         })
     ])
+
+    if (!player) {
+        throw Error("Player not found")
+    }
 
     return {
         player,
