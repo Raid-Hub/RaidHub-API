@@ -71,7 +71,7 @@ export const LeaderboardsForRaid = {
         master: "0"
     },
     [Raid.VOW_OF_THE_DISCIPLE]: {
-        normal: "0",
+        normal: "wf_vow",
         master: "wf_vow_master"
     },
     [Raid.KINGS_FALL]: {

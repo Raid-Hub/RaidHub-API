@@ -16,7 +16,6 @@ searchRouter.get("", async (req, res) => {
     if (Number.isNaN(count)) {
         count = undefined
     }
-
     try {
         const data = await searchForPlayer(String(query), count)
         res.status(200).json(success(data))
@@ -28,9 +27,10 @@ searchRouter.get("", async (req, res) => {
 async function searchForPlayer(query: string, count?: number) {
     const searchTerm = decodeURIComponent(query).trim()
     const take = Math.max(0, Math.min(count ?? 20, 50))
+
     if (searchTerm.includes("#")) {
         const [displayName, code] = searchTerm.split("#")
-        const result = await prisma.player.findFirst({
+        const results = await prisma.player.findMany({
             where: {
                 bungieGlobalDisplayName: {
                     equals: displayName,
@@ -50,7 +50,7 @@ async function searchForPlayer(query: string, count?: number) {
                     bungieGlobalDisplayNameCode: code
                 }
             },
-            results: result ? [result] : []
+            results
         }
     } else {
         const results = await prisma.player.findMany({

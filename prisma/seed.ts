@@ -87,20 +87,20 @@ async function main() {
         .findMany({
             where: {
                 player: {
-                    membershipId: user.membershipId
+                    membershipId: BigInt(user.membershipId)
                 }
             },
             select: {
-                activityId: true
+                instanceId: true
             }
         })
-        .then(data => new Set(data.map(r => r.activityId)))
+        .then(data => new Set(data.map(r => r.instanceId)))
 
     console.log(`PGCRs already in database: ${pgcrs.size}`)
 
     const COUNT = 250
     const THREADS = 3
-    const pgcrQueue = new Set<string>()
+    const pgcrQueue = new Set<BigInt>()
 
     await Promise.all(
         characters.map(async characterId => {
@@ -122,7 +122,7 @@ async function main() {
                 console.log(`Found ${activities.length} activities on characterId ${characterId}`)
 
                 activities.filter(Boolean).forEach(a => {
-                    const id = a.activityDetails.instanceId
+                    const id = BigInt(a.activityDetails.instanceId)
                     if (!pgcrs.has(id)) {
                         pgcrQueue.add(id)
                     }
@@ -218,7 +218,7 @@ async function main() {
                                 deaths,
                                 assists,
                                 timePlayedSeconds,
-                                activityId: pgcr.activityId
+                                instanceId: pgcr.instanceId
                             }
                         },
                         ...(destinyUserInfo.membershipType !== 0
@@ -242,7 +242,7 @@ async function main() {
                             create: {
                                 ...data,
                                 clears: didFinish ? 1 : 0,
-                                membershipId: destinyUserInfo.membershipId
+                                membershipId: BigInt(destinyUserInfo.membershipId)
                             },
                             update: {
                                 ...data,
@@ -253,7 +253,7 @@ async function main() {
                                     : undefined
                             },
                             where: {
-                                membershipId: destinyUserInfo.membershipId
+                                membershipId: BigInt(destinyUserInfo.membershipId)
                             }
                         })
                         .then(d =>
@@ -273,15 +273,6 @@ async function main() {
 }
 
 async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
-    await prisma.rawPGCR
-        .create({
-            data: {
-                id: report.activityDetails.instanceId,
-                rawJson: JSON.stringify(report)
-            }
-        })
-        .catch(console.error)
-
     const players = new Map<string, DestinyPostGameCarnageReportEntry[]>()
 
     report.entries.forEach(e => {
@@ -299,8 +290,8 @@ async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
     const startDate = new Date(report.period)
 
     return {
-        activityId: report.activityDetails.instanceId,
-        raidHash: String(report.activityDetails.directorActivityHash),
+        instanceId: BigInt(report.activityDetails.instanceId),
+        raidHash: BigInt(report.activityDetails.directorActivityHash),
         completed: complete,
         flawless:
             complete && report.entries.every(e => e.values.deaths?.basic.value === 0) && fresh,
