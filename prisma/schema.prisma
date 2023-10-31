@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Activity {
+  instanceId               BigInt                     @id @unique @map("instance_id")
+  raidHash                 BigInt                     @map("raid_hash")
   flawless                 Boolean?
   completed                Boolean
   fresh                    Boolean?
   playerCount              Int                        @map("player_count")
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
-  instanceId               BigInt                     @id @unique @map("instance_id")
-  raidHash                 BigInt                     @map("raid_hash")
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
@@ -26,6 +26,7 @@ model Activity {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model Player {
+  membershipId                BigInt           @id @map("membership_id")
   membershipType              Int?             @map("membership_type")
   iconPath                    String?          @map("icon_path")
   displayName                 String?          @map("display_name")
@@ -33,22 +34,25 @@ model Player {
   bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
   lastSeen                    DateTime         @map("last_seen")
   clears                      Int              @default(0) @map("clears")
-  membershipId                BigInt           @id @unique(map: "player_membership_id_new_key") @map("membership_id")
   playerActivities            PlayerActivity[] @relation("player_activities")
 
-  @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode], map: "bungie_name_index")
+  @@index([clears], map: "clears_idx")
+  @@index([displayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_both_display_names", type: Gin)
+  @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_display_name", type: Gin)
+  @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayNameCode(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_name_and_code", type: Gin)
+  @@index([displayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_display_name", type: Gin)
   @@map("player")
 }
 
 model PlayerActivity {
   id                String   @id @default(uuid())
+  instanceId        BigInt   @map("instance_id")
+  membershipId      BigInt   @map("membership_id")
   finishedRaid      Boolean  @map("finished_raid")
   kills             Int      @default(0)
   assists           Int      @default(0)
   deaths            Int      @default(0)
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
-  instanceId        BigInt   @map("instance_id")
-  membershipId      BigInt   @map("membership_id")
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId])
   player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
 
