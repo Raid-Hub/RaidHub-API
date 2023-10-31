@@ -19,7 +19,7 @@ const allowedOrigins = [
     "https://127.0.0.1:3000",
     "https://127.0.0.1:3001",
     "https://raidhub.app",
-    "https://*.raidhub.app"
+    "https://staging.raidhub.app"
 ]
 app.use(
     cors({
