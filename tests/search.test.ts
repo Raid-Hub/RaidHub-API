@@ -1,25 +1,57 @@
-test("API Tests", async () => {
-    const url = `http://localhost:8000/activity/${process.env.TEST_ACTIVITY_ID}`
+const [displayName, displayNameCode] = process.env.TEST_SEARCH_NAME!.split("#")
+
+test("search by displayName", async () => {
+    const url = `http://localhost:8000/search?query=${displayName}`
 
     const jsonData: any = await fetch(url).then(res => res.json())
 
     expect(jsonData).toHaveProperty("minted")
     expect(jsonData).toHaveProperty("response")
 
-    expect(jsonData.response).toHaveProperty("activityId")
-    expect(jsonData.response).toHaveProperty("raidHash")
-    expect(jsonData.response).toHaveProperty("flawless")
-    expect(jsonData.response).toHaveProperty("completed")
-    expect(jsonData.response).toHaveProperty("fresh")
-    expect(jsonData.response).toHaveProperty("playerCount")
-    expect(jsonData.response).toHaveProperty("dateStarted")
-    expect(jsonData.response).toHaveProperty("dateCompleted")
-    expect(jsonData.response).toHaveProperty("dayOne")
-    expect(jsonData.response).toHaveProperty("contest")
-    expect(jsonData.response).toHaveProperty("weekOne")
-    expect(jsonData.response).toHaveProperty("players")
-    expect(typeof jsonData.response.players).toBe("object")
-    Object.values(jsonData.response.players).forEach(value => {
-        expect(typeof value).toBe("boolean")
+    expect(jsonData.response).toHaveProperty("params")
+    expect(jsonData.response.params).toHaveProperty("count")
+    expect(jsonData.response.params).toHaveProperty("term")
+    expect(jsonData.response.params.term).toHaveProperty("displayName")
+
+    expect(jsonData.response).toHaveProperty("results")
+    expect(jsonData.response.results.length).toBeGreaterThanOrEqual(1)
+    jsonData.response.results.forEach((result: any) => {
+        expect(result).toHaveProperty("bungieGlobalDisplayName")
+        expect(result).toHaveProperty("bungieGlobalDisplayNameCode")
+        expect(result).toHaveProperty("clears")
+        expect(result).toHaveProperty("displayName")
+        expect(result).toHaveProperty("iconPath")
+        expect(result).toHaveProperty("lastSeen")
+        expect(result).toHaveProperty("membershipId")
+        expect(result).toHaveProperty("membershipType")
+    })
+})
+
+test("search by bungie name", async () => {
+    const q = encodeURIComponent(displayName + "#" + displayNameCode)
+    const url = `http://localhost:8000/search?query=${q}`
+
+    const jsonData: any = await fetch(url).then(res => res.json())
+
+    expect(jsonData).toHaveProperty("minted")
+    expect(jsonData).toHaveProperty("response")
+
+    expect(jsonData.response).toHaveProperty("params")
+    expect(jsonData.response.params).toHaveProperty("count")
+    expect(jsonData.response.params).toHaveProperty("term")
+    expect(jsonData.response.params.term).toHaveProperty("bungieGlobalDisplayName")
+    expect(jsonData.response.params.term).toHaveProperty("bungieGlobalDisplayNameCode")
+
+    expect(jsonData.response).toHaveProperty("results")
+    expect(jsonData.response.results.length).toBeGreaterThanOrEqual(1)
+    jsonData.response.results.forEach((result: any) => {
+        expect(result).toHaveProperty("bungieGlobalDisplayName")
+        expect(result).toHaveProperty("bungieGlobalDisplayNameCode")
+        expect(result).toHaveProperty("clears")
+        expect(result).toHaveProperty("displayName")
+        expect(result).toHaveProperty("iconPath")
+        expect(result).toHaveProperty("lastSeen")
+        expect(result).toHaveProperty("membershipId")
+        expect(result).toHaveProperty("membershipType")
     })
 })

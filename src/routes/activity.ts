@@ -14,23 +14,26 @@ activityRouter.use((req, res, next) => {
 })
 
 activityRouter.get("/:activityId", async (req: Request, res: Response) => {
-    const activityId = BigInt(req.params.activityId)
-
     try {
-        const data = await getActivity({ activityId })
-        res.status(200).json(success(data))
-    } catch (e) {
-        if (e instanceof PrismaClientKnownRequestError) {
-            if (e.code === "P2025") {
-                res.status(404).json(failure(`No activity found with id ${activityId}`))
+        const activityId = BigInt(req.params.activityId)
+        try {
+            const data = await getActivity({ activityId })
+            res.status(200).json(success(data))
+        } catch (e) {
+            if (e instanceof PrismaClientKnownRequestError) {
+                if (e.code === "P2025") {
+                    res.status(404).json(failure(`No activity found with id ${activityId}`))
+                } else {
+                    console.error(e)
+                    res.status(500).json(failure(e, "Internal server error"))
+                }
             } else {
                 console.error(e)
                 res.status(500).json(failure(e, "Internal server error"))
             }
-        } else {
-            console.error(e)
-            res.status(500).json(failure(e, "Internal server error"))
         }
+    } catch (e) {
+        res.status(400).json(failure({ activityId: req.params.activityId }, "Invalid activityId"))
     }
 })
 

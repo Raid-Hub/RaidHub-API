@@ -139,7 +139,7 @@ async function main() {
     )
 
     let i = 0
-    const PGCR_THREADS = 50
+    const PGCR_THREADS = 100
     const arr = Array.from(pgcrQueue).sort((a, b) => Number(a) - Number(b))
 
     console.log(`Adding ${arr.length} activities`)
@@ -256,13 +256,6 @@ async function main() {
                                 membershipId: BigInt(destinyUserInfo.membershipId)
                             }
                         })
-                        .then(d =>
-                            console.log(
-                                `Updated or created user ${
-                                    d.bungieGlobalDisplayName ?? d.displayName ?? d.membershipId
-                                }`
-                            )
-                        )
                         .catch(console.error)
                 })
             )

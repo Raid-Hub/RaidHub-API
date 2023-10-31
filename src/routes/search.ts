@@ -11,12 +11,12 @@ searchRouter.use((_, res, next) => {
 })
 
 searchRouter.get("", async (req, res) => {
-    const query = req.query.query
-    let count: number | undefined = Number(req.query.count)
-    if (Number.isNaN(count)) {
-        count = undefined
-    }
     try {
+        const query = req.query.query
+        let count: number | undefined = Number(req.query.count)
+        if (Number.isNaN(count)) {
+            count = undefined
+        }
         const data = await searchForPlayer(String(query), count)
         res.status(200).json(success(data))
     } catch (e) {

@@ -8,17 +8,23 @@ import { AllRaidHashes } from "./manifest"
 export const playerRouter = Router()
 
 playerRouter.get("/:membershipId", async (req, res) => {
-    const membershipId = BigInt(req.params.membershipId)
-
     try {
-        const data = await getPlayer({ membershipId })
-        res.status(200).json(success(data))
-    } catch (e) {
-        if (e instanceof PrismaClientKnownRequestError) {
-            res.status(500).json(failure(e, "Internal server error"))
-        } else {
-            res.status(404).json(failure(e))
+        const membershipId = BigInt(req.params.membershipId)
+
+        try {
+            const data = await getPlayer({ membershipId })
+            res.status(200).json(success(data))
+        } catch (e) {
+            if (e instanceof PrismaClientKnownRequestError) {
+                res.status(500).json(failure(e, "Internal server error"))
+            } else {
+                res.status(404).json(failure(e))
+            }
         }
+    } catch (e) {
+        res.status(400).json(
+            failure({ membershipId: req.params.membershipId }, "Invalid membershipId")
+        )
     }
 })
 

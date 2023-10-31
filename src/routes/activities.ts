@@ -16,18 +16,27 @@ activitiesRouter.use((req, res, next) => {
 })
 
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
-    const membershipId = BigInt(req.params.destinyMembershipId)
-    const cursor = req.query.cursor ? BigInt(req.query.cursor as string) : null
-    let count: number | undefined = Number(req.query.count)
-    if (Number.isNaN(count)) {
-        count = undefined
-    }
-
     try {
-        const data = await getPlayerActivities({ membershipId, cursor })
-        res.status(200).json(success(data))
+        const membershipId = BigInt(req.params.destinyMembershipId)
+        const cursor = req.query.cursor ? BigInt(req.query.cursor as string) : null
+        let count: number | undefined = Number(req.query.count)
+        if (Number.isNaN(count)) {
+            count = undefined
+        }
+
+        try {
+            const data = await getPlayerActivities({ membershipId, cursor })
+            res.status(200).json(success(data))
+        } catch (e) {
+            res.status(500).json(failure(e, "Internal server error"))
+        }
     } catch (e) {
-        res.status(500).json(failure(e, "Internal server error"))
+        res.status(400).json(
+            failure(
+                { destinyMembershipId: req.params.destinyMembershipId, cursor: req.query.cursor },
+                "Invalid query params"
+            )
+        )
     }
 })
 
