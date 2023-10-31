@@ -15,39 +15,47 @@ worldfirstRouter.use((_, res, next) => {
 })
 
 worldfirstRouter.get("/:category", async (req, res) => {
-    const category = req.params.category
-    const page = req.query.page ? Number(req.query.page) : undefined
-    const count = req.query.count ? Number(req.query.count) : undefined
+    try {
+        const category = req.params.category
+        const page = req.query.page ? Number(req.query.page) : undefined
+        const count = req.query.count ? Number(req.query.count) : undefined
 
-    if (page !== undefined && isNaN(page)) {
-        return res.status(400).json(failure({ page: req.query.page }, `Invalid page query param`))
-    }
-    if (count !== undefined && isNaN(count)) {
-        return res.status(400).json(failure({ page: req.query.count }, `Invalid count query param`))
-    }
-
-    // @ts-expect-error
-    const raid = UrlPathsToRaid[req.params.raid] as ListedRaid
-    if (includedIn(Object.keys(LeaderboardsForRaid[raid]), category)) {
-        try {
-            const leaderboard = await getActivityLeaderboard(
-                // @ts-ignore
-                LeaderboardsForRaid[raid][category],
-                category,
-                raid,
-                {
-                    page,
-                    count
-                }
-            )
-            return res.status(200).json(success(leaderboard))
-        } catch (e) {
-            return res.status(500).json(failure(e, "Internal server error"))
+        if (page !== undefined && isNaN(page)) {
+            return res
+                .status(400)
+                .json(failure({ page: req.query.page }, `Invalid page query param`))
         }
-    } else {
-        res.status(404).json(
-            failure({ validBoards: LeaderboardsForRaid[raid] }, `Invalid board: ${category}`)
-        )
+        if (count !== undefined && isNaN(count)) {
+            return res
+                .status(400)
+                .json(failure({ page: req.query.count }, `Invalid count query param`))
+        }
+
+        // @ts-expect-error
+        const raid = UrlPathsToRaid[req.params.raid] as ListedRaid
+        if (includedIn(Object.keys(LeaderboardsForRaid[raid]), category)) {
+            try {
+                const leaderboard = await getActivityLeaderboard(
+                    // @ts-ignore
+                    LeaderboardsForRaid[raid][category],
+                    category,
+                    raid,
+                    {
+                        page,
+                        count
+                    }
+                )
+                return res.status(200).json(success(leaderboard))
+            } catch (e) {
+                return res.status(500).json(failure(e, "Internal server error"))
+            }
+        } else {
+            res.status(404).json(
+                failure({ validBoards: LeaderboardsForRaid[raid] }, `Invalid board: ${category}`)
+            )
+        }
+    } catch (e) {
+        res.status(500).json(failure(e, "Internal server error"))
     }
 })
 
@@ -75,11 +83,11 @@ async function getActivityLeaderboard(
                     rank: true,
                     activity: {
                         select: {
-                            activityId: true,
+                            instanceId: true,
                             raidHash: true,
                             dateStarted: true,
                             dateCompleted: true,
-                            playerActivities: {
+                            playerActivity: {
                                 select: {
                                     finishedRaid: true,
                                     player: {
@@ -125,10 +133,10 @@ async function getActivityLeaderboard(
         date,
         entries: data.entries.map(e => ({
             rank: e.rank,
-            activityId: e.activity.activityId,
+            activityId: e.activity.instanceId,
             dateStarted: e.activity.dateStarted,
             dateCompleted: e.activity.dateCompleted,
-            players: e.activity.playerActivities.map(pa => ({
+            players: e.activity.playerActivity.map(pa => ({
                 ...pa.player,
                 didPlayerFinish: pa.finishedRaid
             }))

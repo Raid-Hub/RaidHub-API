@@ -8,34 +8,29 @@ import { AllRaidHashes } from "./manifest"
 export const playerRouter = Router()
 
 playerRouter.get("/:membershipId", async (req, res) => {
-    const membershipId = req.params.membershipId
-
     try {
-        const data = await getPlayer({ membershipId })
-        res.status(200).json(success(data))
-    } catch (e) {
-        if (e instanceof PrismaClientKnownRequestError) {
-            if (e.code === "P2025") {
-                res.status(404).json(
-                    failure(
-                        {
-                            code: 404
-                        },
-                        `No player found with id ${membershipId}`
-                    )
-                )
-            } else {
+        const membershipId = BigInt(req.params.membershipId)
+
+        try {
+            const data = await getPlayer({ membershipId })
+            res.status(200).json(success(data))
+        } catch (e) {
+            if (e instanceof PrismaClientKnownRequestError) {
                 res.status(500).json(failure(e, "Internal server error"))
+            } else {
+                res.status(404).json(failure(e))
             }
-        } else {
-            res.status(500).json(failure(e, "Internal server error"))
         }
+    } catch (e) {
+        res.status(400).json(
+            failure({ membershipId: req.params.membershipId }, "Invalid membershipId")
+        )
     }
 })
 
-async function getPlayer({ membershipId }: { membershipId: string }) {
+async function getPlayer({ membershipId }: { membershipId: bigint }) {
     const [player, activityLeaderboardEntries] = await Promise.all([
-        prisma.player.findUniqueOrThrow({
+        prisma.player.findUnique({
             where: {
                 membershipId
             }
@@ -43,7 +38,7 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
         prisma.activityLeaderboardEntry.findMany({
             where: {
                 activity: {
-                    playerActivities: {
+                    playerActivity: {
                         some: {
                             player: {
                                 membershipId
@@ -54,7 +49,7 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
             },
             select: {
                 rank: true,
-                activityId: true,
+                instanceId: true,
                 activity: {
                     select: {
                         raidHash: true,
@@ -67,11 +62,18 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
         })
     ])
 
+    if (!player) {
+        throw Error("Player not found")
+    }
+
     return {
-        player,
+        player: {
+            ...player,
+            membershipId: String(player.membershipId)
+        },
         activityLeaderboardEntries: Object.fromEntries(
             activityLeaderboardEntries.map(({ leaderboardId, ...entry }) => {
-                const { raid } = AllRaidHashes[entry.activity.raidHash]
+                const { raid } = AllRaidHashes[String(entry.activity.raidHash)]
                 return [
                     leaderboardId,
                     {

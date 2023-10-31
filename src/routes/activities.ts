@@ -16,27 +16,36 @@ activitiesRouter.use((req, res, next) => {
 })
 
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
-    const membershipId = req.params.destinyMembershipId
-    const cursor = req.query.cursor ? String(req.query.cursor) : null
-    let count: number | undefined = Number(req.query.count)
-    if (Number.isNaN(count)) {
-        count = undefined
-    }
-
     try {
-        const data = await getPlayerActivities({ membershipId, cursor })
-        res.status(200).json(success(data))
+        const membershipId = BigInt(req.params.destinyMembershipId)
+        const cursor = req.query.cursor ? BigInt(req.query.cursor as string) : null
+        let count: number | undefined = Number(req.query.count)
+        if (Number.isNaN(count)) {
+            count = undefined
+        }
+
+        try {
+            const data = await getPlayerActivities({ membershipId, cursor })
+            res.status(200).json(success(data))
+        } catch (e) {
+            res.status(500).json(failure(e, "Internal server error"))
+        }
     } catch (e) {
-        res.status(500).json(failure(e, "Internal server error"))
+        res.status(400).json(
+            failure(
+                { destinyMembershipId: req.params.destinyMembershipId, cursor: req.query.cursor },
+                "Invalid query params"
+            )
+        )
     }
 })
 
 const COUNT = 250
 
-const activityQuery = (membershipId: string) =>
+const activityQuery = (membershipId: bigint) =>
     ({
         where: {
-            playerActivities: {
+            playerActivity: {
                 some: {
                     membershipId: membershipId
                 }
@@ -48,7 +57,7 @@ const activityQuery = (membershipId: string) =>
         take: COUNT + 1
     }) as const
 
-const playerActivityQuery = (membershipId: string) =>
+const playerActivityQuery = (membershipId: bigint) =>
     ({
         where: {
             membershipId: membershipId
@@ -68,8 +77,8 @@ async function getPlayerActivities({
     membershipId,
     cursor
 }: {
-    membershipId: string
-    cursor: string | null
+    membershipId: bigint
+    cursor: bigint | null
 }) {
     const [activities, playerActivities] = await Promise.all(
         // If a cursor is provided
@@ -77,15 +86,15 @@ async function getPlayerActivities({
             ? [
                   prisma.activity.findMany({
                       cursor: {
-                          activityId: cursor
+                          instanceId: cursor
                       },
                       ...activityQuery(membershipId)
                   }),
                   prisma.playerActivity.findMany({
                       ...playerActivityQuery(membershipId),
                       cursor: {
-                          activity_player_index: {
-                              activityId: cursor,
+                          instanceId_membershipId: {
+                              instanceId: cursor,
                               membershipId: membershipId
                           }
                       }
@@ -94,14 +103,19 @@ async function getPlayerActivities({
             : await getFirstPageOfActivities(membershipId)
     )
 
+    const prevActivity = cursor
+        ? activities[COUNT]?.instanceId ?? null
+        : activities[activities.length - 1]?.instanceId ?? null
+
     return {
-        prevActivity: cursor
-            ? activities[COUNT]?.activityId ?? null
-            : activities[activities.length - 1]?.activityId ?? null,
+        prevActivity: prevActivity ? String(prevActivity) : null,
         activities: activities.slice(0, COUNT).map((a, i) => {
-            const { raid } = AllRaidHashes[a.raidHash]
+            const { raid } = AllRaidHashes[String(a.raidHash)]
             return {
                 ...a,
+                instanceId: String(a.instanceId),
+                activityId: String(a.instanceId),
+                raidHash: String(a.raidHash),
                 dayOne: isDayOne(raid, a.dateCompleted),
                 contest: isContest(raid, a.dateStarted),
                 didMemberComplete: playerActivities[i].finishedRaid
@@ -112,7 +126,7 @@ async function getPlayerActivities({
 
 /* This allows us to fetch the same set of activities for the first request each day, making caching just a bit better. We
     can cache subsequent pages, while leaving the first one open */
-async function getFirstPageOfActivities(membershipId: string) {
+async function getFirstPageOfActivities(membershipId: bigint) {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
 

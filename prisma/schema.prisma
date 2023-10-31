@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,32 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model RawPGCR {
-  id      String @id @unique(sort: Desc)
-  rawJson Json   @map("raw_json")
-
-  @@map("raw_pgcr")
-}
-
 model Activity {
-  activityId         String                     @id @map("activity_id")
-  raidHash           String                     @map("raid_hash")
-  flawless           Boolean?
-  completed          Boolean
-  fresh              Boolean?
-  playerCount        Int                        @map("player_count")
-  dateStarted        DateTime                   @map("date_started")
-  dateCompleted      DateTime                   @map("date_completed")
-  playerActivities   PlayerActivity[]           @relation("player_activity")
-  leaderboardEntries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
+  instanceId                 BigInt                     @id @unique @map("instance_id")
+  raidHash                   BigInt                     @map("raid_hash")
+  flawless                   Boolean?
+  completed                  Boolean
+  fresh                      Boolean?
+  playerCount                Int                        @map("player_count")
+  dateStarted                DateTime                   @map("date_started")
+  dateCompleted              DateTime                   @map("date_completed")
+  activityLeaderboardEntry ActivityLeaderboardEntry[]
+  playerActivity            PlayerActivity[] @relation("player_activities")
 
-  @@index(activityId, type: Hash)
-  @@index(dateCompleted(sort: Desc), name: "date_index")
+  @@index([dateCompleted(sort: Desc)], map: "date_index")
+  @@index([instanceId])
   @@map("activity")
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model Player {
-  membershipId                String           @id @unique @map("membership_id")
+  membershipId                BigInt           @id @unique(map: "player_membership_id_new_key") @map("membership_id")
   membershipType              Int?             @map("membership_type")
   iconPath                    String?          @map("icon_path")
   displayName                 String?          @map("display_name")
@@ -43,28 +34,25 @@ model Player {
   bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
   lastSeen                    DateTime         @map("last_seen")
   clears                      Int              @default(0) @map("clears")
-  playerActivities            PlayerActivity[] @relation("player_activity")
+  playerActivities            PlayerActivity[] @relation("player_activities")
 
-  @@index(membershipId, type: Hash)
-  @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode], name: "bungie_name_index")
+  @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode], map: "bungie_name_index")
   @@map("player")
 }
 
 model PlayerActivity {
   id                String   @id @default(uuid())
-  activityId        String   @map("activity_id")
-  membershipId      String   @map("membership_id")
-  activity          Activity @relation(fields: [activityId], references: [activityId], "player_activity")
-  player            Player   @relation(fields: [membershipId], references: [membershipId], "player_activity")
+  instanceId        BigInt   @map("instance_id")
+  membershipId      BigInt   @map("membership_id")
   finishedRaid      Boolean  @map("finished_raid")
   kills             Int      @default(0)
   assists           Int      @default(0)
   deaths            Int      @default(0)
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
+  activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId])
+  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
 
-  @@unique([activityId, membershipId], name: "activity_player_index")
-  @@index(activityId, name: "activity_id_index", type: Hash)
-  @@index(membershipId, name: "membership_id_index", type: Hash)
+  @@unique([instanceId, membershipId], map: "player_activity_instance_id_membership_id_new_key")
   @@map("player_activity")
 }
 
@@ -79,12 +67,12 @@ model ActivityLeaderboardEntry {
   id            String              @id @default(uuid())
   rank          Int                 @default(autoincrement())
   leaderboardId String              @map("leaderboard_id")
-  leaderboard   ActivityLeaderboard @relation(fields: [leaderboardId], references: [id], name: "activity_leaderboard_entry_fk", onDelete: Cascade)
-  activityId    String              @map("activity_id")
-  activity      Activity            @relation(fields: [activityId], references: [activityId], name: "activity_leaderboard_entry_fk")
+  instanceId    BigInt              @map("instance_id")
+  activity      Activity            @relation(fields: [instanceId], references: [instanceId])
+  leaderboard   ActivityLeaderboard @relation("activity_leaderboard_entry_fk", fields: [leaderboardId], references: [id], onDelete: Cascade)
 
   @@unique([id, rank], name: "activity_leaderboard_entry_unique_index")
-  @@index(leaderboardId, name: "activity_leaderboard_entry_leaderboard_id_index")
-  @@index(activityId, name: "activity_leaderboard_entry_activity_id_index", type: Hash)
+  @@index([leaderboardId], map: "activity_leaderboard_entry_leaderboard_id_index", type: Hash)
+  @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
 }
