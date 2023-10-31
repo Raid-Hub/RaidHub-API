@@ -8,7 +8,7 @@ import { AllRaidHashes } from "./manifest"
 export const playerRouter = Router()
 
 playerRouter.get("/:membershipId", async (req, res) => {
-    const membershipId = req.params.membershipId
+    const membershipId = BigInt(req.params.membershipId)
 
     try {
         const data = await getPlayer({ membershipId })
@@ -22,7 +22,7 @@ playerRouter.get("/:membershipId", async (req, res) => {
     }
 })
 
-async function getPlayer({ membershipId }: { membershipId: string }) {
+async function getPlayer({ membershipId }: { membershipId: bigint }) {
     const [player, activityLeaderboardEntries] = await Promise.all([
         prisma.player.findUnique({
             where: {
@@ -32,7 +32,7 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
         prisma.activityLeaderboardEntry.findMany({
             where: {
                 activity: {
-                    playerActivities: {
+                    playerActivity: {
                         some: {
                             player: {
                                 membershipId
@@ -43,7 +43,7 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
             },
             select: {
                 rank: true,
-                activityId: true,
+                instanceId: true,
                 activity: {
                     select: {
                         raidHash: true,
@@ -61,10 +61,13 @@ async function getPlayer({ membershipId }: { membershipId: string }) {
     }
 
     return {
-        player,
+        player: {
+            ...player,
+            membershipId: String(player.membershipId)
+        },
         activityLeaderboardEntries: Object.fromEntries(
             activityLeaderboardEntries.map(({ leaderboardId, ...entry }) => {
-                const { raid } = AllRaidHashes[entry.activity.raidHash]
+                const { raid } = AllRaidHashes[String(entry.activity.raidHash)]
                 return [
                     leaderboardId,
                     {

@@ -20,6 +20,7 @@ searchRouter.get("", async (req, res) => {
         const data = await searchForPlayer(String(query), count)
         res.status(200).json(success(data))
     } catch (e) {
+        console.error(e)
         res.status(500).json(failure(e, "Internal server error"))
     }
 })
@@ -50,7 +51,10 @@ async function searchForPlayer(query: string, count?: number) {
                     bungieGlobalDisplayNameCode: code
                 }
             },
-            results
+            results: results.map(r => ({
+                ...r,
+                membershipId: String(r.membershipId)
+            }))
         }
     } else {
         const results = await prisma.player.findMany({
@@ -84,22 +88,27 @@ async function searchForPlayer(query: string, count?: number) {
                 }
             },
             // sort by a combination of last played and clears
-            results: results.sort((a, b) => {
-                const aMatch = a.bungieGlobalDisplayName === searchTerm
-                const bMatch = b.bungieGlobalDisplayName === searchTerm
+            results: results
+                .sort((a, b) => {
+                    const aMatch = a.bungieGlobalDisplayName === searchTerm
+                    const bMatch = b.bungieGlobalDisplayName === searchTerm
 
-                // @ts-ignore
-                if (aMatch ^ bMatch) {
-                    return aMatch ? -1 : 1
-                } else {
-                    const now = Date.now()
-                    const monthsTime = 2592000000
-                    // normalize last played by adding a month minimum
-                    const timeDifferenceA = monthsTime + now - new Date(a.lastSeen).getTime()
-                    const timeDifferenceB = monthsTime + now - new Date(b.lastSeen).getTime()
-                    return timeDifferenceA / (a.clears || 1) - timeDifferenceB / (b.clears || 1)
-                }
-            })
+                    // @ts-ignore
+                    if (aMatch ^ bMatch) {
+                        return aMatch ? -1 : 1
+                    } else {
+                        const now = Date.now()
+                        const monthsTime = 2592000000
+                        // normalize last played by adding a month minimum
+                        const timeDifferenceA = monthsTime + now - new Date(a.lastSeen).getTime()
+                        const timeDifferenceB = monthsTime + now - new Date(b.lastSeen).getTime()
+                        return timeDifferenceA / (a.clears || 1) - timeDifferenceB / (b.clears || 1)
+                    }
+                })
+                .map(r => ({
+                    ...r,
+                    membershipId: String(r.membershipId)
+                }))
         }
     }
 }

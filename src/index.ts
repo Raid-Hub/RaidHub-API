@@ -1,7 +1,6 @@
 import dotenv from "dotenv"
 import express from "express"
 import { activitiesRouter } from "./routes/activities"
-import { pgcrRouter } from "./routes/pgcr"
 import { manifestRouter } from "./routes/manifest"
 import cors from "cors"
 import { activityRouter } from "./routes/activity"
@@ -29,7 +28,6 @@ app.use(
 )
 
 app.use("/activities", activitiesRouter)
-app.use("/pgcr", pgcrRouter)
 app.use("/activity", activityRouter)
 app.use("/manifest", manifestRouter)
 app.use("/leaderboard", leaderboardRouter)

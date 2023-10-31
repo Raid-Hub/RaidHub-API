@@ -75,11 +75,11 @@ async function getActivityLeaderboard(
                     rank: true,
                     activity: {
                         select: {
-                            activityId: true,
+                            instanceId: true,
                             raidHash: true,
                             dateStarted: true,
                             dateCompleted: true,
-                            playerActivities: {
+                            playerActivity: {
                                 select: {
                                     finishedRaid: true,
                                     player: {
@@ -125,10 +125,10 @@ async function getActivityLeaderboard(
         date,
         entries: data.entries.map(e => ({
             rank: e.rank,
-            activityId: e.activity.activityId,
+            activityId: e.activity.instanceId,
             dateStarted: e.activity.dateStarted,
             dateCompleted: e.activity.dateCompleted,
-            players: e.activity.playerActivities.map(pa => ({
+            players: e.activity.playerActivity.map(pa => ({
                 ...pa.player,
                 didPlayerFinish: pa.finishedRaid
             }))

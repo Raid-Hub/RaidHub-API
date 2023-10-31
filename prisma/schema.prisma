@@ -17,7 +17,7 @@ model Activity {
   dateStarted                DateTime                   @map("date_started")
   dateCompleted              DateTime                   @map("date_completed")
   activityLeaderboardEntry ActivityLeaderboardEntry[]
-  playerActivity            PlayerActivity[]
+  playerActivity            PlayerActivity[] @relation("player_activities")
 
   @@index([dateCompleted(sort: Desc)], map: "date_index")
   @@index([instanceId])
@@ -34,7 +34,7 @@ model Player {
   bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
   lastSeen                    DateTime         @map("last_seen")
   clears                      Int              @default(0) @map("clears")
-  playerActivities            PlayerActivity[] @relation("player_activity")
+  playerActivities            PlayerActivity[] @relation("player_activities")
 
   @@index([bungieGlobalDisplayName, bungieGlobalDisplayNameCode], map: "bungie_name_index")
   @@map("player")
@@ -49,8 +49,8 @@ model PlayerActivity {
   assists           Int      @default(0)
   deaths            Int      @default(0)
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
-  activity          Activity @relation(fields: [instanceId], references: [instanceId])
-  player            Player   @relation("player_activity", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
+  activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId])
+  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
 
   @@unique([instanceId, membershipId], map: "player_activity_instance_id_membership_id_new_key")
   @@map("player_activity")

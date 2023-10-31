@@ -14,7 +14,7 @@ activityRouter.use((req, res, next) => {
 })
 
 activityRouter.get("/:activityId", async (req: Request, res: Response) => {
-    const activityId = req.params.activityId
+    const activityId = BigInt(req.params.activityId)
 
     try {
         const data = await getActivity({ activityId })
@@ -24,21 +24,23 @@ activityRouter.get("/:activityId", async (req: Request, res: Response) => {
             if (e.code === "P2025") {
                 res.status(404).json(failure(`No activity found with id ${activityId}`))
             } else {
+                console.error(e)
                 res.status(500).json(failure(e, "Internal server error"))
             }
         } else {
+            console.error(e)
             res.status(500).json(failure(e, "Internal server error"))
         }
     }
 })
 
-async function getActivity({ activityId }: { activityId: string }) {
-    const { playerActivities, ...activity } = await prisma.activity.findUniqueOrThrow({
+async function getActivity({ activityId }: { activityId: bigint }) {
+    const { playerActivity, ...activity } = await prisma.activity.findUniqueOrThrow({
         where: {
-            activityId
+            instanceId: activityId
         },
         include: {
-            playerActivities: {
+            playerActivity: {
                 select: {
                     finishedRaid: true,
                     membershipId: true
@@ -47,16 +49,21 @@ async function getActivity({ activityId }: { activityId: string }) {
         }
     })
 
-    const { raid } = AllRaidHashes[activity.raidHash]
+    const { raid } = AllRaidHashes[String(activity.raidHash)]
     const dayOne = isDayOne(raid, activity.dateCompleted)
     const contest = isContest(raid, activity.dateStarted)
     const weekOne = isWeekOne(raid, activity.dateCompleted)
 
     return {
         ...activity,
+        instanceId: String(activity.instanceId),
+        raidHash: String(activity.raidHash),
+        activityId: String(activity.instanceId),
         dayOne,
         contest,
         weekOne,
-        players: Object.fromEntries(playerActivities.map(pa => [pa.membershipId, pa.finishedRaid]))
+        players: Object.fromEntries(
+            playerActivity.map(pa => [String(pa.membershipId), pa.finishedRaid])
+        )
     }
 }
