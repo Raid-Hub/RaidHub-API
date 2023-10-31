@@ -1,4 +1,4 @@
-test("Get Activity", async () => {
+test("API Tests", async () => {
     const url = `http://localhost:8000/activity/${process.env.TEST_ACTIVITY_ID}`
 
     const jsonData: any = await fetch(url).then(res => res.json())
