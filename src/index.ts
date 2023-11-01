@@ -7,6 +7,7 @@ import { activityRouter } from "./routes/activity"
 import { leaderboardRouter } from "./routes/leaderboard"
 import { playerRouter } from "./routes/player"
 import { searchRouter } from "./routes/search"
+import { sfRouter } from "./routes/soloflawless"
 
 dotenv.config()
 
@@ -33,6 +34,7 @@ app.use("/manifest", manifestRouter)
 app.use("/leaderboard", leaderboardRouter)
 app.use("/player", playerRouter)
 app.use("/search", searchRouter)
+app.use("/soloflawlessvog", sfRouter)
 
 app.listen(port, () => {
     console.log("Express server started on port: " + port)
