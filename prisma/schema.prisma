@@ -71,7 +71,7 @@ model ActivityLeaderboard {
 
 model ActivityLeaderboardEntry {
   id            String              @id @default(uuid())
-  rank          Int                 @default(autoincrement())
+  rank          Int                 
   leaderboardId String              @map("leaderboard_id")
   instanceId    BigInt              @map("instance_id")
   activity      Activity            @relation(fields: [instanceId], references: [instanceId])
