@@ -10,6 +10,8 @@ activitiesRouter.use((req, res, next) => {
     if (req.query.cursor) {
         // Set cache headers to last for 24 hours (in seconds)
         res.setHeader("Cache-Control", "max-age=86400")
+    } else {
+        res.setHeader("Cache-Control", "max-age=30")
     }
 
     next()
@@ -140,7 +142,6 @@ async function getFirstPageOfActivities(membershipId: bigint) {
                 where: {
                     dateCompleted: {
                         gte: cutoff,
-                        lte: today
                     },
                     ...where1
                 }
@@ -151,7 +152,6 @@ async function getFirstPageOfActivities(membershipId: bigint) {
                     activity: {
                         dateCompleted: {
                             gte: cutoff,
-                            lte: today
                         }
                     }
                 },
