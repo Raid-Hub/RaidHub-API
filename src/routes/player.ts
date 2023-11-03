@@ -92,9 +92,10 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
             ...player,
             membershipId: String(player.membershipId)
         },
-        activityLeaderboardEntries: Array.from(activityLeaderboardEntriesMap.entries()).map(
-            ([leaderboardId, entries]) => ({
-                [leaderboardId]: entries
+        activityLeaderboardEntries: Object.fromEntries(
+            Array.from(activityLeaderboardEntriesMap.entries()).map(([leaderboardId, entries]) => [
+                leaderboardId,
+                entries
                     .sort((a, b) => a.rank - b.rank)
                     .map(entry => {
                         const { raid } = AllRaidHashes[String(entry.activity.raidHash)]
@@ -110,7 +111,7 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                             weekOne: isWeekOne(raid, entry.activity.dateCompleted)
                         }
                     })
-            })
+            ])
         )
     }
 }
