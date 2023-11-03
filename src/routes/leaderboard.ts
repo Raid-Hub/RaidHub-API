@@ -38,54 +38,54 @@ export const UrlPathsToRaid = {
 export type Board = "normal" | "prestige" | "pc" | "challenge" | "master"
 export const LeaderboardsForRaid = {
     [Raid.LEVIATHAN]: {
-        normal: "0",
-        prestige: "0",
-        pc: "0"
+        normal: "wf_levi",
+        prestige: "levi_prestige",
+        pc: "levi_pc"
     },
     [Raid.EATER_OF_WORLDS]: {
-        normal: "0",
-        prestige: "0"
+        normal: "wf_eow",
+        prestige: "levi_prestige"
     },
     [Raid.SPIRE_OF_STARS]: {
-        normal: "0",
-        prestige: "0"
+        normal: "wf_spire",
+        prestige: "spire_prestige"
     },
     [Raid.LAST_WISH]: {
-        normal: "0"
+        normal: "wf_wish"
     },
     [Raid.SCOURGE_OF_THE_PAST]: {
-        normal: "0"
+        normal: "wf_sotp"
     },
     [Raid.CROWN_OF_SORROW]: {
-        normal: "0"
+        normal: "wf_cos"
     },
     [Raid.GARDEN_OF_SALVATION]: {
-        normal: "0"
+        normal: "wf_gos"
     },
     [Raid.DEEP_STONE_CRYPT]: {
-        normal: "0"
+        normal: "wf_dsc"
     },
     [Raid.VAULT_OF_GLASS]: {
-        normal: "0",
-        challenge: "0",
-        master: "0"
+        normal: "vog_normal",
+        challenge: "wf_vog",
+        master: "vog_master"
     },
     [Raid.VOW_OF_THE_DISCIPLE]: {
         normal: "wf_vow",
-        master: "wf_vow_master"
+        master: "vow_master"
     },
     [Raid.KINGS_FALL]: {
-        normal: "0",
-        challenge: "0",
-        master: "0"
+        normal: "kf_normal",
+        challenge: "wf_kf",
+        master: "kf_master"
     },
     [Raid.ROOT_OF_NIGHTMARES]: {
         normal: "wf_ron",
-        master: "0"
+        master: "ron_master"
     },
     [Raid.CROTAS_END]: {
-        normal: "0",
+        normal: "crota_normal",
         challenge: "wf_crota",
-        master: "0"
+        master: "crota_master"
     }
 } satisfies Record<ListedRaid, Partial<Record<Board, string>>>

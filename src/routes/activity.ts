@@ -38,7 +38,7 @@ activityRouter.get("/:activityId", async (req: Request, res: Response) => {
 })
 
 async function getActivity({ activityId }: { activityId: bigint }) {
-    const { playerActivity, ...activity } = await prisma.activity.findUniqueOrThrow({
+    const { playerActivity, activityLeaderboardEntry, ...activity } = await prisma.activity.findUniqueOrThrow({
         where: {
             instanceId: activityId
         },
@@ -47,6 +47,12 @@ async function getActivity({ activityId }: { activityId: bigint }) {
                 select: {
                     finishedRaid: true,
                     membershipId: true
+                }
+            },
+            activityLeaderboardEntry: {
+                select: {
+                    leaderboardId: true,
+                    rank: true
                 }
             }
         }
@@ -59,6 +65,7 @@ async function getActivity({ activityId }: { activityId: bigint }) {
 
     return {
         ...activity,
+        leaderboardEntries: Object.fromEntries(activityLeaderboardEntry.map(e => [e.leaderboardId, e.rank])),
         instanceId: String(activity.instanceId),
         raidHash: String(activity.raidHash),
         activityId: String(activity.instanceId),

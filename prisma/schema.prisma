@@ -77,7 +77,7 @@ model ActivityLeaderboardEntry {
   activity      Activity            @relation(fields: [instanceId], references: [instanceId])
   leaderboard   ActivityLeaderboard @relation("activity_leaderboard_entry_fk", fields: [leaderboardId], references: [id], onDelete: Cascade)
 
-  @@unique([id, rank], name: "activity_leaderboard_entry_unique_index")
+  @@unique([leaderboardId, rank], name: "activity_leaderboard_unique_rank")
   @@index([leaderboardId], map: "activity_leaderboard_entry_leaderboard_id_index", type: Hash)
   @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
