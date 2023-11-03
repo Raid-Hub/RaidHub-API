@@ -17,6 +17,12 @@ import { WorldFirstLeaderboardsForRaid } from "./leaderboard/worldfirst"
 
 export const manifestRouter = Router()
 
+manifestRouter.use((_, res, next) => {
+    // cache for 1 hour
+    res.setHeader("Cache-Control", "max-age=3600")
+    next()
+})
+
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
     [Raid.LEVIATHAN]: "Leviathan",

@@ -9,7 +9,7 @@ export const worldfirstRouter = Router({ mergeParams: true })
 
 worldfirstRouter.use((_, res, next) => {
     // cache for 5 minutes
-    // res.setHeader("Cache-Control", "max-age=300")
+    res.setHeader("Cache-Control", "max-age=300")
     next()
 })
 
