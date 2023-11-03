@@ -295,6 +295,7 @@ async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
             startDate.getTime() +
                 report.entries[0]?.values.activityDurationSeconds.basic.value * 1000
         ),
+        platformType: report.activityDetails.membershipType,
         players
     }
 }

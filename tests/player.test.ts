@@ -7,6 +7,19 @@ test("API Tests", async () => {
     expect(jsonData).toHaveProperty("response")
 
     expect(jsonData.response).toHaveProperty("activityLeaderboardEntries")
+    const values = Object.values(jsonData.response.activityLeaderboardEntries) as any[][]
+    expect(values.length).toBeGreaterThan(0)
+    values.forEach(board => {
+        expect(board.length).toBeGreaterThan(0)
+        board.forEach(entry => {
+            expect(entry).toHaveProperty("rank")
+            expect(entry).toHaveProperty("instanceId")
+            expect(entry).toHaveProperty("raidHash")
+            expect(entry).toHaveProperty("dayOne")
+            expect(entry).toHaveProperty("contest")
+            expect(entry).toHaveProperty("weekOne")
+        })
+    })
     expect(jsonData.response).toHaveProperty("player")
     expect(jsonData.response.player).toHaveProperty("bungieGlobalDisplayName")
     expect(jsonData.response.player).toHaveProperty("bungieGlobalDisplayNameCode")
