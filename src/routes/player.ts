@@ -66,23 +66,50 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
         throw Error("Player not found")
     }
 
+    const activityLeaderboardEntriesMap = new Map<
+        string,
+        {
+            rank: number
+            leaderboardId: string
+            instanceId: bigint
+            activity: {
+                raidHash: bigint
+                dateStarted: Date
+                dateCompleted: Date
+            }
+        }[]
+    >()
+    activityLeaderboardEntries.forEach(entry => {
+        if (activityLeaderboardEntriesMap.has(entry.leaderboardId)) {
+            activityLeaderboardEntriesMap.get(entry.leaderboardId)!.push(entry)
+        } else {
+            activityLeaderboardEntriesMap.set(entry.leaderboardId, [entry])
+        }
+    })
+
     return {
         player: {
             ...player,
             membershipId: String(player.membershipId)
         },
-        activityLeaderboardEntries: Object.fromEntries(
-            activityLeaderboardEntries.map(({ leaderboardId, ...entry }) => {
-                const { raid } = AllRaidHashes[String(entry.activity.raidHash)]
-                return [
-                    leaderboardId,
-                    {
-                        ...entry,
-                        dayOne: isDayOne(raid, entry.activity.dateCompleted),
-                        contest: isContest(raid, entry.activity.dateStarted),
-                        weekOne: isWeekOne(raid, entry.activity.dateCompleted)
-                    }
-                ]
+        activityLeaderboardEntries: Array.from(activityLeaderboardEntriesMap.entries()).map(
+            ([leaderboardId, entries]) => ({
+                [leaderboardId]: entries
+                    .sort((a, b) => a.rank - b.rank)
+                    .map(entry => {
+                        const { raid } = AllRaidHashes[String(entry.activity.raidHash)]
+                        return {
+                            rank: entry.rank,
+                            instanceId: String(entry.instanceId),
+                            activity: {
+                                ...entry.activity,
+                                raidHash: String(entry.activity.raidHash)
+                            },
+                            dayOne: isDayOne(raid, entry.activity.dateCompleted),
+                            contest: isContest(raid, entry.activity.dateStarted),
+                            weekOne: isWeekOne(raid, entry.activity.dateCompleted)
+                        }
+                    })
             })
         )
     }
