@@ -16,7 +16,7 @@ model Activity {
   playerCount              Int                        @map("player_count")
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
-  platformType   Int                        @map("platform_type")
+  platformType             Int                        @map("platform_type")
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
@@ -73,7 +73,7 @@ model ActivityLeaderboard {
 
 model ActivityLeaderboardEntry {
   id            String              @id @default(uuid())
-  rank          Int                 
+  rank          Int
   leaderboardId String              @map("leaderboard_id")
   instanceId    BigInt              @map("instance_id")
   activity      Activity            @relation(fields: [instanceId], references: [instanceId])
