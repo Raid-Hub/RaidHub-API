@@ -16,6 +16,7 @@ model Activity {
   playerCount              Int                        @map("player_count")
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
+  platformType             Int                        @map("platform_type")
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
@@ -53,6 +54,7 @@ model PlayerActivity {
   assists           Int      @default(0)
   deaths            Int      @default(0)
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
+  classHash         BigInt?  @map("class_hash")
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId])
   player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
 
@@ -71,7 +73,7 @@ model ActivityLeaderboard {
 
 model ActivityLeaderboardEntry {
   id            String              @id @default(uuid())
-  rank          Int                 
+  rank          Int
   leaderboardId String              @map("leaderboard_id")
   instanceId    BigInt              @map("instance_id")
   activity      Activity            @relation(fields: [instanceId], references: [instanceId])

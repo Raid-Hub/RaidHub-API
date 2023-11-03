@@ -7,6 +7,12 @@ import { AllRaidHashes } from "./manifest"
 
 export const playerRouter = Router()
 
+playerRouter.use((_, res, next) => {
+    // cache for 30s
+    res.setHeader("Cache-Control", "max-age=30")
+    next()
+})
+
 playerRouter.get("/:membershipId", async (req, res) => {
     try {
         const membershipId = BigInt(req.params.membershipId)
@@ -28,6 +34,14 @@ playerRouter.get("/:membershipId", async (req, res) => {
     }
 })
 
+type PrismaRawLeaderboardEntry = {
+    rank: number
+    leaderboard_id: string
+    instance_id: string
+    raid_hash: string
+    date_completed: Date
+    date_started: Date
+}
 async function getPlayer({ membershipId }: { membershipId: bigint }) {
     const [player, activityLeaderboardEntries] = await Promise.all([
         prisma.player.findUnique({
@@ -35,55 +49,36 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 membershipId
             }
         }),
-        prisma.activityLeaderboardEntry.findMany({
-            where: {
-                activity: {
-                    playerActivity: {
-                        some: {
-                            player: {
-                                membershipId
-                            }
-                        }
-                    }
-                }
-            },
-            select: {
-                rank: true,
-                instanceId: true,
-                activity: {
-                    select: {
-                        raidHash: true,
-                        dateCompleted: true,
-                        dateStarted: true
-                    }
-                },
-                leaderboardId: true
-            }
-        })
+        await prisma.$queryRaw<Array<PrismaRawLeaderboardEntry>>`
+            SELECT 
+                ale.rank, 
+                lb.id AS leaderboard_id,
+                pa.instance_id::text,
+                pa.raid_hash::text,
+                pa.date_started,
+                pa.date_completed
+            FROM 
+                activity_leaderboard_entry ale
+            JOIN 
+                (
+                    SELECT a.* 
+                    FROM player_activity
+                    JOIN activity a ON player_activity.instance_id = a.instance_id
+                    WHERE membership_id = ${membershipId}::bigint AND finished_raid
+                ) pa ON pa.instance_id = ale.instance_id
+            JOIN leaderboard lb ON ale.leaderboard_id = lb.id;`
     ])
 
     if (!player) {
         throw Error("Player not found")
     }
 
-    const activityLeaderboardEntriesMap = new Map<
-        string,
-        {
-            rank: number
-            leaderboardId: string
-            instanceId: bigint
-            activity: {
-                raidHash: bigint
-                dateStarted: Date
-                dateCompleted: Date
-            }
-        }[]
-    >()
+    const activityLeaderboardEntriesMap = new Map<string, PrismaRawLeaderboardEntry[]>()
     activityLeaderboardEntries.forEach(entry => {
-        if (activityLeaderboardEntriesMap.has(entry.leaderboardId)) {
-            activityLeaderboardEntriesMap.get(entry.leaderboardId)!.push(entry)
+        if (activityLeaderboardEntriesMap.has(entry.leaderboard_id)) {
+            activityLeaderboardEntriesMap.get(entry.leaderboard_id)!.push(entry)
         } else {
-            activityLeaderboardEntriesMap.set(entry.leaderboardId, [entry])
+            activityLeaderboardEntriesMap.set(entry.leaderboard_id, [entry])
         }
     })
 
@@ -98,17 +93,14 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 entries
                     .sort((a, b) => a.rank - b.rank)
                     .map(entry => {
-                        const { raid } = AllRaidHashes[String(entry.activity.raidHash)]
+                        const { raid } = AllRaidHashes[entry.raid_hash]
                         return {
                             rank: entry.rank,
-                            instanceId: String(entry.instanceId),
-                            activity: {
-                                ...entry.activity,
-                                raidHash: String(entry.activity.raidHash)
-                            },
-                            dayOne: isDayOne(raid, entry.activity.dateCompleted),
-                            contest: isContest(raid, entry.activity.dateStarted),
-                            weekOne: isWeekOne(raid, entry.activity.dateCompleted)
+                            instanceId: entry.instance_id,
+                            raidHash: String(entry.raid_hash),
+                            dayOne: isDayOne(raid, entry.date_completed),
+                            contest: isContest(raid, entry.date_started),
+                            weekOne: isWeekOne(raid, entry.date_completed)
                         }
                     })
             ])

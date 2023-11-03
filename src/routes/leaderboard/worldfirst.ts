@@ -1,10 +1,9 @@
 import { Router } from "express"
-import { ListedRaid, MasterRaid, PrestigeRaid, PrestigeRaids, Raid } from "../../data/raids"
-import { failure, includedIn, success } from "../../util"
+import { ListedRaid, MasterRaid, PrestigeRaid, PrestigeRaids, Raid } from "~/data/raids"
+import { failure, includedIn, success } from "~/util"
 import { Board, LeaderboardsForRaid, UrlPathsToRaid } from "../leaderboard"
-import { prisma } from "../../prisma"
-import { MasterReleases, PCLeviathanRelease, ReleaseDate } from "../../data/raceDates"
-import { resolve } from "path"
+import { prisma } from "~/prisma"
+import { MasterReleases, PCLeviathanRelease, ReleaseDate } from "~/data/raceDates"
 
 export const worldfirstRouter = Router({ mergeParams: true })
 
