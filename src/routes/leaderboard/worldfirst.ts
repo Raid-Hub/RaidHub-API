@@ -133,11 +133,12 @@ async function getActivityLeaderboard(
         date,
         entries: data.entries.map(e => ({
             rank: e.rank,
-            activityId: e.activity.instanceId,
+            activityId: String(e.activity.instanceId),
             dateStarted: e.activity.dateStarted,
             dateCompleted: e.activity.dateCompleted,
             players: e.activity.playerActivity.map(pa => ({
                 ...pa.player,
+                membershipId: String(pa.player.membershipId),
                 didPlayerFinish: pa.finishedRaid
             }))
         }))
