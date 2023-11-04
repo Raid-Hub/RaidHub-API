@@ -46,7 +46,6 @@ model Player {
 }
 
 model PlayerActivity {
-  id                String   @id @default(uuid())
   instanceId        BigInt   @map("instance_id")
   membershipId      BigInt   @map("membership_id")
   finishedRaid      Boolean  @map("finished_raid")
@@ -58,7 +57,7 @@ model PlayerActivity {
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId])
   player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
 
-  @@unique([instanceId, membershipId], map: "player_activity_instance_id_membership_id_new_key")
+  @@id([instanceId, membershipId], map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")
   @@index([membershipId], map: "idx_membership_id")
   @@map("player_activity")
@@ -72,14 +71,13 @@ model ActivityLeaderboard {
 }
 
 model ActivityLeaderboardEntry {
-  id            String              @id @default(uuid())
   rank          Int
   leaderboardId String              @map("leaderboard_id")
   instanceId    BigInt              @map("instance_id")
   activity      Activity            @relation(fields: [instanceId], references: [instanceId])
   leaderboard   ActivityLeaderboard @relation("activity_leaderboard_entry_fk", fields: [leaderboardId], references: [id], onDelete: Cascade)
 
-  @@unique([leaderboardId, rank], name: "activity_leaderboard_unique_rank")
+  @@id([rank, leaderboardId], map: "activity_leaderboard_rank_pkey")
   @@index([leaderboardId], map: "activity_leaderboard_entry_leaderboard_id_index", type: Hash)
   @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
