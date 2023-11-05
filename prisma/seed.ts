@@ -2,18 +2,17 @@ import * as dotenv from "dotenv"
 import { PrismaClient } from "@prisma/client"
 import {
     BungieNetResponse,
-    DestinyHistoricalStatsPeriodGroup,
     DestinyPostGameCarnageReportData,
     DestinyPostGameCarnageReportEntry
 } from "bungie-net-core/models"
 import { DestinyActivityModeType } from "bungie-net-core/enums"
 import {
     getActivityHistory,
-    getPostGameCarnageReport,
     getProfile,
     searchDestinyPlayerByBungieName
 } from "bungie-net-core/endpoints/Destiny2"
 import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
+import { gzipSync } from "zlib"
 
 dotenv.config()
 const prisma = new PrismaClient()
@@ -169,15 +168,24 @@ async function main() {
             })
         )
 
-        await prisma.activity
-            .createMany({
-                data: fetchedPGCRs.map(pgcr => ({
-                    ...pgcr,
-                    players: undefined
-                })),
-                skipDuplicates: true
-            })
-            .then(({ count }) => console.log(`Inserted ${count} entries`))
+        await Promise.all(
+            fetchedPGCRs.map(({ players, compressed, ...pgcr }) =>
+                Promise.all([
+                    prisma.activity
+                        .create({
+                            data: pgcr
+                        })
+                        .catch(console.error),
+
+                    prisma.pGCR.create({
+                        data: {
+                            instanceId: pgcr.instanceId,
+                            data: compressed
+                        }
+                    })
+                ])
+            )
+        ).then(res => console.log(`Inserted ${res.length} entries`))
 
         for (const pgcr of fetchedPGCRs) {
             await Promise.all(
@@ -296,7 +304,8 @@ async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
                 report.entries[0]?.values.activityDurationSeconds.basic.value * 1000
         ),
         platformType: report.activityDetails.membershipType,
-        players
+        players,
+        compressed: gzipSync(Buffer.from(JSON.stringify(report), "utf-8"))
     }
 }
 

@@ -82,3 +82,10 @@ model ActivityLeaderboardEntry {
   @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
 }
+
+model PGCR {
+  instanceId BigInt @id @map("instance_id")
+  data       Bytes
+
+  @@map("pgcr")
+}
