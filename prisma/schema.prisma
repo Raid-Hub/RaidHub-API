@@ -21,7 +21,6 @@ model Activity {
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
   @@index([dateCompleted(sort: Desc)], map: "date_index")
-  @@index([instanceId])
   @@map("activity")
 }
 

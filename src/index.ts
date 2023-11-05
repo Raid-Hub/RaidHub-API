@@ -1,7 +1,6 @@
 import dotenv from "dotenv"
 import express from "express"
 import cluster from "cluster"
-import cors from "cors"
 import { cpus } from "os"
 import { activitiesRouter } from "./routes/activities"
 import { manifestRouter } from "./routes/manifest"
@@ -13,14 +12,11 @@ import { pgcrRouter } from "./routes/pgcr"
 
 const port = Number(process.env.PORT || 8000)
 const totalCPUs = cpus().length
-const allowedOrigins = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://127.0.0.1:3000",
-    "https://127.0.0.1:3001",
-    "https://raidhub.app",
-    "https://staging.raidhub.app"
-]
+
+if (process.env.PROD && !process.env.PRIVATE_KEY){
+    console.error("Missing private API KEY")
+    process.exit(1)
+}
 
 if (cluster.isPrimary) {
     console.log(`Master ${process.pid} is running`)
@@ -45,12 +41,17 @@ if (cluster.isPrimary) {
     console.log(`Worker ${process.pid} started`)
     const app = express()
 
-    app.use(
-        cors({
-            origin: allowedOrigins
-        })
-    )
-
+    // allow our private API 
+    app.use((req, res, next) => {
+        if ("X-API-KEY" in req.headers && req.headers["X-API-KEY"] === process.env.PRIVATE_KEY) {
+            res.header("Access-Control-Allow-Origin", "*")
+        } else {
+            res.header("Access-Control-Allow-Origin", "https://raidhub.app")
+            res.header("Access-Control-Allow-Origin", "https://*.raidhub.app")
+        }
+        next()
+    })
+    
     app.use("/activities", activitiesRouter)
     app.use("/activity", activityRouter)
     app.use("/manifest", manifestRouter)

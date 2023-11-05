@@ -13,3 +13,5 @@ raidhub-api-db
 test.js
 
 *.log
+
+*.deb
