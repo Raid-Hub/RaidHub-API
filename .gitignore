@@ -4,6 +4,7 @@ dist/
 
 .env
 
+prisma/migrations
 raidhub-api-db
 
 #ignore intelliJ IDE configs
