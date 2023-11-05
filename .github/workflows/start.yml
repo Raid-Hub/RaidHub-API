@@ -1,0 +1,38 @@
+name: Deploy to VPS on Push
+
+on:
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Fail if branch is not main
+              if: github.ref != 'refs/heads/main'
+              run: |
+                  echo "This workflow should not be triggered on a branch other than main"
+                  exit 1
+
+            - name: Check if user is a repo admin
+              working-directory: ./
+              run: |
+                  if [[ $(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/collaborators/${{ github.actor }}/permission" | jq -r '.permission') != "admin" ]]; then
+                  echo "Only repo admins can run this action."
+                  exit 1
+                  fi
+
+            - name: SSH to VPS and Start API
+              uses: appleboy/ssh-action@master
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USERNAME }}
+                  key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+                  script: |
+                      cd ~/../RaidHub/RaidHub-API/
+                      git pull origin main
+                      source ~/.nvm/nvm.sh
+                      nvm use 20
+                      yarn
+                      yarn prisma generate
+                      yarn build 
+                      yarn start
