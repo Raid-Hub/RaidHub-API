@@ -43,10 +43,18 @@ if (cluster.isPrimary) {
     console.log(`Worker ${process.pid} started`)
     const app = express()
 
+    app.options('*', (req, res) => {
+        res.header('Access-Control-Allow-Methods', 'GET');
+        res.header("Access-Control-Allow-Origin", req.headers.origin)
+        res.header("Access-Control-Allow-Headers", "X-API-KEY");
+        res.sendStatus(200);
+    });
+
     // allow our private API
     app.use((req, res, next) => {
         if (req.headers.origin && urlOriginRegex.test(req.headers.origin)) {
             res.header("Access-Control-Allow-Origin", req.headers.origin)
+
             next()
         } else if (
             "x-api-key" in req.headers &&
