@@ -9,11 +9,13 @@ import { leaderboardRouter } from "./routes/leaderboard"
 import { playerRouter } from "./routes/player"
 import { searchRouter } from "./routes/search"
 import { pgcrRouter } from "./routes/pgcr"
+import { failure } from "./util"
 
 const port = Number(process.env.PORT || 8000)
 const totalCPUs = cpus().length
+const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.app$/
 
-if (process.env.PROD && !process.env.PRIVATE_KEY){
+if (process.env.PROD && !process.env.PRIVATE_KEY) {
     console.error("Missing private API KEY")
     process.exit(1)
 }
@@ -41,17 +43,29 @@ if (cluster.isPrimary) {
     console.log(`Worker ${process.pid} started`)
     const app = express()
 
-    // allow our private API 
+    // allow our private API
     app.use((req, res, next) => {
-        if ("X-API-KEY" in req.headers && req.headers["X-API-KEY"] === process.env.PRIVATE_KEY) {
-            res.header("Access-Control-Allow-Origin", "*")
+        if (req.headers.origin && urlOriginRegex.test(req.headers.origin)) {
+            res.header("Access-Control-Allow-Origin", req.headers.origin)
+            next()
+        } else if (
+            "x-api-key" in req.headers &&
+            req.headers["x-api-key"] === process.env.PRIVATE_KEY
+        ) {
+            if (req.headers.origin) {
+                res.header("Access-Control-Allow-Origin", req.headers.origin)
+            } else {
+                res.header("Access-Control-Allow-Origin", "*")
+            }
+            next()
         } else {
             res.header("Access-Control-Allow-Origin", "https://raidhub.app")
-            res.header("Access-Control-Allow-Origin", "https://*.raidhub.app")
+            res.status(403).send(
+                failure({}, "Request originated from an invalid origin")
+            )
         }
-        next()
     })
-    
+
     app.use("/activities", activitiesRouter)
     app.use("/activity", activityRouter)
     app.use("/manifest", manifestRouter)
