@@ -53,8 +53,8 @@ model PlayerActivity {
   deaths            Int      @default(0)
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
   classHash         BigInt?  @map("class_hash")
-  activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId])
-  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], map: "player_activity_membership_id_new_fkey")
+  activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
+  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
   @@id([instanceId, membershipId], map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")
@@ -73,7 +73,7 @@ model ActivityLeaderboardEntry {
   rank          Int
   leaderboardId String              @map("leaderboard_id")
   instanceId    BigInt              @map("instance_id")
-  activity      Activity            @relation(fields: [instanceId], references: [instanceId])
+  activity      Activity            @relation(fields: [instanceId], references: [instanceId], onDelete: NoAction, onUpdate: NoAction)
   leaderboard   ActivityLeaderboard @relation("activity_leaderboard_entry_fk", fields: [leaderboardId], references: [id], onDelete: Cascade)
 
   @@id([rank, leaderboardId], map: "activity_leaderboard_rank_pkey")
@@ -82,9 +82,9 @@ model ActivityLeaderboardEntry {
   @@map("activity_leaderboard_entry")
 }
 
-model PGCR {
-  instanceId BigInt @id @map("instance_id")
-  data       Bytes
-
-  @@map("pgcr")
-}
+// model PGCR {
+//   instanceId BigInt @id @map("instance_id")
+//   data       Bytes
+// 
+//   @@map("pgcr")
+// }
