@@ -6,17 +6,6 @@ import { AllRaidHashes } from "./manifest"
 
 export const activitiesRouter = Router()
 
-activitiesRouter.use((req, res, next) => {
-    if (req.query.cursor) {
-        // Set cache headers to last for 24 hours (in seconds)
-        res.setHeader("Cache-Control", "max-age=86400")
-    } else {
-        res.setHeader("Cache-Control", "max-age=30")
-    }
-
-    next()
-})
-
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
     try {
         const membershipId = BigInt(req.params.destinyMembershipId)
@@ -28,6 +17,7 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
 
         try {
             const data = await getPlayerActivities({ membershipId, cursor })
+            res.setHeader("Cache-Control", `"max-age=${cursor ? 86400 : 30}"`)
             res.status(200).json(success(data))
         } catch (e) {
             res.status(500).json(failure(e, "Internal server error"))

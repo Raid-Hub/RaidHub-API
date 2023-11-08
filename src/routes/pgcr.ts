@@ -5,18 +5,14 @@ import { gunzipSync } from "zlib"
 
 export const pgcrRouter = Router()
 
-pgcrRouter.use((req, res, next) => {
-    // cache for 1 day
-    res.setHeader("Cache-Control", "max-age=86400")
-    next()
-})
-
 pgcrRouter.get("/:instanceId", async (req, res) => {
     try {
         const instanceId = BigInt(req.params.instanceId)
         try {
             const bytes = await getRawPGCRBytes({ instanceId })
             const data = decompressGzippedBytes(bytes)
+            // cache for 1 day
+            res.setHeader("Cache-Control", "max-age=86400")
             res.status(200).json(success(data))
         } catch (e) {
             if (e instanceof Error) {
