@@ -1,8 +1,10 @@
-import { NextFunction, Request, Response, Router } from "express"
+import { Request, Response, Router } from "express"
 import { failure, success } from "~/util"
 import { prisma } from "~/prisma"
 import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
+
+const DEFAULT_COUNT = 500
 
 export const activitiesRouter = Router()
 
@@ -16,7 +18,7 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
         }
 
         try {
-            const data = await getPlayerActivities({ membershipId, cursor })
+            const data = await getPlayerActivities({ membershipId, cursor, count })
             res.setHeader("Cache-Control", `"max-age=${cursor ? 86400 : 30}"`)
             res.status(200).json(success(data))
         } catch (e) {
@@ -32,9 +34,7 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
     }
 })
 
-const COUNT = 250
-
-const activityQuery = (membershipId: bigint) =>
+const activityQuery = (membershipId: bigint, count: number) =>
     ({
         where: {
             playerActivity: {
@@ -46,15 +46,15 @@ const activityQuery = (membershipId: bigint) =>
         orderBy: {
             dateCompleted: "desc"
         },
-        take: COUNT + 1
+        take: count + 1
     }) as const
 
-const playerActivityQuery = (membershipId: bigint) =>
+const playerActivityQuery = (membershipId: bigint, count: number) =>
     ({
         where: {
             membershipId: membershipId
         },
-        take: COUNT + 1,
+        take: count + 1,
         select: {
             finishedRaid: true
         },
@@ -67,10 +67,12 @@ const playerActivityQuery = (membershipId: bigint) =>
 
 async function getPlayerActivities({
     membershipId,
-    cursor
+    cursor,
+    count = DEFAULT_COUNT
 }: {
     membershipId: bigint
     cursor: bigint | null
+    count?: number
 }) {
     const [activities, playerActivities] = await Promise.all(
         // If a cursor is provided
@@ -80,10 +82,10 @@ async function getPlayerActivities({
                       cursor: {
                           instanceId: cursor
                       },
-                      ...activityQuery(membershipId)
+                      ...activityQuery(membershipId, count)
                   }),
                   prisma.playerActivity.findMany({
-                      ...playerActivityQuery(membershipId),
+                      ...playerActivityQuery(membershipId, count),
                       cursor: {
                           instanceId_membershipId: {
                               instanceId: cursor,
@@ -92,16 +94,28 @@ async function getPlayerActivities({
                       }
                   })
               ]
-            : await getFirstPageOfActivities(membershipId)
+            : await getFirstPageOfActivities(membershipId, count)
     )
 
-    const prevActivity = cursor
-        ? activities[COUNT]?.instanceId ?? null
-        : activities[activities.length - 1]?.instanceId ?? null
+    const countFound = activities.length
+
+    /* either the "bonus" activity we found, or if we did not find a bonus:
+    / - if it was cursor based, we've reached the end
+    / - if it was not cursor based, aka first req, return 1 less than the current instance
+    / - if there were 0 entries, we've reached the end
+    */
+    const prevActivity =
+        countFound === count + 1
+            ? activities[activities.length - 1].instanceId
+            : countFound > 0
+            ? cursor
+                ? null
+                : activities[activities.length - 1].instanceId - BigInt(1)
+            : null
 
     return {
         prevActivity: prevActivity ? String(prevActivity) : null,
-        activities: activities.slice(0, COUNT).map((a, i) => {
+        activities: activities.slice(0, count).map((a, i) => {
             const { raid } = AllRaidHashes[String(a.raidHash)]
             return {
                 ...a,
@@ -118,12 +132,12 @@ async function getPlayerActivities({
 
 /* This allows us to fetch the same set of activities for the first request each day, making caching just a bit better. We
     can cache subsequent pages, while leaving the first one open */
-async function getFirstPageOfActivities(membershipId: bigint) {
+async function getFirstPageOfActivities(membershipId: bigint, count: number) {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
 
-    const { where: where1, ...query1 } = activityQuery(membershipId)
-    const { where: where2, ...query2 } = playerActivityQuery(membershipId)
+    const { where: where1, ...query1 } = activityQuery(membershipId, count)
+    const { where: where2, ...query2 } = playerActivityQuery(membershipId, count)
 
     const getActivites = (cutoff: Date) =>
         Promise.all([
@@ -131,7 +145,7 @@ async function getFirstPageOfActivities(membershipId: bigint) {
                 ...query1,
                 where: {
                     dateCompleted: {
-                        gte: cutoff,
+                        gte: cutoff
                     },
                     ...where1
                 }
@@ -141,7 +155,7 @@ async function getFirstPageOfActivities(membershipId: bigint) {
                     ...where2,
                     activity: {
                         dateCompleted: {
-                            gte: cutoff,
+                            gte: cutoff
                         }
                     }
                 },
@@ -154,17 +168,18 @@ async function getFirstPageOfActivities(membershipId: bigint) {
 
     const [activities, playerActivities] = await getActivites(lastMonth)
 
-    if (!activities.length) {
+    // Try this month, then this past year, then just screw it and go all time
+    if (activities.length) {
+        return [activities, playerActivities] as const
+    } else {
         const lastYear = new Date(today)
         lastYear.setMonth(today.getUTCFullYear() - 1)
 
         const [lastYearActivities, lastYearPlayerActivities] = await getActivites(lastYear)
-        if (!lastYearActivities.length) {
-            return getActivites(new Date(0))
-        } else {
+        if (lastYearActivities.length) {
             return [lastYearActivities, lastYearPlayerActivities] as const
+        } else {
+            return getActivites(new Date(0))
         }
-    } else {
-        return [activities, playerActivities] as const
     }
 }
