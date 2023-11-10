@@ -56,7 +56,7 @@ model PlayerActivity {
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
   player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
-  @@id([instanceId, membershipId], map: "player_activity_instance_id_membership_id_pkey")
+  @@id([instanceId, membershipId], name: "instance_membership_pkey", map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")
   @@index([membershipId], map: "idx_membership_id")
   @@map("player_activity")

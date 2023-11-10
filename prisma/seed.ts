@@ -175,14 +175,14 @@ async function main() {
                         .create({
                             data: pgcr
                         })
-                        .catch(console.error),
+                        .catch(console.error)
 
-                    prisma.pGCR.create({
-                        data: {
-                            instanceId: pgcr.instanceId,
-                            data: compressed
-                        }
-                    })
+                    // prisma.pGCR.create({
+                    //     data: {
+                    //         instanceId: pgcr.instanceId,
+                    //         data: compressed
+                    //     }
+                    // })
                 ])
             )
         ).then(res => console.log(`Inserted ${res.length} entries`))

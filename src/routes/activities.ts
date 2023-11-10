@@ -22,6 +22,7 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
             res.setHeader("Cache-Control", `"max-age=${cursor ? 86400 : 30}"`)
             res.status(200).json(success(data))
         } catch (e) {
+            console.error(e)
             res.status(500).json(failure(e, "Internal server error"))
         }
     } catch (e) {
@@ -87,7 +88,7 @@ async function getPlayerActivities({
                   prisma.playerActivity.findMany({
                       ...playerActivityQuery(membershipId, count),
                       cursor: {
-                          instanceId_membershipId: {
+                          instance_membership_pkey: {
                               instanceId: cursor,
                               membershipId: membershipId
                           }
@@ -104,17 +105,17 @@ async function getPlayerActivities({
     / - if it was not cursor based, aka first req, return 1 less than the current instance
     / - if there were 0 entries, we've reached the end
     */
-    const prevActivity =
+    const nextCursor =
         countFound === count + 1
-            ? activities[activities.length - 1].instanceId
+            ? activities[countFound - 1].instanceId
             : countFound > 0
             ? cursor
                 ? null
-                : activities[activities.length - 1].instanceId - BigInt(1)
+                : activities[countFound - 1].instanceId
             : null
 
     return {
-        prevActivity: prevActivity ? String(prevActivity) : null,
+        nextCursor: nextCursor ? String(nextCursor) : null,
         activities: activities.slice(0, count).map((a, i) => {
             const { raid } = AllRaidHashes[String(a.raidHash)]
             return {
