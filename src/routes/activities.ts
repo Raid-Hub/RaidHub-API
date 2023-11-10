@@ -19,7 +19,7 @@ activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response
 
         try {
             const data = await getPlayerActivities({ membershipId, cursor, count })
-            res.setHeader("Cache-Control", `"max-age=${cursor ? 86400 : 30}"`)
+            res.setHeader("Cache-Control", `max-age=${cursor ? 86400 : 30}`)
             res.status(200).json(success(data))
         } catch (e) {
             console.error(e)
