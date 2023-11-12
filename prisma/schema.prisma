@@ -61,7 +61,7 @@ model PlayerActivity {
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
   classHash         BigInt?  @map("class_hash")
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
-  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
+  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
   @@id([instanceId, membershipId], name: "instance_membership_pkey", map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")

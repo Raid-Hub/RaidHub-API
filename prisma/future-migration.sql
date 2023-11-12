@@ -185,3 +185,6 @@ ALTER TABLE "raid_definition" ADD CONSTRAINT "raid_definition_raid_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "raid_definition" ADD CONSTRAINT "raid_definition_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "raid_version"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Prevent player deletions
+ALTER TABLE "player_activity" ALTER CONSTRAINT "player_activity_membership_id_fkey" ON DELETE RESTRICT;
