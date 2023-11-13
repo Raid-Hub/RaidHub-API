@@ -18,6 +18,7 @@
         "paths": {
             "~/data/*": ["data/*"],
             "~/routes/*": ["routes/*"],
+            "~/middlewares/*": ["middlewares/*"],
             "~/util": ["util"],
             "~/prisma": ["prisma"]
         }

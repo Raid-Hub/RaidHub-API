@@ -1,9 +1,12 @@
 import { Router } from "express"
-import { failure, success } from "~/util"
+import { bigIntString, failure, success } from "~/util"
 import { prisma } from "~/prisma"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
+import { z } from "zod"
+import { zodBodyParser, zodParamsParser } from "~/middlewares/parsers"
+import { appendToFile } from "tasks/appendToFile"
 
 export const playerRouter = Router()
 
@@ -13,24 +16,20 @@ playerRouter.use((_, res, next) => {
     next()
 })
 
-playerRouter.get("/:membershipId", async (req, res) => {
-    try {
-        const membershipId = BigInt(req.params.membershipId)
+const PlayerParamSchema = z.object({
+    membershipId: bigIntString
+})
 
-        try {
-            const data = await getPlayer({ membershipId })
+playerRouter.get("/:membershipId", zodParamsParser(PlayerParamSchema), async (req, res, next) => {
+    try {
+        const data = await getPlayer({ membershipId: req.params.membershipId })
+        if (!data) {
+            res.status(404).json(failure({}, "Player not found"))
+        } else {
             res.status(200).json(success(data))
-        } catch (e) {
-            if (e instanceof PrismaClientKnownRequestError) {
-                res.status(500).json(failure(e, "Internal server error"))
-            } else {
-                res.status(404).json(failure(e))
-            }
         }
     } catch (e) {
-        res.status(400).json(
-            failure({ membershipId: req.params.membershipId }, "Invalid membershipId")
-        )
+        next(e)
     }
 })
 
@@ -46,7 +45,7 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
     const [player, activityLeaderboardEntries] = await Promise.all([
         prisma.player.findUnique({
             where: {
-                membershipId
+                membershipId: membershipId
             }
         }),
         await prisma.$queryRaw<Array<PrismaRawLeaderboardEntry>>`
@@ -70,7 +69,7 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
     ])
 
     if (!player) {
-        throw Error("Player not found")
+        return null
     }
 
     const activityLeaderboardEntriesMap = new Map<string, PrismaRawLeaderboardEntry[]>()
@@ -107,3 +106,24 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
         )
     }
 }
+
+const PlayerLogBodySchema = z.record(
+    z.string().regex(/^\d+$/),
+    z.object({ membershipType: z.number().int(), characterIds: z.array(z.string().regex(/^\d+$/)) })
+)
+
+playerRouter.post("/log", zodBodyParser(PlayerLogBodySchema), async (req, res, next) => {
+    try {
+        appendToFile({
+            filePath: "players.log",
+            contents: Object.entries(req.body)
+                .map(([membershipId, { membershipType, characterIds }]) =>
+                    [membershipId, membershipType, characterIds.join(",")].join(",")
+                )
+                .join("\n")
+        })
+        res.status(200).json(success(Object.keys(req.body).length))
+    } catch (e) {
+        next(e)
+    }
+})

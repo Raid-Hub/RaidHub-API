@@ -10,7 +10,7 @@ test("Get all Activities", async () => {
 
         expect(jsonData).toHaveProperty("minted")
         expect(jsonData).toHaveProperty("response")
-        expect(jsonData.response).toHaveProperty("prevActivity")
+        expect(jsonData.response).toHaveProperty("nextCursor")
         expect(jsonData.response).toHaveProperty("activities")
 
         if (!cursor) {
@@ -31,7 +31,7 @@ test("Get all Activities", async () => {
             expect(jsonData.response.activities[0]).toHaveProperty("didMemberComplete")
         }
 
-        cursor = jsonData.response.prevActivity
+        cursor = jsonData.response.nextCursor
         if (cursor) await send()
     }
 })
@@ -43,7 +43,7 @@ test("Get first page of activities", async () => {
 
     expect(jsonData).toHaveProperty("minted")
     expect(jsonData).toHaveProperty("response")
-    expect(jsonData.response).toHaveProperty("prevActivity")
+    expect(jsonData.response).toHaveProperty("nextCursor")
     expect(jsonData.response).toHaveProperty("activities")
 
     expect(jsonData.response.activities.length).toBeGreaterThan(3)
