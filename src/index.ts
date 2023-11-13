@@ -57,11 +57,16 @@ function go(pid?: number) {
     }
 
     // handle OPTIONS before any other middleware
-    app.options("*", (req, res) => {
-        // res.header("Access-Control-Allow-Methods", "GET, POST")
+    app.options("*", (req, res, next) => {
+        const method = req.headers["access-control-request-method"]
+        const allowedHeaders = ["X-API-KEY"]
+        if (method == "POST") {
+            allowedHeaders.push("Content-Type")
+        }
+        res.header("Access-Control-Allow-Methods", method)
         res.header("Access-Control-Allow-Origin", req.headers.origin)
-        res.header("Access-Control-Allow-Headers", "X-API-KEY")
-        res.sendStatus(200)
+        res.header("Access-Control-Allow-Headers", allowedHeaders.join(", "))
+        next()
     })
 
     // Apply CORS if Prod
