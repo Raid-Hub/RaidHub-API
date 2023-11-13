@@ -1,5 +1,5 @@
 import dotenv from "dotenv"
-import express from "express"
+import express, { json } from "express"
 import cluster from "cluster"
 import { cpus } from "os"
 import { activitiesRouter } from "./routes/activities"
@@ -9,18 +9,20 @@ import { leaderboardRouter } from "./routes/leaderboard"
 import { playerRouter } from "./routes/player"
 import { searchRouter } from "./routes/search"
 import { pgcrRouter } from "./routes/pgcr"
-import { failure } from "./util"
+import { cors } from "./middlewares/cors"
+import { errorHandler } from "./middlewares/errorHandler"
 
 const port = Number(process.env.PORT || 8000)
 const totalCPUs = cpus().length
-const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.app$/
 
 if (process.env.PROD && !process.env.PRIVATE_KEY) {
     console.error("Missing private API KEY")
     process.exit(1)
 }
 
-if (cluster.isPrimary) {
+if (!process.env.PROD) {
+    go()
+} else if (cluster.isPrimary) {
     console.log(`Master ${process.pid} is running`)
     dotenv.config()
 
@@ -41,39 +43,34 @@ if (cluster.isPrimary) {
     })
 } else {
     console.log(`Worker ${process.pid} started`)
+    go(process.pid)
+}
+
+function go(pid?: number) {
     const app = express()
 
-    app.options('*', (req, res) => {
-        res.header('Access-Control-Allow-Methods', 'GET');
+    if (pid) {
+        app.use("*", (_, res, next) => {
+            res.header("X-Processed-By", String(pid))
+            next()
+        })
+    }
+
+    // handle OPTIONS before any other middleware
+    app.options("*", (req, res) => {
+        // res.header("Access-Control-Allow-Methods", "GET, POST")
         res.header("Access-Control-Allow-Origin", req.headers.origin)
-        res.header("Access-Control-Allow-Headers", "X-API-KEY");
-        res.sendStatus(200);
-    });
-
-    // allow our private API
-    app.use((req, res, next) => {
-        if (req.headers.origin && urlOriginRegex.test(req.headers.origin)) {
-            res.header("Access-Control-Allow-Origin", req.headers.origin)
-
-            next()
-        } else if (
-            "x-api-key" in req.headers &&
-            req.headers["x-api-key"] === process.env.PRIVATE_KEY
-        ) {
-            if (req.headers.origin) {
-                res.header("Access-Control-Allow-Origin", req.headers.origin)
-            } else {
-                res.header("Access-Control-Allow-Origin", "*")
-            }
-            next()
-        } else {
-            res.header("Access-Control-Allow-Origin", "https://raidhub.app")
-            res.status(403).send(
-                failure({}, "Request originated from an invalid origin")
-            )
-        }
+        res.header("Access-Control-Allow-Headers", "X-API-KEY")
+        res.sendStatus(200)
     })
 
+    // Apply CORS if Prod
+    app.use(cors(Boolean(process.env.PROD)))
+
+    // parse incoming request body with json
+    app.use(json())
+
+    // Define our routes
     app.use("/activities", activitiesRouter)
     app.use("/activity", activityRouter)
     app.use("/manifest", manifestRouter)
@@ -82,6 +79,10 @@ if (cluster.isPrimary) {
     app.use("/search", searchRouter)
     app.use("/pgcr", pgcrRouter)
 
+    // handle any uncaught errors
+    app.use(errorHandler)
+
+    // Start the server
     app.listen(port, () => {
         console.log("Express server started on port: " + port)
     })
