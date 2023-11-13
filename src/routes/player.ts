@@ -107,23 +107,22 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
     }
 }
 
-const PlayerLogBodySchema = z.object({
-    membershipId: z.string().regex(/^\d+$/),
-    membershipType: z.number().int()
-})
+const PlayerLogBodySchema = z.record(
+    z.string().regex(/^\d+$/),
+    z.object({ membershipType: z.number().int(), characterIds: z.array(z.string().regex(/^\d+$/)) })
+)
 
 playerRouter.post("/log", zodBodyParser(PlayerLogBodySchema), async (req, res, next) => {
     try {
         appendToFile({
             filePath: "players.log",
-            contents: [req.body.membershipId, req.body.membershipType].join(",")
+            contents: Object.entries(req.body)
+                .map(([membershipId, { membershipType, characterIds }]) =>
+                    [membershipId, membershipType, characterIds.join(",")].join(",")
+                )
+                .join("\n")
         })
-        res.status(200).json(
-            success({
-                membershipId: req.body.membershipId,
-                membershipType: req.body.membershipType
-            })
-        )
+        res.status(200).json(success(Object.keys(req.body).length))
     } catch (e) {
         next(e)
     }
