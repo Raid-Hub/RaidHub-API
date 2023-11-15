@@ -3,10 +3,13 @@ import { failure, success } from "~/util"
 import { prisma } from "~/prisma"
 import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
+import { activitySearchRouter } from "./activity-search"
 
 const DEFAULT_COUNT = 500
 
 export const activitiesRouter = Router()
+
+activitiesRouter.use("/search", activitySearchRouter)
 
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
     try {

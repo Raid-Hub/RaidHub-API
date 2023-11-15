@@ -22,4 +22,6 @@ export function includedIn<T>(arr: readonly T[], element: any): element is T {
     return arr.includes(element)
 }
 
-export const bigIntString = z.string().regex(/^\d+$/).transform(BigInt)
+export const numberString = z.coerce.string().regex(/^\d+$/)
+
+export const bigIntString = numberString.transform(BigInt)
