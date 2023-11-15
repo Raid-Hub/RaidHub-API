@@ -8,7 +8,7 @@
         "build": "tsc && tsc-alias",
         "start": "pm2 start ./dist/index.js --name raidhub-api",
         "stop": "pm2 stop raidhub-api",
-        "restart": "yarn prisma generate && yarn build && pm2 restart raidhub-api --update-env",
+        "restart": "yarn && yarn prisma generate && yarn build && pm2 restart raidhub-api --update-env",
         "db:start": "docker-compose -f docker-compose.yml up -d",
         "db:stop": "docker-compose -f docker-compose.yml down",
         "db:push": "prisma db push",
