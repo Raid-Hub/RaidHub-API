@@ -10,9 +10,7 @@ export const activitySearchRouter = Router()
 
 const activitySearchQuerySchema = z
     .object({
-        membershipId: z
-            .union([z.array(numberString), numberString.transform(s => [s])])
-            .default([]),
+        membershipId: z.union([z.array(numberString).min(1), numberString.transform(s => [s])]),
         minPlayers: z.coerce.number().int().nonnegative().default(1),
         maxPlayers: z.coerce.number().int().nonnegative().default(16384),
         minDate: z.coerce.date().optional(),
@@ -98,7 +96,7 @@ async function searchActivities({
             WHERE
                 (${fresh}::boolean IS NULL OR a.fresh = ${fresh}) AND
                 (${completed}::boolean IS NULL OR a.completed = ${completed}) AND
-                (${flawless}::boolean IS NULL  OR a.flawless = ${flawless}) AND   
+                (${flawless}::boolean IS NULL OR a.flawless = ${flawless}) AND   
                 (${hashes.length} = 0 OR a.raid_hash = ANY(${hashes}::bigint[])) AND
                 (${platformType}::int IS NULL OR a.platform_type = ${platformType}) AND
                 a.player_count BETWEEN ${minPlayers} AND ${maxPlayers} AND
