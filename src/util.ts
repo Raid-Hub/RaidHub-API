@@ -23,5 +23,9 @@ export function includedIn<T>(arr: readonly T[], element: any): element is T {
 }
 
 export const numberString = z.coerce.string().regex(/^\d+$/)
+export const booleanString = z
+    .string()
+    .transform(s => JSON.parse(s))
+    .pipe(z.boolean())
 
 export const bigIntString = numberString.transform(BigInt)
