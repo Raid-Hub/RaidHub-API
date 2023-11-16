@@ -73,8 +73,9 @@ async function searchActivities({
 }: z.infer<typeof activitySearchQuerySchema>) {
     // @ts-ignore
     const hashes = RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
-    const minDate = SeasonDates[minSeason] ?? new Date(0)
-    const maxDate = SeasonDates[maxSeason] ?? new Date(2000000000000)
+    const minDate = SeasonDates[minSeason] ?? SeasonDates[0]
+    // do plus once because the season dates are the start dates
+    const maxDate = SeasonDates[maxSeason + 1] ?? new Date(2000000000000)
 
     console.log({
         membershipIds,
@@ -102,7 +103,7 @@ async function searchActivities({
             WHERE
                 a.player_count BETWEEN ${minPlayers} AND ${maxPlayers} AND
                 a.date_completed BETWEEN ${minDate} AND ${maxDate} AND
-                (cardinality(${hashes}::bigint[]) = 0 OR a.raid_hash = ANY(${hashes}::bigint[])) AND
+                (${hashes.length} = 0 OR a.raid_hash = ANY(${hashes}::bigint[])) AND
                 (${platformType} = -1 OR a.platform_type = ${platformType})
             GROUP BY
                 a.instance_id
@@ -128,8 +129,4 @@ async function searchActivities({
     return results
 }
 
-// ORDER BY
-// CASE WHEN NOT ${reversed} THEN a.date_completed ELSE 'epoch'::timestamp END DESC,
-// CASE WHEN ${reversed} THEN a.date_completed ELSE 'epoch'::timestamp END ASC
-// OFFSET ${(page - 1) * count}
-// LIMIT ${count}
+// flawless, fresh, difficulty, start/end date option

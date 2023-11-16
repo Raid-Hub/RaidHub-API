@@ -138,7 +138,7 @@ async function getPlayerActivities({
     can cache subsequent pages, while leaving the first one open */
 async function getFirstPageOfActivities(membershipId: bigint, count: number) {
     const today = new Date()
-    today.setUTCHours(0, 0, 0, 0)
+    today.setUTCHours(10, 0, 0, 0)
 
     const { where: where1, ...query1 } = activityQuery(membershipId, count)
     const { where: where2, ...query2 } = playerActivityQuery(membershipId, count)
