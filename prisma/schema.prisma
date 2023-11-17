@@ -26,7 +26,7 @@ model Activity {
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
   @@index([dateCompleted(sort: Desc)], map: "date_index")
-  @@index([raidHash], name: "hash_index", type: Hash)
+  @@index([raidHash], name: "hash_index")
   @@map("activity")
 }
 
