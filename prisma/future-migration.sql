@@ -165,9 +165,6 @@ CREATE TABLE "clear_count" (
 -- CreateIndex
 CREATE UNIQUE INDEX "clear_count_membership_id_raid_id_key" ON "clear_count"("membership_id", "raid_id");
 
--- CreateIndex
-CREATE INDEX "hash_index" ON "activity" USING HASH ("raid_hash");
-
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
