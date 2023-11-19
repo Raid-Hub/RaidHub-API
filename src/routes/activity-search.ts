@@ -103,10 +103,10 @@ async function searchActivities({
 }: z.infer<typeof activitySearchQuerySchema>) {
     // @ts-ignore
     const hashes = RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
-    const minSeasonDate = minSeason ? SeasonDates[minSeason] ?? SeasonDates[0] : SeasonDates[0]
+    const minSeasonDate = minSeason ? SeasonDates[minSeason - 1] ?? SeasonDates[0] : SeasonDates[0]
     // do plus once because the season dates are the start dates
     const maxSeasonDate = maxSeason
-        ? SeasonDates[maxSeason + 1] ?? new Date(2000000000000)
+        ? SeasonDates[maxSeason] ?? new Date(2000000000000)
         : new Date(2000000000000)
 
     const results = await prisma.$queryRaw<Array<ActivitySearchResult>>`
@@ -137,11 +137,6 @@ async function searchActivities({
                 ${
                     hashes.length
                         ? Prisma.sql`a.raid_hash IN (${Prisma.join(hashes.map(BigInt))}) AND`
-                        : Prisma.empty
-                }
-                ${
-                    platformType !== undefined
-                        ? Prisma.sql`WHERE a.platform_type = ${platformType}::int AND`
                         : Prisma.empty
                 }
                 ${
