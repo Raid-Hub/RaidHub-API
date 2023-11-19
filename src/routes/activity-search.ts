@@ -53,7 +53,7 @@ activitySearchRouter.get("/", zodQueryParser(activitySearchQuerySchema), async (
             return {
                 instanceId: a.instance_id,
                 raidHash: a.raid_hash,
-                false: a.fresh,
+                fresh: a.fresh,
                 completed: a.completed,
                 flawless: a.flawless,
                 playerCount: a.player_count,
