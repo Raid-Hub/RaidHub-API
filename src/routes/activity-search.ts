@@ -6,6 +6,8 @@ import { z } from "zod"
 import { type ListedRaid, ListedRaids, RaidHashes } from "~/data/raids"
 import { SeasonDates } from "~/data/seasonDates"
 import { Prisma } from "@prisma/client"
+import { isContest, isDayOne } from "~/data/raceDates"
+import { AllRaidHashes } from "./manifest"
 
 export const activitySearchRouter = Router()
 
@@ -46,17 +48,22 @@ const activitySearchQuerySchema = z
 activitySearchRouter.get("/", zodQueryParser(activitySearchQuerySchema), async (req, res, next) => {
     try {
         const activities = await searchActivities(req.query)
-        const results = activities.map(a => ({
-            instanceId: a.instance_id,
-            raidHash: a.raid_hash,
-            false: a.fresh,
-            completed: a.completed,
-            flawless: a.flawless,
-            playerCount: a.player_count,
-            dateStarted: a.date_started,
-            dateCompleted: a.date_completed,
-            platformType: a.platform_type
-        }))
+        const results = activities.map(a => {
+            const { raid } = AllRaidHashes[String(a.raid_hash)]
+            return {
+                instanceId: a.instance_id,
+                raidHash: a.raid_hash,
+                false: a.fresh,
+                completed: a.completed,
+                flawless: a.flawless,
+                playerCount: a.player_count,
+                dateStarted: a.date_started,
+                dateCompleted: a.date_completed,
+                platformType: a.platform_type,
+                dayOne: isDayOne(raid, a.date_completed),
+                contest: isContest(raid, a.date_started)
+            }
+        })
         res.setHeader("cache-control", "max-age=30")
         res.status(200).json(
             success({
@@ -122,16 +129,16 @@ async function searchActivities({
             WHERE
                 ${
                     fresh !== undefined
-                        ? Prisma.sql`WHERE a.fresh = ${fresh}::boolean AND `
+                        ? Prisma.sql`a.fresh = ${fresh}::boolean AND `
                         : Prisma.empty
                 }${
                     completed !== undefined
-                        ? Prisma.sql`WHERE a.completed = ${completed}::boolean AND`
+                        ? Prisma.sql`a.completed = ${completed}::boolean AND`
                         : Prisma.empty
                 }
                 ${
                     flawless !== undefined
-                        ? Prisma.sql`WHERE a.flawless = ${flawless}::boolean AND`
+                        ? Prisma.sql`a.flawless = ${flawless}::boolean AND`
                         : Prisma.empty
                 }
                 ${
