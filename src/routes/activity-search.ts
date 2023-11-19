@@ -117,14 +117,16 @@ async function searchActivities({
                 player_activity pa ON a.instance_id = pa.instance_id
                 AND pa.membership_id = ANY(${membershipIds}::bigint[])
             WHERE
-                (${fresh}::boolean IS NULL OR a.fresh = ${fresh}) AND
-                (${completed}::boolean IS NULL OR a.completed = ${completed}) AND
-                (${flawless}::boolean IS NULL OR a.flawless = ${flawless}) AND   
-                (${hashes.length} = 0 OR a.raid_hash = ANY(${hashes}::bigint[])) AND
-                (${platformType}::int IS NULL OR a.platform_type = ${platformType}) AND
+                (${fresh}::boolean IS NULL OR a.fresh = ${fresh}::boolean) AND
+                (${completed}::boolean IS NULL OR a.completed = ${completed}::boolean) AND
+                (${flawless}::boolean IS NULL OR a.flawless = ${flawless}::boolean) AND   
+                (${hashes.length}::int = 0 OR a.raid_hash = ANY(${hashes}::bigint[])) AND
+                (${platformType}::int IS NULL OR a.platform_type = ${platformType}::int) AND
                 a.player_count BETWEEN ${minPlayers ?? 1} AND ${maxPlayers ?? 16384} AND
-                a.date_completed BETWEEN ${minSeasonDate} AND ${maxSeasonDate} AND
-                a.date_completed BETWEEN ${minDate ?? SeasonDates[0]} AND ${maxDate ?? new Date()}
+                a.date_completed BETWEEN ${minSeasonDate}::timestamp AND ${maxSeasonDate}::timestamp AND
+                a.date_completed BETWEEN ${minDate ?? SeasonDates[0]}::timestamp AND ${
+                    maxDate ?? new Date()
+                }::timestamp
             GROUP BY
                 a.instance_id
         )
@@ -139,12 +141,12 @@ async function searchActivities({
             date_completed,
             platform_type
         FROM activities_union
-        WHERE _match_count = ${membershipIds.length}
+        WHERE _match_count = ${membershipIds.length}::int
         ORDER BY
-            CASE WHEN NOT ${reversed} THEN date_completed ELSE 'epoch'::timestamp END DESC,
-            CASE WHEN ${reversed} THEN date_completed ELSE 'epoch'::timestamp END ASC
-        OFFSET ${(page - 1) * count}
-        LIMIT ${count};`
+            CASE WHEN NOT ${reversed}::boolean THEN date_completed ELSE 'epoch'::timestamp END DESC,
+            CASE WHEN ${reversed}::boolean THEN date_completed ELSE 'epoch'::timestamp END ASC
+        OFFSET ${(page - 1) * count}::int
+        LIMIT ${count}::int;`
 
     return results
 }
