@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 export function success<T>(data: T, message?: string) {
     return {
         minted: Date.now(),
@@ -19,3 +21,11 @@ export function failure<T>(data: T, message?: string) {
 export function includedIn<T>(arr: readonly T[], element: any): element is T {
     return arr.includes(element)
 }
+
+export const numberString = z.coerce.string().regex(/^\d+$/)
+export const booleanString = z
+    .string()
+    .transform(s => JSON.parse(s))
+    .pipe(z.boolean())
+
+export const bigIntString = numberString.transform(BigInt)

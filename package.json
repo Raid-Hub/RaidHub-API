@@ -8,7 +8,7 @@
         "build": "tsc && tsc-alias",
         "start": "pm2 start ./dist/index.js --name raidhub-api",
         "stop": "pm2 stop raidhub-api",
-        "restart": "yarn prisma generate && yarn build && pm2 restart raidhub-api --update-env",
+        "restart": "yarn && yarn prisma generate && yarn build && pm2 restart raidhub-api --update-env",
         "db:start": "docker-compose -f docker-compose.yml up -d",
         "db:stop": "docker-compose -f docker-compose.yml down",
         "db:push": "prisma db push",
@@ -36,7 +36,7 @@
         "nodemon": "^3.0.1",
         "pm2": "^5.3.0",
         "prettier": "^3.0.3",
-        "prisma": "^5.5.2",
+        "prisma": "^5.6.0",
         "ts-jest": "^29.1.1",
         "ts-node": "^10.9.1",
         "tsc-alias": "^1.8.8",
@@ -44,10 +44,11 @@
         "typescript": "^5.2.2"
     },
     "dependencies": {
-        "@prisma/client": "^5.5.2",
+        "@prisma/client": "^5.6.0",
         "cluster": "^0.7.7",
         "dotenv": "^16.3.1",
         "express": "^4.18.2",
-        "zlib": "^1.0.5"
+        "zlib": "^1.0.5",
+        "zod": "^3.22.4"
     }
 }
