@@ -44,7 +44,7 @@ export const LeaderboardsForRaid = {
     },
     [Raid.EATER_OF_WORLDS]: {
         normal: "wf_eow",
-        prestige: "levi_prestige"
+        prestige: "eow_prestige"
     },
     [Raid.SPIRE_OF_STARS]: {
         normal: "wf_spire",
