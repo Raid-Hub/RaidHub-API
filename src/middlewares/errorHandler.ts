@@ -12,5 +12,7 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
         }
     }
 
+    console.error(err)
+
     res.status(500).send(failure(details, "Something went wrong."))
 }

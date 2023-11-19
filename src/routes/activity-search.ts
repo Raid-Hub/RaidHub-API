@@ -5,15 +5,15 @@ import { zodQueryParser } from "~/middlewares/parsers"
 import { z } from "zod"
 import { type ListedRaid, ListedRaids, RaidHashes } from "~/data/raids"
 import { SeasonDates } from "~/data/seasonDates"
-import { cacheControl } from "~/middlewares/cache-control"
+import { Prisma } from "@prisma/client"
 
 export const activitySearchRouter = Router()
 
-activitySearchRouter.use(cacheControl(30))
-
 const activitySearchQuerySchema = z
     .object({
-        membershipId: z.union([z.array(numberString).min(1), numberString.transform(s => [s])]),
+        membershipId: z
+            .union([z.array(numberString).min(1), numberString.transform(s => [s])])
+            .pipe(z.array(z.coerce.bigint())),
         minPlayers: z.coerce.number().int().nonnegative().optional(),
         maxPlayers: z.coerce.number().int().nonnegative().optional(),
         minDate: z.coerce.date().optional(),
@@ -26,7 +26,6 @@ const activitySearchQuerySchema = z
         raid: z.coerce
             .number()
             .int()
-            .positive()
             .refine(n => includedIn(ListedRaids, n), {
                 message: "invalid raid value"
             })
@@ -58,9 +57,13 @@ activitySearchRouter.get("/", zodQueryParser(activitySearchQuerySchema), async (
             dateCompleted: a.date_completed,
             platformType: a.platform_type
         }))
+        res.setHeader("cache-control", "max-age=30")
         res.status(200).json(
             success({
-                query: req.query,
+                query: {
+                    ...req.query,
+                    membershipIds: req.query.membershipIds.map(String)
+                },
                 results
             })
         )
@@ -115,13 +118,37 @@ async function searchActivities({
                 activity a
             JOIN
                 player_activity pa ON a.instance_id = pa.instance_id
-                AND pa.membership_id = ANY(${membershipIds}::bigint[])
+                AND pa.membership_id IN (${Prisma.join(membershipIds)})
             WHERE
-                (${fresh}::boolean IS NULL OR a.fresh = ${fresh}::boolean) AND
-                (${completed}::boolean IS NULL OR a.completed = ${completed}::boolean) AND
-                (${flawless}::boolean IS NULL OR a.flawless = ${flawless}::boolean) AND   
-                (${hashes.length}::int = 0 OR a.raid_hash = ANY(${hashes}::bigint[])) AND
-                (${platformType}::int IS NULL OR a.platform_type = ${platformType}::int) AND
+                ${
+                    fresh !== undefined
+                        ? Prisma.sql`WHERE a.fresh = ${fresh}::boolean AND `
+                        : Prisma.empty
+                }${
+                    completed !== undefined
+                        ? Prisma.sql`WHERE a.completed = ${completed}::boolean AND`
+                        : Prisma.empty
+                }
+                ${
+                    flawless !== undefined
+                        ? Prisma.sql`WHERE a.flawless = ${flawless}::boolean AND`
+                        : Prisma.empty
+                }
+                ${
+                    hashes.length
+                        ? Prisma.sql`a.raid_hash IN (${Prisma.join(hashes.map(BigInt))}) AND`
+                        : Prisma.empty
+                }
+                ${
+                    platformType !== undefined
+                        ? Prisma.sql`WHERE a.platform_type = ${platformType}::int AND`
+                        : Prisma.empty
+                }
+                ${
+                    platformType !== undefined
+                        ? Prisma.sql`WHERE a.platform_type = ${platformType}::int AND`
+                        : Prisma.empty
+                }
                 a.player_count BETWEEN ${minPlayers ?? 1} AND ${maxPlayers ?? 16384} AND
                 a.date_completed BETWEEN ${minSeasonDate}::timestamp AND ${maxSeasonDate}::timestamp AND
                 a.date_completed BETWEEN ${minDate ?? SeasonDates[0]}::timestamp AND ${
@@ -141,7 +168,7 @@ async function searchActivities({
             date_completed,
             platform_type
         FROM activities_union
-        WHERE _match_count = ${membershipIds.length}::int
+        WHERE _match_count = ${new Set(membershipIds).size}::int
         ORDER BY
             CASE WHEN NOT ${reversed}::boolean THEN date_completed ELSE 'epoch'::timestamp END DESC,
             CASE WHEN ${reversed}::boolean THEN date_completed ELSE 'epoch'::timestamp END ASC
