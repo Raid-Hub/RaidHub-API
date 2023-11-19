@@ -82,9 +82,9 @@ model ActivityLeaderboardEntry {
   @@map("activity_leaderboard_entry")
 }
 
-// model PGCR {
-//   instanceId BigInt @id @map("instance_id")
-//   data       Bytes
-// 
-//   @@map("pgcr")
-// }
+model PGCR {
+  instanceId BigInt @id @map("instance_id")
+  data       Bytes
+
+  @@map("pgcr")
+}

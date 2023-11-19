@@ -11,6 +11,7 @@ import { searchRouter } from "./routes/search"
 import { pgcrRouter } from "./routes/pgcr"
 import { cors } from "./middlewares/cors"
 import { errorHandler } from "./middlewares/errorHandler"
+import { memberRouter } from "./routes/member"
 
 const port = Number(process.env.PORT || 8000)
 const totalCPUs = cpus().length
@@ -81,6 +82,7 @@ function go(pid?: number) {
     app.use("/manifest", manifestRouter)
     app.use("/leaderboard", leaderboardRouter)
     app.use("/player", playerRouter)
+    app.use("/member", memberRouter)
     app.use("/search", searchRouter)
     app.use("/pgcr", pgcrRouter)
 

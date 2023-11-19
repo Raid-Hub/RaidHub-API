@@ -3,10 +3,13 @@ import { failure, success } from "~/util"
 import { prisma } from "~/prisma"
 import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
+import { activitySearchRouter } from "./activity-search"
 
 const DEFAULT_COUNT = 500
 
 export const activitiesRouter = Router()
+
+activitiesRouter.use("/search", activitySearchRouter)
 
 activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
     try {
@@ -135,7 +138,7 @@ async function getPlayerActivities({
     can cache subsequent pages, while leaving the first one open */
 async function getFirstPageOfActivities(membershipId: bigint, count: number) {
     const today = new Date()
-    today.setUTCHours(0, 0, 0, 0)
+    today.setUTCHours(10, 0, 0, 0)
 
     const { where: where1, ...query1 } = activityQuery(membershipId, count)
     const { where: where2, ...query2 } = playerActivityQuery(membershipId, count)
