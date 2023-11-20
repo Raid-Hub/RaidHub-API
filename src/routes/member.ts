@@ -22,7 +22,6 @@ memberRouter.get("/:membershipId", zodParamsParser(PlayerParamSchema), async (re
             res.status(200).json(success(member))
         }
     } catch (e) {
-        console.error(e)
         next(e)
     }
 })

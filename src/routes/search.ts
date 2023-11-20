@@ -1,33 +1,31 @@
 import { Router } from "express"
-import { failure, success } from "~/util"
+import { success } from "~/util"
 import { prisma } from "~/prisma"
+import { cacheControl } from "~/middlewares/cache-control"
+import { zodQueryParser } from "~/middlewares/parsers"
+import { z } from "zod"
 
 export const searchRouter = Router()
 
-searchRouter.use((_, res, next) => {
-    // cache for 10 mins
-    res.setHeader("Cache-Control", "max-age=600")
-    next()
+searchRouter.use(cacheControl(600))
+
+const SearchParams = z.object({
+    count: z.coerce.number().int().min(0).max(50).default(20),
+    query: z.string().min(1)
 })
 
-searchRouter.get("", async (req, res) => {
+searchRouter.get("/", zodQueryParser(SearchParams), async (req, res, next) => {
     try {
-        const query = req.query.query
-        let count: number | undefined = Number(req.query.count)
-        if (Number.isNaN(count)) {
-            count = undefined
-        }
-        const data = await searchForPlayer(String(query), count)
+        const { query, count } = req.query
+        const data = await searchForPlayer(query, count)
         res.status(200).json(success(data))
     } catch (e) {
-        console.error(e)
-        res.status(500).json(failure(e, "Internal server error"))
+        next(e)
     }
 })
 
-async function searchForPlayer(query: string, count?: number) {
+async function searchForPlayer(query: string, take: number) {
     const searchTerm = decodeURIComponent(query).trim()
-    const take = Math.max(0, Math.min(count ?? 20, 50))
 
     if (searchTerm.includes("#")) {
         const [displayName, code] = searchTerm.split("#")
@@ -41,7 +39,7 @@ async function searchForPlayer(query: string, count?: number) {
                     contains: code
                 }
             },
-            take: count
+            take: take
         })
         return {
             params: {

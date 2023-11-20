@@ -7,14 +7,11 @@ import { AllRaidHashes } from "./manifest"
 import { z } from "zod"
 import { zodBodyParser, zodParamsParser } from "~/middlewares/parsers"
 import { appendToFile } from "tasks/appendToFile"
+import { cacheControl } from "~/middlewares/cache-control"
 
 export const playerRouter = Router()
 
-playerRouter.use((_, res, next) => {
-    // cache for 30s
-    res.setHeader("Cache-Control", "max-age=30")
-    next()
-})
+playerRouter.use(cacheControl(30))
 
 const PlayerParamSchema = z.object({
     membershipId: bigIntString
