@@ -1,80 +1,16 @@
 import { Router } from "express"
-import { ListedRaid, MasterRaid, PrestigeRaid, PrestigeRaids, Raid } from "~/data/raids"
-import { includedIn, success } from "~/util"
+import { ListedRaid, MasterRaid, PrestigeRaid, Raid } from "~/data/raids"
+import { success } from "~/util"
 import { prisma } from "~/prisma"
-import { MasterReleases, PCLeviathanRelease, ReleaseDate } from "~/data/raceDates"
+import { MasterReleases, PCLeviathanRelease, PrestigeReleases, ReleaseDate } from "~/data/raceDates"
 import { cacheControl } from "~/middlewares/cache-control"
 import { z } from "zod"
 import { zodParamsParser, zodQueryParser } from "~/middlewares/parsers"
-import { RaidPathSchema, UrlPathsToRaid } from "./leaderboard"
-
-const Boards = ["normal", "prestige", "pc", "challenge", "master"] as const
-type Board = (typeof Boards)[number]
-
-const LeaderboardsForRaid = {
-    [Raid.LEVIATHAN]: {
-        normal: "wf_levi",
-        prestige: "levi_prestige",
-        pc: "levi_pc"
-    },
-    [Raid.EATER_OF_WORLDS]: {
-        normal: "wf_eow",
-        prestige: "eow_prestige"
-    },
-    [Raid.SPIRE_OF_STARS]: {
-        normal: "wf_spire",
-        prestige: "spire_prestige"
-    },
-    [Raid.LAST_WISH]: {
-        normal: "wf_wish"
-    },
-    [Raid.SCOURGE_OF_THE_PAST]: {
-        normal: "wf_sotp"
-    },
-    [Raid.CROWN_OF_SORROW]: {
-        normal: "wf_cos"
-    },
-    [Raid.GARDEN_OF_SALVATION]: {
-        normal: "wf_gos"
-    },
-    [Raid.DEEP_STONE_CRYPT]: {
-        normal: "wf_dsc"
-    },
-    [Raid.VAULT_OF_GLASS]: {
-        normal: "vog_normal",
-        challenge: "wf_vog",
-        master: "vog_master"
-    },
-    [Raid.VOW_OF_THE_DISCIPLE]: {
-        normal: "wf_vow",
-        master: "vow_master"
-    },
-    [Raid.KINGS_FALL]: {
-        normal: "kf_normal",
-        challenge: "wf_kf",
-        master: "kf_master"
-    },
-    [Raid.ROOT_OF_NIGHTMARES]: {
-        normal: "wf_ron",
-        master: "ron_master"
-    },
-    [Raid.CROTAS_END]: {
-        normal: "crota_normal",
-        challenge: "wf_crota",
-        master: "crota_master"
-    }
-} satisfies Record<ListedRaid, Partial<Record<Board, string>>>
+import { ActivityLeaderboardParams, Board } from "~/data/leaderboards"
 
 export const worldfirstRouter = Router({ mergeParams: true })
 
 worldfirstRouter.use(cacheControl(300))
-
-const WorldFirstLeaderboardParams = RaidPathSchema.extend({
-    category: z.enum(Boards)
-}).refine(
-    schema => includedIn(Object.keys(LeaderboardsForRaid[schema.raid]), schema.category),
-    "This leaderboard is not available for this raid"
-)
 
 const WorldFirstLeaderboardQuery = z.object({
     page: z.coerce.number().int().positive().default(1),
@@ -83,7 +19,7 @@ const WorldFirstLeaderboardQuery = z.object({
 
 worldfirstRouter.get(
     "/:category",
-    zodParamsParser(WorldFirstLeaderboardParams),
+    zodParamsParser(ActivityLeaderboardParams),
     zodQueryParser(WorldFirstLeaderboardQuery),
     async (req, res, next) => {
         try {
@@ -166,7 +102,7 @@ async function getActivityLeaderboard(
             date = ReleaseDate[raid]
             break
         case "prestige":
-            date = PrestigeRaids[raid as PrestigeRaid]
+            date = PrestigeReleases[raid as PrestigeRaid]
             break
         case "pc":
             date = PCLeviathanRelease

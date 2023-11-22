@@ -12,9 +12,9 @@ import {
     SunsetRaids
 } from "~/data/raids"
 import { success } from "~/util"
-import { LeaderboardsForRaid } from "./leaderboard"
 import { WorldFirstLeaderboardsForRaid } from "./worldfirst"
 import { cacheControl } from "~/middlewares/cache-control"
+import { LeaderboardsForRaid } from "~/data/leaderboards"
 
 export const manifestRouter = Router()
 

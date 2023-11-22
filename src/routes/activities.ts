@@ -1,29 +1,38 @@
-import { Request, Response, Router } from "express"
-import { bigIntString, failure, success } from "~/util"
+import { Router } from "express"
+import { bigIntString, numberString, success } from "~/util"
 import { prisma } from "~/prisma"
 import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
 import { activitySearchRouter } from "./activity-search"
 import { z } from "zod"
-import { zodParamsParser } from "~/middlewares/parsers"
+import { zodParamsParser, zodQueryParser } from "~/middlewares/parsers"
 
 export const activitiesRouter = Router()
 
 activitiesRouter.use("/search", activitySearchRouter)
 
-const PlayerParamSchema = z.object({
+const ActivitiesParamSchema = z.object({
     membershipId: bigIntString,
-    cursor: bigIntString.optional(),
     count: z.number().int().positive().max(1000).default(750)
+})
+
+const ActivitiesQuerySchema = z.object({
+    cursor: bigIntString.optional()
 })
 
 activitiesRouter.get(
     "/:membershipId",
-    zodParamsParser(PlayerParamSchema),
+    zodParamsParser(ActivitiesParamSchema),
+    zodQueryParser(ActivitiesQuerySchema),
     async (req, res, next) => {
         try {
-            const { membershipId, cursor, count } = req.params
-            const data = await getPlayerActivities({ membershipId, cursor, count })
+            const { membershipId, count } = req.params
+            const { cursor } = req.query
+            const data = await getPlayerActivities({
+                membershipId,
+                cursor,
+                count
+            })
             res.setHeader("Cache-Control", `max-age=${cursor ? 86400 : 30}`)
             res.status(200).json(success(data))
         } catch (e) {

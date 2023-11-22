@@ -1,7 +1,6 @@
 import { Router } from "express"
 import { bigIntString, failure, success } from "~/util"
 import { prisma } from "~/prisma"
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
 import { z } from "zod"
