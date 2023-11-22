@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express"
+import { Router } from "express"
 import {
     ContestRaids,
     Difficulty,
@@ -12,16 +12,13 @@ import {
     SunsetRaids
 } from "~/data/raids"
 import { success } from "~/util"
-import { LeaderboardsForRaid } from "./leaderboard"
-import { WorldFirstLeaderboardsForRaid } from "./leaderboard/worldfirst"
+import { WorldFirstLeaderboardsForRaid } from "./worldfirst"
+import { cacheControl } from "~/middlewares/cache-control"
+import { LeaderboardsForRaid } from "~/data/leaderboards"
 
 export const manifestRouter = Router()
 
-manifestRouter.use((_, res, next) => {
-    // cache for 1 hour
-    res.setHeader("Cache-Control", "max-age=3600")
-    next()
-})
+manifestRouter.use(cacheControl(300))
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -72,23 +69,29 @@ export const AllRaidHashes = Object.fromEntries(
         .flat(2)
 )
 
-manifestRouter.get("/", async (req: Request, res: Response) => {
-    return res.status(200).json(
-        success({
-            raids,
-            difficulties,
-            hashes: AllRaidHashes,
-            listed: ListedRaids,
-            sunset: SunsetRaids,
-            contest: ContestRaids,
-            master: MasterRaids,
-            prestige: PrestigeRaids,
-            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
-                raid,
-                difficulty
-            })),
-            activityLeaderboards: LeaderboardsForRaid,
-            worldFirstBoards: WorldFirstLeaderboardsForRaid
-        })
-    )
+manifestRouter.get("/", async (_, res, next) => {
+    try {
+        res.status(200).json(
+            success({
+                raids,
+                difficulties,
+                hashes: AllRaidHashes,
+                listed: ListedRaids,
+                sunset: SunsetRaids,
+                contest: ContestRaids,
+                master: MasterRaids,
+                prestige: PrestigeRaids,
+                reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
+                    ([raid, difficulty]) => ({
+                        raid,
+                        difficulty
+                    })
+                ),
+                activityLeaderboards: LeaderboardsForRaid,
+                worldFirstBoards: WorldFirstLeaderboardsForRaid
+            })
+        )
+    } catch (e) {
+        next(e)
+    }
 })

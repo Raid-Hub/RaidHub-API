@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Activity {
-  instanceId               BigInt                     @id @unique @map("instance_id")
+  instanceId               BigInt                     @id @map("instance_id")
   raidHash                 BigInt                     @map("raid_hash")
   flawless                 Boolean?
   completed                Boolean
@@ -17,11 +17,13 @@ model Activity {
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
   platformType             Int                        @map("platform_type")
+  raidDefintion            RaidDefintion              @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
   @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
   @@index([dateCompleted(sort: Desc)], map: "date_index")
+  @@index([raidHash], name: "hash_index")
   @@map("activity")
 }
 
@@ -36,6 +38,7 @@ model Player {
   lastSeen                    DateTime         @map("last_seen")
   clears                      Int              @default(0) @map("clears")
   playerActivities            PlayerActivity[] @relation("player_activities")
+  clearCounts                 ClearCount[]     @relation("player_clear_counts")
 
   @@index([clears], map: "clears_idx")
   @@index([displayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_both_display_names", type: Gin)
@@ -55,12 +58,23 @@ model PlayerActivity {
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
   classHash         BigInt?  @map("class_hash")
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
-  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
+  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
   @@id([instanceId, membershipId], name: "instance_membership_pkey", map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")
   @@index([membershipId], map: "idx_membership_id")
   @@map("player_activity")
+}
+
+model ClearCount {
+  membershipId BigInt @map("membership_id")
+  count        Int
+  raidId       Int    @map("raid_id")
+  raid         Raid   @relation("player_clear_counts", fields: [raidId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "raid_id_fkey")
+  player       Player @relation("player_clear_counts", fields: [membershipId], references: [membershipId], onDelete: Cascade, onUpdate: NoAction, map: "player_membership_id_fkey")
+
+  @@unique([membershipId, raidId], name: "clear_count_membership_id_raid_id_key")
+  @@map("clear_count")
 }
 
 model ActivityLeaderboard {
@@ -80,6 +94,37 @@ model ActivityLeaderboardEntry {
   @@id([leaderboardId, rank], map: "activity_leaderboard_rank_pkey")
   @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
+}
+
+model Raid {
+  id                     Int             @id
+  name                   String
+  clears                 ClearCount[]    @relation("player_clear_counts")
+  AssociatedRaidVersions RaidVersion[]   @relation("associated_raid_version")
+  RaidDefintion          RaidDefintion[] @relation("raid_name_definition")
+
+  @@map("raid")
+}
+
+model RaidVersion {
+  id               Int             @id
+  name             String
+  RaidDefintion    RaidDefintion[] @relation("raid_version_definition")
+  associatedRaidId Int?            @map("associated_raid_id")
+  associatedRaid   Raid?           @relation("associated_raid_version", fields: [associatedRaidId], references: [id])
+
+  @@map("raid_version")
+}
+
+model RaidDefintion {
+  raidHash   BigInt      @id @map("hash")
+  raidId     Int         @map("raid_id")
+  versionId  Int         @map("version_id")
+  raid       Raid        @relation("raid_name_definition", fields: [raidId], references: [id])
+  version    RaidVersion @relation("raid_version_definition", fields: [versionId], references: [id])
+  activities Activity[]  @relation("raid_defintion")
+
+  @@map("raid_definition")
 }
 
 model PGCR {

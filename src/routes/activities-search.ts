@@ -8,8 +8,11 @@ import { SeasonDates } from "~/data/seasonDates"
 import { Prisma } from "@prisma/client"
 import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
+import { cacheControl } from "~/middlewares/cache-control"
 
 export const activitySearchRouter = Router()
+
+activitySearchRouter.use(cacheControl(30))
 
 const activitySearchQuerySchema = z
     .object({
@@ -64,7 +67,6 @@ activitySearchRouter.get("/", zodQueryParser(activitySearchQuerySchema), async (
                 contest: isContest(raid, a.date_started)
             }
         })
-        res.setHeader("cache-control", "max-age=30")
         res.status(200).json(
             success({
                 query: {

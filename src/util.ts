@@ -22,10 +22,10 @@ export function includedIn<T>(arr: readonly T[], element: any): element is T {
     return arr.includes(element)
 }
 
-export const numberString = z.coerce.string().regex(/^\d+$/)
+export const numberString = z.string().regex(/^\d+$/)
 export const booleanString = z
     .string()
     .transform(s => JSON.parse(s))
     .pipe(z.boolean())
 
-export const bigIntString = numberString.transform(BigInt)
+export const bigIntString = numberString.pipe(z.coerce.bigint())

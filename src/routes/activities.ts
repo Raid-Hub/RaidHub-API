@@ -1,42 +1,45 @@
-import { Request, Response, Router } from "express"
-import { failure, success } from "~/util"
+import { Router } from "express"
+import { bigIntString, success } from "~/util"
 import { prisma } from "~/prisma"
 import { isContest, isDayOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
-import { activitySearchRouter } from "./activity-search"
-
-const DEFAULT_COUNT = 500
+import { z } from "zod"
+import { zodParamsParser, zodQueryParser } from "~/middlewares/parsers"
+import { activitySearchRouter } from "./activities-search"
 
 export const activitiesRouter = Router()
 
 activitiesRouter.use("/search", activitySearchRouter)
 
-activitiesRouter.get("/:destinyMembershipId", async (req: Request, res: Response) => {
-    try {
-        const membershipId = BigInt(req.params.destinyMembershipId)
-        const cursor = req.query.cursor ? BigInt(req.query.cursor as string) : null
-        let count: number | undefined = Number(req.query.count)
-        if (Number.isNaN(count)) {
-            count = undefined
-        }
+const ActivitiesParamSchema = z.object({
+    membershipId: bigIntString,
+    count: z.number().int().positive().max(1000).default(750)
+})
 
+const ActivitiesQuerySchema = z.object({
+    cursor: bigIntString.optional()
+})
+
+activitiesRouter.get(
+    "/:membershipId",
+    zodParamsParser(ActivitiesParamSchema),
+    zodQueryParser(ActivitiesQuerySchema),
+    async (req, res, next) => {
         try {
-            const data = await getPlayerActivities({ membershipId, cursor, count })
+            const { membershipId, count } = req.params
+            const { cursor } = req.query
+            const data = await getPlayerActivities({
+                membershipId,
+                cursor,
+                count
+            })
             res.setHeader("Cache-Control", `max-age=${cursor ? 86400 : 30}`)
             res.status(200).json(success(data))
         } catch (e) {
-            console.error(e)
-            res.status(500).json(failure(e, "Internal server error"))
+            next(e)
         }
-    } catch (e) {
-        res.status(400).json(
-            failure(
-                { destinyMembershipId: req.params.destinyMembershipId, cursor: req.query.cursor },
-                "Invalid query params"
-            )
-        )
     }
-})
+)
 
 const activityQuery = (membershipId: bigint, count: number) =>
     ({
@@ -72,11 +75,11 @@ const playerActivityQuery = (membershipId: bigint, count: number) =>
 async function getPlayerActivities({
     membershipId,
     cursor,
-    count = DEFAULT_COUNT
+    count
 }: {
     membershipId: bigint
-    cursor: bigint | null
-    count?: number
+    cursor?: bigint
+    count: number
 }) {
     const [activities, playerActivities] = await Promise.all(
         // If a cursor is provided

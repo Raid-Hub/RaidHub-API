@@ -3,7 +3,7 @@ import { ZodType, z } from "zod"
 import { failure } from "~/util"
 
 export const zodBodyParser =
-    <Z extends ZodType>(schema: Z): RequestHandler<unknown, any, z.infer<Z>> =>
+    <P, Z extends ZodType, ReqQuery>(schema: Z): RequestHandler<P, any, z.infer<Z>, ReqQuery> =>
     (req, res, next) => {
         const parsed = schema.safeParse(req.body)
         if (parsed.success) {
@@ -15,7 +15,7 @@ export const zodBodyParser =
     }
 
 export const zodQueryParser =
-    <Z extends ZodType>(schema: Z): RequestHandler<unknown, any, any, z.infer<Z>> =>
+    <P, ReqBody, Z extends ZodType>(schema: Z): RequestHandler<P, any, ReqBody, z.infer<Z>> =>
     (req, res, next) => {
         const parsed = schema.safeParse(req.query)
         if (parsed.success) {
@@ -27,13 +27,15 @@ export const zodQueryParser =
     }
 
 export const zodParamsParser =
-    <Z extends ZodType>(schema: Z): RequestHandler<z.infer<Z>> =>
+    <Z extends ZodType, ReqBody, ReqQuery>(
+        schema: Z
+    ): RequestHandler<z.infer<Z>, any, ReqBody, ReqQuery> =>
     (req, res, next) => {
         const parsed = schema.safeParse(req.params)
         if (parsed.success) {
             req.params = parsed.data
             next()
         } else {
-            res.status(400).json(failure({ issues: parsed.error.issues }, "Invalid path"))
+            res.status(404).json(failure({ issues: parsed.error.issues }, "Invalid path"))
         }
     }
