@@ -105,7 +105,7 @@ CREATE INDEX "idx_raidhash_date_completed" ON "activity"("raid_hash", "date_comp
 CREATE INDEX "date_index" ON "activity"("date_completed" DESC);
 
 -- CreateIndex
-CREATE INDEX "hash_index" ON "activity"("raid_hash");
+CREATE INDEX "tag_index" ON "activity"("completed", "player_count", "fresh", "flawless");
 
 -- CreateIndex
 CREATE INDEX "clears_idx" ON "player"("clears");
@@ -136,6 +136,12 @@ CREATE UNIQUE INDEX "leaderboard_id_key" ON "leaderboard"("id");
 
 -- CreateIndex
 CREATE INDEX "activity_leaderboard_entry_instance_id_index" ON "activity_leaderboard_entry" USING HASH ("instance_id");
+
+-- CreateIndex
+CREATE INDEX "idx_raid_definition_raid_id" ON "raid_definition"("raid_id");
+
+-- CreateIndex
+CREATE INDEX "idx_raid_definition_version_id" ON "raid_definition"("version_id");
 
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;
