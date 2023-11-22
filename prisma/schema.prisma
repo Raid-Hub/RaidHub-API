@@ -23,7 +23,7 @@ model Activity {
 
   @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
   @@index([dateCompleted(sort: Desc)], map: "date_index")
-  @@index([playerCount], map: "player_count_index")
+  @@index([completed, playerCount, fresh, flawless], map: "tag_index")
   @@map("activity")
 }
 
