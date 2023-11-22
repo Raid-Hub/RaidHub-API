@@ -18,7 +18,7 @@ import { LeaderboardsForRaid } from "~/data/leaderboards"
 
 export const manifestRouter = Router()
 
-manifestRouter.use(cacheControl(3600))
+manifestRouter.use(cacheControl(300))
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
