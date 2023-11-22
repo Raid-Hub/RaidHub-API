@@ -6,7 +6,7 @@ import { MasterReleases, PCLeviathanRelease, PrestigeReleases, ReleaseDate } fro
 import { cacheControl } from "~/middlewares/cache-control"
 import { z } from "zod"
 import { zodParamsParser, zodQueryParser } from "~/middlewares/parsers"
-import { ActivityLeaderboardParams, Board } from "~/data/leaderboards"
+import { ActivityLeaderboardParams, Board, LeaderboardsForRaid } from "~/data/leaderboards"
 
 export const worldfirstRouter = Router({ mergeParams: true })
 
@@ -26,7 +26,7 @@ worldfirstRouter.get(
             const { raid, category } = req.params
             const { page, count } = req.query
 
-            // @ts-expect-error the generics required to make this work are simply not worth, the params parser handles
+            // @ts-ignore the generics required to make this work are simply not worth, the params parser handles
             // the run-time validation for us
             const boardId = LeaderboardsForRaid[raid][category] as string
 
