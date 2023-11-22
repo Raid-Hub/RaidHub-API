@@ -7,10 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-}
-
 model Activity {
   instanceId               BigInt                     @id @map("instance_id")
   raidHash                 BigInt                     @map("raid_hash")
