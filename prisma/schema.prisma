@@ -17,13 +17,13 @@ model Activity {
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
   platformType             Int                        @map("platform_type")
-  raidDefintion            RaidDefintion              @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
+  raidDefintion            RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
   @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
   @@index([dateCompleted(sort: Desc)], map: "date_index")
-  @@index([raidHash], name: "hash_index")
+  @@index([playerCount], map: "player_count_index")
   @@map("activity")
 }
 
@@ -97,26 +97,27 @@ model ActivityLeaderboardEntry {
 }
 
 model Raid {
-  id                     Int             @id
+  id                     Int              @id
   name                   String
-  clears                 ClearCount[]    @relation("player_clear_counts")
-  AssociatedRaidVersions RaidVersion[]   @relation("associated_raid_version")
-  RaidDefintion          RaidDefintion[] @relation("raid_name_definition")
+  clears                 ClearCount[]     @relation("player_clear_counts")
+  AssociatedRaidVersions RaidVersion[]    @relation("associated_raid_version")
+  RaidDefintion          RaidDefinition[] @relation("raid_name_definition")
 
   @@map("raid")
 }
 
 model RaidVersion {
-  id               Int             @id
+  id               Int              @id
   name             String
-  RaidDefintion    RaidDefintion[] @relation("raid_version_definition")
-  associatedRaidId Int?            @map("associated_raid_id")
-  associatedRaid   Raid?           @relation("associated_raid_version", fields: [associatedRaidId], references: [id])
+  associatedRaidId Int?             @map("associated_raid_id")
+  associatedRaid   Raid?            @relation("associated_raid_version", fields: [associatedRaidId], references: [id])
+
+  RaidDefintion    RaidDefinition[] @relation("raid_version_definition")
 
   @@map("raid_version")
 }
 
-model RaidDefintion {
+model RaidDefinition {
   raidHash   BigInt      @id @map("hash")
   raidId     Int         @map("raid_id")
   versionId  Int         @map("version_id")
@@ -124,6 +125,8 @@ model RaidDefintion {
   version    RaidVersion @relation("raid_version_definition", fields: [versionId], references: [id])
   activities Activity[]  @relation("raid_defintion")
 
+  @@index([raidId], map: "idx_raid_definition_raid_id")
+  @@index([versionId], map: "idx_raid_definition_version_id")
   @@map("raid_definition")
 }
 
