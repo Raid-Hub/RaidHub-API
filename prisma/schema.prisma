@@ -17,7 +17,7 @@ model Activity {
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
   platformType             Int                        @map("platform_type")
-  raidDefintion            RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
+  raidDefinition            RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
 
@@ -101,7 +101,7 @@ model Raid {
   name                   String
   clears                 ClearCount[]     @relation("player_clear_counts")
   AssociatedRaidVersions RaidVersion[]    @relation("associated_raid_version")
-  RaidDefintion          RaidDefinition[] @relation("raid_name_definition")
+  RaidDefinition          RaidDefinition[] @relation("raid_name_definition")
 
   @@map("raid")
 }
@@ -112,7 +112,7 @@ model RaidVersion {
   associatedRaidId Int?             @map("associated_raid_id")
   associatedRaid   Raid?            @relation("associated_raid_version", fields: [associatedRaidId], references: [id])
 
-  RaidDefintion    RaidDefinition[] @relation("raid_version_definition")
+  RaidDefinition    RaidDefinition[] @relation("raid_version_definition")
 
   @@map("raid_version")
 }

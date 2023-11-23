@@ -105,8 +105,9 @@ INSERT INTO "raid_definition" ("raid_id", "version_id", "hash") VALUES
     (10, 1, 2906950631),
     -- VOW_OF_THE_DISCIPLE GUIDEDGAMES
     (10, 2, 4156879541),
-    (10, 2, 4217492330),
-    (10, 2, 3889634515),
+    -- VOW_OF_THE_DISCIPLE MASTER
+    (10, 4, 4217492330),
+    (10, 4, 3889634515),
     -- KINGS_FALL
     (11, 1, 1374392663),
     -- KINGS_FALL GUIDEDGAMES
@@ -130,3 +131,11 @@ INSERT INTO "raid_definition" ("raid_id", "version_id", "hash") VALUES
     (13, 66, 156253568),
     -- CROTAS_END MASTER
     (13, 4, 1507509200);
+
+SELECT COUNT(*) as 'guided games clears', r.name
+FROM activity a 
+JOIN raid_definition rd ON rd.hash = a.raid_hash 
+JOIN raid r ON r.id = rd.raid_id 
+WHERE a.completed = true AND rd.version_id = 2
+GROUP BY r.name, r.id
+ORDER BY r.id DESC;
