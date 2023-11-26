@@ -9,8 +9,6 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: check out
-              uses: actions/checkout@master
             - name: Cloudflare Warp Client Setup
               uses: Boostport/setup-cloudflare-warp@v1
               with:
@@ -18,30 +16,21 @@ jobs:
                   auth_client_id: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_ID }}
                   auth_client_secret: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_SECRET }}
 
-            - name: install cloudflared
+            - name: Install cloudflared
               run: |
                   curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
                   echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee  /etc/apt/sources.list.d/cloudflared.list
                   sudo apt update
                   sudo apt-get install cloudflared
                   cloudflared --version
-            - name: install-ssh-key
+
+            - name: Load SSH Key
               uses: shimataro/ssh-key-action@v2
               with:
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
-                  name: ed25519
+                  name: gapk
                   if_key_exists: fail
-            - name: deploy api
-              run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app" root@ssh.raidhub.app "~/../RaidHub/RaidHub-API/deploy.sh"
 
-            # - name: SSH to VPS and Restart Server
-            #   uses: appleboy/ssh-action@master
-            #   with:
-            #       host: ${{ secrets.VPS_HOST }}
-            #       username: ${{ secrets.VPS_USERNAME }}
-            #       key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-            #       port: 80
-            #       timeout: 120s
-            #       script: |
-            #           cd ~/../RaidHub/RaidHub-API/
+            - name: Deploy API
+              run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app" root@ssh.raidhub.app "~/../RaidHub/RaidHub-API/deploy.sh
