@@ -9,6 +9,13 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
+            - name: Test
+              uses: Boostport/setup-cloudflare-warp@v1
+              with:
+                  organization: raidhub
+                  auth_client_id: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_ID }}
+                  auth_client_secret: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_SECRET }}
+
             - name: SSH to VPS and Restart Server
               uses: appleboy/ssh-action@master
               with:
