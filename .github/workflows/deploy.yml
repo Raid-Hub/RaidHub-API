@@ -11,6 +11,13 @@ jobs:
         steps:
             - name: check out
               uses: actions/checkout@master
+            - name: Cloudflare Warp Client Setup
+              uses: Boostport/setup-cloudflare-warp@v1
+              with:
+                  organization: raidhub
+                  auth_client_id: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_ID }}
+                  auth_client_secret: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_SECRET }}
+
             - name: install cloudflared
               run: |
                   curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
@@ -27,13 +34,6 @@ jobs:
                   if_key_exists: fail
             - name: deploy api
               run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app" root@ssh.raidhub.app "~/../RaidHub/RaidHub-API/deploy.sh"
-
-            # - name: Cloudflare Warp Client Setup
-            #   uses: Boostport/setup-cloudflare-warp@v1
-            #   with:
-            #       organization: raidhub
-            #       auth_client_id: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_ID }}
-            #       auth_client_secret: ${{ secrets.CLOUDFLARE_AUTH_CLIENT_SECRET }}
 
             # - name: SSH to VPS and Restart Server
             #   uses: appleboy/ssh-action@master
