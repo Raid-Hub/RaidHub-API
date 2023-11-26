@@ -9,7 +9,7 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Test
+            - name: Cloudlfare Warp Setup
               uses: Boostport/setup-cloudflare-warp@v1
               with:
                   organization: raidhub
