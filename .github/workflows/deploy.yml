@@ -26,7 +26,7 @@ jobs:
                   name: ed25519
                   if_key_exists: fail
             - name: deploy api
-              run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app" pi@ssh.raidhub.app < ~/../RaidHub/RaidHub-API/deploy.sh
+              run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app" root@ssh.raidhub.app "~/../RaidHub/RaidHub-API/deploy.sh"
 
             # - name: Cloudflare Warp Client Setup
             #   uses: Boostport/setup-cloudflare-warp@v1
