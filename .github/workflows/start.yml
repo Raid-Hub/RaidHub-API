@@ -21,6 +21,7 @@ jobs:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USERNAME }}
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+                  timeout: 120s
                   script: |
                       cd ~/../RaidHub/RaidHub-API/
                       git pull origin main
