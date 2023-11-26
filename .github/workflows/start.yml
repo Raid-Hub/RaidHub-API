@@ -1,4 +1,4 @@
-name: Deploy to VPS on Push
+name: Manually Deploy API
 
 on:
     workflow_dispatch:
