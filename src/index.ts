@@ -16,7 +16,7 @@ import { memberRouter } from "./routes/member"
 const port = Number(process.env.PORT || 8000)
 const totalCPUs = cpus().length
 
-if (process.env.PROD && !process.env.PRIVATE_KEY) {
+if (process.env.PROD && !process.env.PRIVATE_KEY_PROD) {
     console.error("Missing private API KEY")
     process.exit(1)
 }

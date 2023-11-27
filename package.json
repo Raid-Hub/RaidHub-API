@@ -6,9 +6,9 @@
     "scripts": {
         "dev": "nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/index.ts",
         "build": "tsc && tsc-alias",
-        "start": "pm2 start ./dist/index.js --name raidhub-api",
+        "start": "pm2 start ./dist/index.js --name \"raidhub-api\" --time",
         "stop": "pm2 stop raidhub-api",
-        "restart": "yarn && yarn prisma generate && yarn build && pm2 restart raidhub-api --update-env",
+        "restart": "yarn && yarn prisma generate && yarn build && pm2 restart \"raidhub-api\" --update-env",
         "db:start": "docker-compose -f docker-compose.yml up -d",
         "db:stop": "docker-compose -f docker-compose.yml down",
         "db:push": "prisma db push",
