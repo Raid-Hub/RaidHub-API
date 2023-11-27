@@ -7,8 +7,12 @@ export const cors =
     (prod: boolean): RequestHandler =>
     (req, res, next) => {
         if (
+            req.headers.origin &&
+            urlOriginRegex.test(req.headers.origin) // matches raidhub url
+        ) {
+            res.header("Access-Control-Allow-Origin", "*.raidhub.app, raidhub.app")
+        } else if (
             !prod || // dev mode
-            (req.headers.origin && urlOriginRegex.test(req.headers.origin)) || // matches raidhub url
             ("x-api-key" in req.headers && req.headers["x-api-key"] === process.env.PRIVATE_KEY) // api key required
         ) {
             if (req.headers.origin) {
