@@ -13,7 +13,7 @@ activitiesRouter.use("/search", activitySearchRouter)
 
 const ActivitiesParamSchema = z.object({
     membershipId: bigIntString,
-    count: z.number().int().positive().max(1000).default(750)
+    count: z.number().int().positive().max(5000).default(2000)
 })
 
 const ActivitiesQuerySchema = z.object({
