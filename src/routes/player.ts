@@ -5,7 +5,6 @@ import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
 import { AllRaidHashes } from "./manifest"
 import { z } from "zod"
 import { zodBodyParser, zodParamsParser } from "~/middlewares/parsers"
-import { appendToFile } from "tasks/appendToFile"
 import { cacheControl } from "~/middlewares/cache-control"
 
 export const playerRouter = Router()
@@ -110,15 +109,7 @@ const PlayerLogBodySchema = z.record(
 
 playerRouter.post("/log", zodBodyParser(PlayerLogBodySchema), async (req, res, next) => {
     try {
-        appendToFile({
-            filePath: "players.log",
-            contents: Object.entries(req.body)
-                .map(([membershipId, { membershipType, characterIds }]) =>
-                    [membershipId, membershipType, characterIds.join(",")].join(",")
-                )
-                .join("\n")
-        })
-        res.status(200).json(success(Object.keys(req.body).length))
+        res.sendStatus(204)
     } catch (e) {
         next(e)
     }

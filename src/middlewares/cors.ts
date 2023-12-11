@@ -1,4 +1,5 @@
 import { RequestHandler } from "express"
+import { appendToFile } from "tasks/appendToFile"
 import { failure, includedIn } from "~/util"
 
 const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.app$/
@@ -10,8 +11,7 @@ export const cors =
             req.headers.origin &&
             urlOriginRegex.test(req.headers.origin) // matches raidhub url
         ) {
-            res.header("Access-Control-Allow-Origin", req.headers.origin)
-            console.log("a")
+            res.header("Access-Control-Allow-Origin", "*")
             next()
         } else if (
             !prod || // dev mode
@@ -22,16 +22,16 @@ export const cors =
                 ))
             // api key required
         ) {
-            if (req.headers.origin) {
-                res.header("Access-Control-Allow-Origin", req.headers.origin)
-            } else {
-                res.header("Access-Control-Allow-Origin", "*")
-            }
-            console.log("b")
+            res.header("Access-Control-Allow-Origin", "*")
             next()
         } else {
-            console.log("c")
             res.header("Access-Control-Allow-Origin", "https://raidhub.app")
+            if (req.headers.origin) {
+                appendToFile({
+                    contents: req.headers.origin,
+                    filePath: "origins.log"
+                })
+            }
             res.status(403).send(failure({}, "Request originated from an invalid origin"))
         }
     }
