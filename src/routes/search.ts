@@ -44,7 +44,6 @@ async function searchForPlayer(query: string, count: number) {
         }
     }
 
-    const take = count * 2
     async function searchGlobal() {
         const [globalDisplayName, globalDisplayNameCode] = searchTerm.split("#")
         const results = await prisma.player
@@ -58,7 +57,7 @@ async function searchForPlayer(query: string, count: number) {
                         startsWith: globalDisplayNameCode
                     }
                 },
-                take: take
+                take: count
             })
             .then(res => res.sort(sortResults))
 
@@ -78,6 +77,7 @@ async function searchForPlayer(query: string, count: number) {
     }
 
     async function searchDisplay() {
+        const take = count * 2
         const results = await prisma.player
             .findMany({
                 where: {
