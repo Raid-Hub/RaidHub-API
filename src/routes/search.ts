@@ -26,13 +26,13 @@ searchRouter.get("/", zodQueryParser(SearchParams), async (req, res, next) => {
 })
 
 async function searchForPlayer(query: string, count: number) {
-    const searchTerm = query.trim()
+    const searchTerm = query.trim().toLowerCase()
 
     // normalize last played by adding a month minimum
     const adjustedNow = Date.now() + 1000 * 60 * 60 * 24 * 30
     const sortResults = (a: Player, b: Player) => {
-        const aMatch = a.bungieGlobalDisplayName === searchTerm
-        const bMatch = b.bungieGlobalDisplayName === searchTerm
+        const aMatch = a.bungieGlobalDisplayName?.toLowerCase() === searchTerm
+        const bMatch = b.bungieGlobalDisplayName?.toLowerCase() === searchTerm
 
         // @ts-ignore
         if (aMatch ^ bMatch) {
