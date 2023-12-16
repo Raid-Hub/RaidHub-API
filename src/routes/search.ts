@@ -4,6 +4,7 @@ import { prisma } from "~/prisma"
 import { cacheControl } from "~/middlewares/cache-control"
 import { zodQueryParser } from "~/middlewares/parsers"
 import { z } from "zod"
+import { Player } from "@prisma/client"
 
 export const searchRouter = Router()
 
@@ -24,29 +25,48 @@ searchRouter.get("/", zodQueryParser(SearchParams), async (req, res, next) => {
     }
 })
 
-async function searchForPlayer(query: string, take: number) {
-    const searchTerm = decodeURIComponent(query).trim()
+async function searchForPlayer(query: string, count: number) {
+    const searchTerm = query.trim().toLowerCase()
 
-    if (searchTerm.includes("#")) {
-        const [displayName, code] = searchTerm.split("#")
-        const results = await prisma.player.findMany({
-            where: {
-                bungieGlobalDisplayName: {
-                    equals: displayName,
-                    mode: "insensitive"
+    // normalize last played by adding a month minimum
+    const adjustedNow = Date.now() + 1000 * 60 * 60 * 24 * 30
+    const sortResults = (a: Player, b: Player) => {
+        const aMatch = a.bungieGlobalDisplayName?.toLowerCase() === searchTerm
+        const bMatch = b.bungieGlobalDisplayName?.toLowerCase() === searchTerm
+
+        // @ts-ignore
+        if (aMatch ^ bMatch) {
+            return aMatch ? -1 : 1
+        } else {
+            const timeDifferenceA = adjustedNow - a.lastSeen.getTime()
+            const timeDifferenceB = adjustedNow - b.lastSeen.getTime()
+            return timeDifferenceA / (a.clears || 1) - timeDifferenceB / (b.clears || 1)
+        }
+    }
+
+    async function searchGlobal() {
+        const [globalDisplayName, globalDisplayNameCode] = searchTerm.split("#")
+        const results = await prisma.player
+            .findMany({
+                where: {
+                    bungieGlobalDisplayName: {
+                        equals: globalDisplayName,
+                        mode: "insensitive"
+                    },
+                    bungieGlobalDisplayNameCode: {
+                        startsWith: globalDisplayNameCode
+                    }
                 },
-                bungieGlobalDisplayNameCode: {
-                    contains: code
-                }
-            },
-            take: take
-        })
+                take: count
+            })
+            .then(res => res.sort(sortResults))
+
         return {
             params: {
-                count: take,
+                count: count,
                 term: {
-                    bungieGlobalDisplayName: displayName,
-                    bungieGlobalDisplayNameCode: code
+                    bungieGlobalDisplayName: globalDisplayName,
+                    bungieGlobalDisplayNameCode: globalDisplayNameCode
                 }
             },
             results: results.map(r => ({
@@ -54,59 +74,64 @@ async function searchForPlayer(query: string, take: number) {
                 membershipId: String(r.membershipId)
             }))
         }
-    } else {
-        const results = await prisma.player.findMany({
-            where: {
-                OR: [
-                    {
-                        bungieGlobalDisplayName: {
-                            contains: searchTerm,
-                            mode: "insensitive"
-                        }
-                    },
-                    {
+    }
+
+    async function searchDisplay() {
+        const take = count * 2
+        const results = await prisma.player
+            .findMany({
+                where: {
+                    bungieGlobalDisplayName: {
+                        startsWith: searchTerm,
+                        mode: "insensitive"
+                    }
+                },
+                orderBy: {
+                    clears: "desc"
+                },
+                take: take
+            })
+            .then(res => res.sort(sortResults))
+
+        if (results.length < count) {
+            const more = await prisma.player
+                .findMany({
+                    where: {
                         displayName: {
                             contains: searchTerm,
                             mode: "insensitive"
+                        },
+                        NOT: {
+                            bungieGlobalDisplayName: {
+                                startsWith: searchTerm,
+                                mode: "insensitive"
+                            }
                         }
-                    }
-                ]
-            },
-            orderBy: {
-                clears: "desc"
-            },
-            take: take
-        })
+                    },
+                    orderBy: {
+                        clears: "desc"
+                    },
+                    take: take - results.length
+                })
+                .then(res => res.sort(sortResults))
+            results.push(...more)
+        }
 
         return {
             params: {
                 count: take,
                 term: {
-                    displayName: searchTerm
+                    displayName: searchTerm,
+                    bungieGlobalDisplayName: searchTerm
                 }
             },
             // sort by a combination of last played and clears
-            results: results
-                .sort((a, b) => {
-                    const aMatch = a.bungieGlobalDisplayName === searchTerm
-                    const bMatch = b.bungieGlobalDisplayName === searchTerm
-
-                    // @ts-ignore
-                    if (aMatch ^ bMatch) {
-                        return aMatch ? -1 : 1
-                    } else {
-                        const now = Date.now()
-                        const monthsTime = 2592000000
-                        // normalize last played by adding a month minimum
-                        const timeDifferenceA = monthsTime + now - new Date(a.lastSeen).getTime()
-                        const timeDifferenceB = monthsTime + now - new Date(b.lastSeen).getTime()
-                        return timeDifferenceA / (a.clears || 1) - timeDifferenceB / (b.clears || 1)
-                    }
-                })
-                .map(r => ({
-                    ...r,
-                    membershipId: String(r.membershipId)
-                }))
+            results: results.slice(0, count).map(r => ({
+                ...r,
+                membershipId: String(r.membershipId)
+            }))
         }
     }
+
+    return searchTerm.includes("#") ? searchGlobal() : searchDisplay()
 }
