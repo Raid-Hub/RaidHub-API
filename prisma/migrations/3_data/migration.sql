@@ -132,10 +132,55 @@ INSERT INTO "raid_definition" ("raid_id", "version_id", "hash") VALUES
     -- CROTAS_END MASTER
     (13, 4, 1507509200);
 
-SELECT COUNT(*) as 'guided games clears', r.name
-FROM activity a 
-JOIN raid_definition rd ON rd.hash = a.raid_hash 
-JOIN raid r ON r.id = rd.raid_id 
-WHERE a.completed = true AND rd.version_id = 2
-GROUP BY r.name, r.id
-ORDER BY r.id DESC;
+CREATE OR REPLACE FUNCTION SEASON(p_input_date timestamp with time zone)
+RETURNS integer AS $$
+DECLARE
+    v_season_number integer;
+    v_season_dates timestamp with time zone[] := ARRAY[
+        '2017-12-05T17:00:00Z',
+        '2018-05-08T18:00:00Z',
+        '2018-09-04T17:00:00Z',
+        '2018-11-27T17:00:00Z',
+        '2019-03-05T17:00:00Z',
+        '2019-06-04T17:00:00Z',
+        '2019-10-01T17:00:00Z',
+        '2019-12-10T17:00:00Z',
+        '2020-03-10T17:00:00Z',
+        '2020-06-09T17:00:00Z',
+        '2020-11-10T17:00:00Z',
+        '2021-02-09T17:00:00Z',
+        '2021-05-11T17:00:00Z',
+        '2021-08-24T17:00:00Z',
+        '2022-02-22T17:00:00Z',
+        '2022-05-24T17:00:00Z',
+        '2022-08-23T17:00:00Z',
+        '2022-12-06T17:00:00Z',
+        '2023-02-28T17:00:00Z',
+        '2023-05-23T17:00:00Z',
+        '2023-08-22T17:00:00Z',
+        '2023-11-28T17:00:00Z',
+        '2024-06-04T17:00:00Z',
+        -- add new seasons here
+        '2099-12-31T17:00:00Z'
+    ];
+    v_low integer := 1;
+    v_high integer := array_length(v_season_dates, 1);
+BEGIN
+    -- binary search
+    WHILE v_low <= v_high LOOP
+        DECLARE
+            v_mid integer := floor((v_low + v_high) / 2);
+        BEGIN
+            IF p_input_date >= v_season_dates[v_mid] THEN
+                v_low := v_mid + 1;
+            ELSE
+                v_high := v_mid - 1;
+            END IF;
+        END;
+    END LOOP;
+
+    v_season_number := v_high + 1;
+
+    RETURN v_season_number;
+END;
+$$ LANGUAGE plpgsql;

@@ -21,5 +21,6 @@ export const SeasonDates = [
     new Date("2023-02-28T17:00:00Z"),
     new Date("2023-05-23T17:00:00Z"),
     new Date("2023-08-22T17:00:00Z"),
-    new Date("2023-11-28T17:00:00Z")
+    new Date("2023-11-28T17:00:00Z"),
+    new Date("2023-06-04T17:00:00Z")
 ]
