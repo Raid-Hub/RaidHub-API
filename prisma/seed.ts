@@ -169,29 +169,34 @@ async function main() {
         )
 
         await Promise.all(
-            fetchedPGCRs.map(({ players, compressed, ...pgcr }) =>
+            fetchedPGCRs.map(({ compressed, instanceId }) =>
                 Promise.all([
-                    prisma.activity
-                        .create({
-                            data: pgcr
-                        })
-                        .catch(console.error),
-
                     prisma.pGCR
                         .create({
                             data: {
-                                instanceId: pgcr.instanceId,
+                                instanceId: instanceId,
                                 data: compressed
                             }
                         })
                         .catch(console.error)
                 ])
             )
-        ).then(res => console.log(`Inserted ${res.length} entries`))
+        )
 
-        for (const pgcr of fetchedPGCRs) {
+        for (const { compressed, players, ...pgcr } of fetchedPGCRs) {
+            const { raidDefinition } = await prisma.activity.create({
+                data: pgcr,
+                select: {
+                    raidDefinition: {
+                        select: {
+                            raidId: true
+                        }
+                    }
+                }
+            })
+
             await Promise.all(
-                Array.from(pgcr.players.values()).map(async p => {
+                Array.from(players.values()).map(async p => {
                     const destinyUserInfo = p[0].player.destinyUserInfo
                     const didFinish = p.some(
                         e =>
@@ -247,12 +252,32 @@ async function main() {
                               }
                             : null)
                     }
+                    const durationSeconds = Math.floor(
+                        pgcr.dateCompleted.getTime() - pgcr.dateStarted.getTime() / 1000
+                    )
+
+                    const statsCreate = {
+                        clears: didFinish ? 1 : 0,
+                        freshClears: didFinish && pgcr.fresh ? 1 : 0,
+                        trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
+                        duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
+                        solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
+                        raid: {
+                            connect: {
+                                id: raidDefinition.raidId
+                            }
+                        }
+                    }
+
                     return prisma.player
                         .upsert({
                             create: {
                                 ...data,
                                 clears: didFinish ? 1 : 0,
-                                membershipId: BigInt(destinyUserInfo.membershipId)
+                                membershipId: BigInt(destinyUserInfo.membershipId),
+                                stats: {
+                                    create: statsCreate
+                                }
                             },
                             update: {
                                 ...data,
@@ -260,7 +285,38 @@ async function main() {
                                     ? {
                                           increment: 1
                                       }
-                                    : undefined
+                                    : undefined,
+                                stats: {
+                                    upsert: {
+                                        create: statsCreate,
+                                        update: {
+                                            clears: {
+                                                increment: didFinish ? 1 : 0
+                                            },
+                                            freshClears: {
+                                                increment: didFinish && pgcr.fresh ? 1 : 0
+                                            },
+                                            trios: {
+                                                increment:
+                                                    didFinish && pgcr.playerCount === 3 ? 1 : 0
+                                            },
+                                            duos: {
+                                                increment:
+                                                    didFinish && pgcr.playerCount === 2 ? 1 : 0
+                                            },
+                                            solos: {
+                                                increment:
+                                                    didFinish && pgcr.playerCount === 1 ? 1 : 0
+                                            }
+                                        },
+                                        where: {
+                                            player_stats_membership_id_raid_id_key: {
+                                                membershipId: BigInt(destinyUserInfo.membershipId),
+                                                raidId: raidDefinition.raidId
+                                            }
+                                        }
+                                    }
+                                }
                             },
                             where: {
                                 membershipId: BigInt(destinyUserInfo.membershipId)
