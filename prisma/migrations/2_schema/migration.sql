@@ -48,7 +48,6 @@ CREATE TABLE "player_stats" (
     "raid_id" INTEGER NOT NULL,
     "clears" INTEGER NOT NULL DEFAULT 0,
     "fresh_clears" INTEGER NOT NULL DEFAULT 0,
-    "fastest" INTEGER NOT NULL DEFAULT 0,
     "sherpas" INTEGER NOT NULL DEFAULT 0,
     "trios" INTEGER NOT NULL DEFAULT 0,
     "duos" INTEGER NOT NULL DEFAULT 0,
@@ -141,7 +140,6 @@ CREATE UNIQUE INDEX "player_stats_membership_id_raid_id_key" ON "player_stats"("
 -- CreateIndex
 CREATE INDEX "raid_clears_idx" ON "player_stats"("raid_id", "clears" DESC);
 CREATE INDEX "raid_fresh_clears_idx" ON "player_stats"("raid_id", "fresh_clears" DESC);
-CREATE INDEX "raid_fastest_clear_idx" ON "player_stats"("raid_id", "fastest" DESC);
 CREATE INDEX "raid_sherpas_idx" ON "player_stats"("raid_id", "sherpas" DESC);
 CREATE INDEX "raid_trio_clears_idx" ON "player_stats"("raid_id", "trios" DESC);
 CREATE INDEX "raid_duo_clears_idx" ON "player_stats"("raid_id", "duos" DESC);

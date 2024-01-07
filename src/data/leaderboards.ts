@@ -1,9 +1,20 @@
 import { z } from "zod"
 import { includedIn } from "~/util"
 import { ListedRaid, Raid } from "./raids"
+import { PlayerStats } from "@prisma/client"
 
 export const Boards = ["normal", "prestige", "pc", "challenge", "master"] as const
 export type Board = (typeof Boards)[number]
+
+export const IndividualBoards = [
+    "fresh",
+    "clears",
+    "sherpas",
+    "trios",
+    "duos",
+    "solos"
+] as const satisfies (keyof PlayerStats)[]
+export type IndividualBoard = (typeof IndividualBoards)[number]
 
 const RaidPathSchema = z.object({
     raid: z
@@ -24,6 +35,16 @@ const RaidPathSchema = z.object({
         ])
         .transform(r => UrlPathsToRaid[r])
 })
+
+export const IndividualLeaderboardParams = RaidPathSchema.extend({
+    category: z
+        .string()
+        .transform(s => s.toLowerCase())
+        .pipe(z.enum(IndividualBoards))
+}).refine(
+    schema => includedIn(Object.keys(ClearsLeaderboardsForRaid[schema.raid]), schema.category),
+    "This leaderboard is not available for this raid"
+)
 
 export const ActivityLeaderboardParams = RaidPathSchema.extend({
     category: z.enum(Boards)
@@ -101,3 +122,110 @@ export const LeaderboardsForRaid = {
         master: "crota_master"
     }
 } satisfies Record<ListedRaid, Partial<Record<Board, string>>>
+
+export const ClearsLeaderboardsForRaid = {
+    [Raid.LEVIATHAN]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: false
+    },
+    [Raid.EATER_OF_WORLDS]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: true
+    },
+    [Raid.SPIRE_OF_STARS]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: false,
+        duos: false,
+        solos: false
+    },
+    [Raid.LAST_WISH]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: true
+    },
+    [Raid.SCOURGE_OF_THE_PAST]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: false
+    },
+    [Raid.CROWN_OF_SORROW]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: false
+    },
+    [Raid.GARDEN_OF_SALVATION]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: true
+    },
+    [Raid.DEEP_STONE_CRYPT]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: false
+    },
+    [Raid.VAULT_OF_GLASS]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: true
+    },
+    [Raid.VOW_OF_THE_DISCIPLE]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: false,
+        solos: false
+    },
+    [Raid.KINGS_FALL]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: false
+    },
+    [Raid.ROOT_OF_NIGHTMARES]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: true
+    },
+    [Raid.CROTAS_END]: {
+        clears: true,
+        fresh: true,
+        sherpas: true,
+        trios: true,
+        duos: true,
+        solos: false
+    }
+} satisfies Record<ListedRaid, Record<IndividualBoard, boolean>>

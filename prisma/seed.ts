@@ -258,7 +258,7 @@ async function main() {
 
                     const statsCreate = {
                         clears: didFinish ? 1 : 0,
-                        freshClears: didFinish && pgcr.fresh ? 1 : 0,
+                        fresh: didFinish && pgcr.fresh ? 1 : 0,
                         trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
                         duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
                         solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
@@ -293,7 +293,7 @@ async function main() {
                                             clears: {
                                                 increment: didFinish ? 1 : 0
                                             },
-                                            freshClears: {
+                                            fresh: {
                                                 increment: didFinish && pgcr.fresh ? 1 : 0
                                             },
                                             trios: {
