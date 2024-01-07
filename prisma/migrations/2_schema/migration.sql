@@ -37,6 +37,7 @@ CREATE TABLE "player_activity" (
     "deaths" INTEGER NOT NULL DEFAULT 0,
     "time_played_seconds" INTEGER NOT NULL DEFAULT 0,
     "class_hash" BIGINT,
+    "is_sherpa" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "player_activity_instance_id_membership_id_pkey" PRIMARY KEY ("instance_id","membership_id")
 );
@@ -130,6 +131,9 @@ CREATE INDEX "idx_membership_id" ON "player_activity"("membership_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "clear_count_membership_id_raid_id_key" ON "clear_count"("membership_id", "raid_id");
+
+-- CreateIndex
+CREATE INDEX "raid_clears_idx" ON "clear_count"("raid_id", "count" DESC);
 
 -- CreateIndex
 CREATE UNIQUE INDEX "leaderboard_id_key" ON "leaderboard"("id");
