@@ -37,7 +37,7 @@ CREATE TABLE "player_activity" (
     "deaths" INTEGER NOT NULL DEFAULT 0,
     "time_played_seconds" INTEGER NOT NULL DEFAULT 0,
     "class_hash" BIGINT,
-    "is_sherpa" BOOLEAN NOT NULL DEFAULT false,
+    "sherpas" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "player_activity_instance_id_membership_id_pkey" PRIMARY KEY ("instance_id","membership_id")
 );
@@ -170,7 +170,7 @@ ALTER TABLE "player_activity" ADD CONSTRAINT "player_activity_membership_id_fkey
 ALTER TABLE "player_stats" ADD CONSTRAINT "raid_id_fkey" FOREIGN KEY ("raid_id") REFERENCES "raid"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "player_stats" ADD CONSTRAINT "player_membership_id_fkey" FOREIGN KEY ("membership_id") REFERENCES "player"("membership_id") ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "player_stats" ADD CONSTRAINT "player_membership_id_fkey" FOREIGN KEY ("membership_id") REFERENCES "player"("membership_id") ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "activity_leaderboard_entry" ADD CONSTRAINT "activity_leaderboard_entry_instance_id_fkey" FOREIGN KEY ("instance_id") REFERENCES "activity"("instance_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
