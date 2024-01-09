@@ -11,10 +11,10 @@ import {
     ReprisedRaidDifficultyPairings,
     SunsetRaids
 } from "~/data/raids"
-import { success } from "~/util"
+import { includedIn, success } from "~/util"
 import { WorldFirstLeaderboardsForRaid } from "./worldfirst"
 import { cacheControl } from "~/middlewares/cache-control"
-import { LeaderboardsForRaid } from "~/data/leaderboards"
+import { Board, ClearsLeaderboardsForRaid, LeaderboardsForRaid } from "~/data/leaderboards"
 
 export const manifestRouter = Router()
 
@@ -69,6 +69,36 @@ export const AllRaidHashes = Object.fromEntries(
         .flat(2)
 )
 
+const leaderboards = Object.fromEntries(
+    ListedRaids.map(raid => {
+        const otherBoards: Board[] = []
+        if (
+            includedIn(
+                ReprisedRaidDifficultyPairings.map(pairing => pairing[0]),
+                raid
+            )
+        ) {
+            otherBoards.push("normal")
+        }
+        if (includedIn(PrestigeRaids, raid)) {
+            otherBoards.push("prestige")
+        }
+        if (includedIn(MasterRaids, raid)) {
+            otherBoards.push("master")
+        }
+        return [
+            raid,
+            {
+                worldFirst: WorldFirstLeaderboardsForRaid[raid],
+                otherFirsts: otherBoards,
+                individualLeaderboards: Object.entries(ClearsLeaderboardsForRaid[raid])
+                    .filter(([_, bool]) => bool)
+                    .map(([key, _]) => key)
+            }
+        ]
+    })
+)
+
 manifestRouter.get("/", async (_, res, next) => {
     try {
         res.status(200).json(
@@ -87,8 +117,7 @@ manifestRouter.get("/", async (_, res, next) => {
                         difficulty
                     })
                 ),
-                activityLeaderboards: LeaderboardsForRaid,
-                worldFirstBoards: WorldFirstLeaderboardsForRaid
+                leaderboards: leaderboards
             })
         )
     } catch (e) {
