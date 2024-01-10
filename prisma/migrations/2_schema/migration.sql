@@ -23,6 +23,7 @@ CREATE TABLE "player" (
     "bungie_global_display_name_code" TEXT,
     "last_seen" TIMESTAMP(3) NOT NULL,
     "clears" INTEGER NOT NULL DEFAULT 0,
+    "sherpas" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "player_pkey" PRIMARY KEY ("membership_id")
 );
@@ -38,6 +39,7 @@ CREATE TABLE "player_activity" (
     "time_played_seconds" INTEGER NOT NULL DEFAULT 0,
     "class_hash" BIGINT,
     "sherpas" INTEGER NOT NULL DEFAULT 0,
+    "is_first_clear" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "player_activity_instance_id_membership_id_pkey" PRIMARY KEY ("instance_id","membership_id")
 );
