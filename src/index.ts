@@ -1,5 +1,5 @@
 import dotenv from "dotenv"
-import express, { json } from "express"
+import express, { Router, json } from "express"
 import cluster from "cluster"
 import { cpus } from "os"
 import { activitiesRouter } from "./routes/activities"
@@ -12,6 +12,13 @@ import { pgcrRouter } from "./routes/pgcr"
 import { cors } from "./middlewares/cors"
 import { errorHandler } from "./middlewares/errorHandler"
 import { memberRouter } from "./routes/member"
+import { adminProtected } from "./middlewares/admin-protect"
+import { adminSqlQueryRouter } from "./routes/admin-sql-query"
+
+// @ts-expect-error this is a hack to make BigInts work with JSON.stringify
+BigInt.prototype["toJSON"] = function () {
+    return this.toString()
+}
 
 const port = Number(process.env.PORT || 8000)
 const totalCPUs = cpus().length
@@ -85,6 +92,13 @@ function go(pid?: number) {
     app.use("/member", memberRouter)
     app.use("/search", searchRouter)
     app.use("/pgcr", pgcrRouter)
+
+    // admin routes
+    const admin = Router()
+    admin.use(adminProtected(Boolean(process.env.PROD)))
+    app.use("/admin", admin)
+
+    admin.use("/query", adminSqlQueryRouter)
 
     // handle any uncaught errors
     app.use(errorHandler)
