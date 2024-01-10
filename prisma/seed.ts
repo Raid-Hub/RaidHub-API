@@ -233,7 +233,8 @@ async function main() {
                                 deaths,
                                 assists,
                                 timePlayedSeconds,
-                                instanceId: pgcr.instanceId
+                                instanceId: pgcr.instanceId,
+                                classHash: BigInt(p[0].player.classHash)
                             }
                         },
                         ...(destinyUserInfo.membershipType !== 0
