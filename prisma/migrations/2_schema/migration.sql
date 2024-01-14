@@ -23,6 +23,7 @@ CREATE TABLE "player" (
     "bungie_global_display_name_code" TEXT,
     "last_seen" TIMESTAMP(3) NOT NULL,
     "clears" INTEGER NOT NULL DEFAULT 0,
+    "fresh_clears" INTEGER NOT NULL DEFAULT 0,
     "sherpas" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "player_pkey" PRIMARY KEY ("membership_id")
@@ -53,7 +54,9 @@ CREATE TABLE "player_stats" (
     "sherpas" INTEGER NOT NULL DEFAULT 0,
     "trios" INTEGER NOT NULL DEFAULT 0,
     "duos" INTEGER NOT NULL DEFAULT 0,
-    "solos" INTEGER NOT NULL DEFAULT 0
+    "solos" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "player_stats_pkey" PRIMARY KEY ("membership_id","raid_id")
 );
 
 -- CreateTable
@@ -106,49 +109,37 @@ CREATE TABLE "pgcr" (
     CONSTRAINT "pgcr_pkey" PRIMARY KEY ("instance_id")
 );
 
--- CreateIndex
+-- Raid Completion Leaderboard
 CREATE INDEX "idx_raidhash_date_completed" ON "activity"("raid_hash", "date_completed");
 
--- CreateIndex
+-- Recent Activity
 CREATE INDEX "date_index" ON "activity"("date_completed" DESC);
 
--- CreateIndex
+-- Tag Search Index
 CREATE INDEX "tag_index" ON "activity"("completed", "player_count", "fresh", "flawless");
 
--- CreateIndex
-CREATE INDEX "clears_idx" ON "player"("clears");
+-- Global Player Leaderboard Indices
+CREATE INDEX "total_clears_idx" ON "player"("clears");
+CREATE INDEX "total_fresh_clears_idx" ON "player"("fresh_clears");
+CREATE INDEX "total_sherpas_idx" ON "player"("sherpas");
 
--- CreateIndex
+-- Player Search Indices
 CREATE INDEX "trgm_idx_both_display_names" ON "player" USING GIN ("display_name" gin_trgm_ops, "bungie_global_display_name" gin_trgm_ops);
-
--- CreateIndex
 CREATE INDEX "trgm_idx_bungie_global_display_name" ON "player" USING GIN ("bungie_global_display_name" gin_trgm_ops);
-
--- CreateIndex
 CREATE INDEX "trgm_idx_bungie_global_name_and_code" ON "player" USING GIN ("bungie_global_display_name" gin_trgm_ops, "bungie_global_display_name_code" gin_trgm_ops);
-
--- CreateIndex
 CREATE INDEX "trgm_idx_display_name" ON "player" USING GIN ("display_name" gin_trgm_ops);
 
--- CreateIndex
+-- Foreign Key Indices
 CREATE INDEX "idx_instance_id" ON "player_activity"("instance_id");
-
--- CreateIndex
 CREATE INDEX "idx_membership_id" ON "player_activity"("membership_id");
 
--- CreateIndex
-CREATE UNIQUE INDEX "player_stats_membership_id_raid_id_key" ON "player_stats"("membership_id", "raid_id");
-
--- CreateIndex
+-- Individual Leaderboard Indices
 CREATE INDEX "raid_clears_idx" ON "player_stats"("raid_id", "clears" DESC);
 CREATE INDEX "raid_fresh_clears_idx" ON "player_stats"("raid_id", "fresh_clears" DESC);
 CREATE INDEX "raid_sherpas_idx" ON "player_stats"("raid_id", "sherpas" DESC);
 CREATE INDEX "raid_trio_clears_idx" ON "player_stats"("raid_id", "trios" DESC);
 CREATE INDEX "raid_duo_clears_idx" ON "player_stats"("raid_id", "duos" DESC);
 CREATE INDEX "raid_solo_clears_idx" ON "player_stats"("raid_id", "solos" DESC);
-
--- CreateIndex
-CREATE UNIQUE INDEX "leaderboard_id_key" ON "leaderboard"("id");
 
 -- CreateIndex
 CREATE INDEX "activity_leaderboard_entry_instance_id_index" ON "activity_leaderboard_entry" USING HASH ("instance_id");
