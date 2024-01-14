@@ -94,7 +94,7 @@ async function getPlayerActivities({
                   prisma.playerActivity.findMany({
                       ...playerActivityQuery(membershipId, count),
                       cursor: {
-                          instance_membership_pkey: {
+                          instanceId_membershipId: {
                               instanceId: cursor,
                               membershipId: membershipId
                           }

@@ -37,11 +37,14 @@ model Player {
   bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
   lastSeen                    DateTime         @map("last_seen")
   clears                      Int              @default(0) @map("clears")
+  fullClears                  Int              @default(0) @map("fresh_clears")
   sherpas                     Int              @default(0) @map("sherpas")
   playerActivities            PlayerActivity[] @relation("player_activities")
   stats                       PlayerStats[]    @relation("player_stats_membership_id")
 
-  @@index([clears], map: "clears_idx")
+  @@index([clears], map: "total_clears_idx")
+  @@index([fullClears], map: "total_fresh_clears_idx")
+  @@index([sherpas], map: "total_sherpas_idx")
   @@index([displayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_both_display_names", type: Gin)
   @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_display_name", type: Gin)
   @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayNameCode(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_name_and_code", type: Gin)
@@ -63,7 +66,7 @@ model PlayerActivity {
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
   player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
-  @@id([instanceId, membershipId], name: "instance_membership_pkey", map: "player_activity_instance_id_membership_id_pkey")
+  @@id([instanceId, membershipId], map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")
   @@index([membershipId], map: "idx_membership_id")
   @@map("player_activity")
@@ -81,7 +84,7 @@ model PlayerStats {
   raid         Raid   @relation("player_stats_raid", fields: [raidId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "raid_id_fkey")
   player       Player @relation("player_stats_membership_id", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_membership_id_fkey")
 
-  @@unique([membershipId, raidId], name: "player_stats_membership_id_raid_id_key")
+  @@id([membershipId, raidId], map: "player_stats_pkey")
   @@index([raidId, clears(sort: Desc)], name: "raid_clears_idx")
   @@index([raidId, fresh(sort: Desc)], name: "raid_fresh_clears_idx")
   @@index([raidId, sherpas(sort: Desc)], name: "raid_sherpas_idx")
@@ -92,7 +95,7 @@ model PlayerStats {
 }
 
 model ActivityLeaderboard {
-  id      String                     @id @unique
+  id      String                     @id
   entries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
 
   @@map("leaderboard")
