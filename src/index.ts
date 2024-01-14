@@ -65,8 +65,8 @@ app.use("/pgcr", pgcrRouter)
 
 // admin routes
 const admin = Router()
-admin.use(adminProtected(Boolean(process.env.PROD)))
 app.use("/admin", admin)
+admin.use(adminProtected(Boolean(process.env.PROD)))
 
 admin.use("/query", adminSqlQueryRouter)
 
