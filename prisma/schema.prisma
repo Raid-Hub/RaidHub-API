@@ -37,6 +37,7 @@ model Player {
   bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
   lastSeen                    DateTime         @map("last_seen")
   clears                      Int              @default(0) @map("clears")
+  sherpas                     Int              @default(0) @map("sherpas")
   playerActivities            PlayerActivity[] @relation("player_activities")
   stats                       PlayerStats[]    @relation("player_stats_membership_id")
 
@@ -58,6 +59,7 @@ model PlayerActivity {
   timePlayedSeconds Int      @default(0) @map("time_played_seconds")
   classHash         BigInt?  @map("class_hash")
   sherpas           Int      @default(0)
+  isFirstClear      Boolean  @default(false) @map("is_first_clear")
   activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
   player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
