@@ -10,7 +10,7 @@ function startTunnel() {
         process.exit(1)
     }
 
-    const sshCommand = `ssh -ttL ${process.env.POSTGRES_PORT}:localhost:5432 -o "ProxyCommand=/usr/local/bin/cloudflared access ssh --hostname %h" -p 22 ${process.env.POSTGRES_USER}@${process.env.SSH_REMOTE_HOST}`
+    const sshCommand = `ssh -ttL ${process.env.POSTGRES_PORT}:localhost:5432 -o "ProxyCommand=cloudflared access ssh --hostname %h" -p 22 ${process.env.POSTGRES_USER}@${process.env.SSH_REMOTE_HOST}`
     const sshProcess = exec(sshCommand)
     console.log(sshCommand)
 
