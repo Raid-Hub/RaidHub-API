@@ -1,45 +1,39 @@
-import { Router } from "express"
-import { bigIntString, success } from "~/util"
+import { success } from "util/helpers"
 import { prisma } from "~/prisma"
 import { isContest, isDayOne } from "~/data/raceDates"
-import { AllRaidHashes } from "./manifest"
 import { z } from "zod"
-import { zodParamsParser, zodQueryParser } from "~/middlewares/parsers"
-import { activitySearchRouter } from "./activities-search"
+import { RaidHubRoute } from "route"
+import { playerRouterParams } from "."
+import { zBigIntString, zCount } from "util/zod-common"
 
-export const activitiesRouter = Router()
-
-activitiesRouter.use("/search", activitySearchRouter)
-
-const ActivitiesParamSchema = z.object({
-    membershipId: bigIntString,
-    count: z.number().int().positive().max(5000).default(2000)
-})
-
-const ActivitiesQuerySchema = z.object({
-    cursor: bigIntString.optional()
-})
-
-activitiesRouter.get(
-    "/:membershipId",
-    zodParamsParser(ActivitiesParamSchema),
-    zodQueryParser(ActivitiesQuerySchema),
-    async (req, res, next) => {
+export const playerActivitiesRoute = new RaidHubRoute({
+    method: "get",
+    params: playerRouterParams,
+    query: z.object({
+        count: zCount({
+            min: 50,
+            def: 2000,
+            max: 5000
+        }),
+        cursor: zBigIntString().optional()
+    }),
+    async handler(req, res, next) {
         try {
-            const { membershipId, count } = req.params
-            const { cursor } = req.query
+            const { membershipId } = req.params
+            const { cursor, count } = req.query
             const data = await getPlayerActivities({
                 membershipId,
                 cursor,
                 count
             })
+            // Cache for 1 day if we have a cursor, otherwise 30 seconds
             res.setHeader("Cache-Control", `max-age=${cursor ? 86400 : 30}`)
             res.status(200).json(success(data))
         } catch (e) {
             next(e)
         }
     }
-)
+})
 
 const activityQuery = (membershipId: bigint, count: number) =>
     ({
@@ -53,6 +47,14 @@ const activityQuery = (membershipId: bigint, count: number) =>
         orderBy: {
             dateCompleted: "desc"
         },
+        include: {
+            raidDefinition: {
+                select: {
+                    raidId: true
+                }
+            }
+        },
+
         take: count + 1
     }) as const
 
@@ -123,14 +125,13 @@ async function getPlayerActivities({
     return {
         nextCursor: nextCursor ? String(nextCursor) : null,
         activities: activities.slice(0, count).map((a, i) => {
-            const { raid } = AllRaidHashes[String(a.raidHash)]
             return {
                 ...a,
                 instanceId: String(a.instanceId),
                 activityId: String(a.instanceId),
                 raidHash: String(a.raidHash),
-                dayOne: isDayOne(raid, a.dateCompleted),
-                contest: isContest(raid, a.dateStarted),
+                dayOne: isDayOne(a.raidDefinition.raidId, a.dateCompleted),
+                contest: isContest(a.raidDefinition.raidId, a.dateStarted),
                 didMemberComplete: playerActivities[i].finishedRaid
             }
         })
@@ -155,6 +156,13 @@ async function getFirstPageOfActivities(membershipId: bigint, count: number) {
                         gte: cutoff
                     },
                     ...where1
+                },
+                include: {
+                    raidDefinition: {
+                        select: {
+                            raidId: true
+                        }
+                    }
                 }
             }),
             prisma.playerActivity.findMany({

@@ -1,24 +1,10 @@
 import dotenv from "dotenv"
-import express, { Router, json } from "express"
-import cluster from "cluster"
-import { cpus } from "os"
-import { activitiesRouter } from "./routes/activities"
-import { manifestRouter } from "./routes/manifest"
-import { activityRouter } from "./routes/activity"
-import { leaderboardRouter } from "./routes/leaderboard"
-import { playerRouter } from "./routes/player"
-import { searchRouter } from "./routes/search"
-import { pgcrRouter } from "./routes/pgcr"
+import express from "express"
 import { cors } from "./middlewares/cors"
 import { errorHandler } from "./middlewares/errorHandler"
-import { memberRouter } from "./routes/member"
-import { adminProtected } from "./middlewares/admin-protect"
-import { adminSqlQueryRouter } from "./routes/admin-sql-query"
+import { router } from "./routes"
 
-// @ts-expect-error this is a hack to make BigInts work with JSON.stringify
-BigInt.prototype["toJSON"] = function () {
-    return this.toString()
-}
+dotenv.config()
 
 const port = Number(process.env.PORT || 8000)
 
@@ -51,24 +37,14 @@ app.options("*", (req, res, _) => {
 app.use(cors(Boolean(process.env.PROD)))
 
 // parse incoming request body with json
-app.use(json())
+app.use(express.json())
 
-// Define our routes
-app.use("/activities", activitiesRouter)
-app.use("/activity", activityRouter)
-app.use("/manifest", manifestRouter)
-app.use("/leaderboard", leaderboardRouter)
-app.use("/player", playerRouter)
-app.use("/member", memberRouter)
-app.use("/search", searchRouter)
-app.use("/pgcr", pgcrRouter)
+// @ts-expect-error this is a hack to make BigInts work with JSON.stringify
+BigInt.prototype["toJSON"] = function () {
+    return this.toString()
+}
 
-// admin routes
-const admin = Router()
-app.use("/admin", admin)
-admin.use(adminProtected(Boolean(process.env.PROD)))
-
-admin.use("/query", adminSqlQueryRouter)
+app.use(router)
 
 // handle any uncaught errors
 app.use(errorHandler)

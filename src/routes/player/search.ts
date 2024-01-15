@@ -1,27 +1,26 @@
-import { Router } from "express"
-import { success } from "~/util"
+import { success } from "util/helpers"
 import { prisma } from "~/prisma"
 import { cacheControl } from "~/middlewares/cache-control"
-import { zodQueryParser } from "~/middlewares/parsers"
 import { z } from "zod"
 import { Player } from "@prisma/client"
+import { RaidHubRoute } from "route"
+import { zCount } from "util/zod-common"
 
-export const searchRouter = Router()
-
-searchRouter.use(cacheControl(600))
-
-const SearchParams = z.object({
-    count: z.coerce.number().int().min(0).max(50).default(20),
-    query: z.string().min(1)
-})
-
-searchRouter.get("/", zodQueryParser(SearchParams), async (req, res, next) => {
-    try {
-        const { query, count } = req.query
-        const data = await searchForPlayer(query, count)
-        res.status(200).json(success(data))
-    } catch (e) {
-        next(e)
+export const playerSearchRoute = new RaidHubRoute({
+    method: "get",
+    query: z.object({
+        count: zCount({ min: 0, max: 50, def: 20 }),
+        query: z.string().min(1)
+    }),
+    middlewares: [cacheControl(60)],
+    async handler(req, res, next) {
+        try {
+            const { query, count } = req.query
+            const data = await searchForPlayer(query, count)
+            res.status(200).json(success(data))
+        } catch (e) {
+            next(e)
+        }
     }
 })
 

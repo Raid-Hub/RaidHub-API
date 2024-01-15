@@ -1,33 +1,27 @@
-import { Router } from "express"
-import { booleanString, includedIn, numberString, success } from "~/util"
+import { includedIn, success } from "util/helpers"
 import { prisma } from "~/prisma"
-import { zodQueryParser } from "~/middlewares/parsers"
 import { z } from "zod"
 import { type ListedRaid, ListedRaids, RaidHashes } from "~/data/raids"
 import { SeasonDates } from "~/data/seasonDates"
 import { Prisma } from "@prisma/client"
 import { isContest, isDayOne } from "~/data/raceDates"
-import { AllRaidHashes } from "./manifest"
 import { cacheControl } from "~/middlewares/cache-control"
+import { RaidHubRoute } from "route"
+import { zBigIntString, zBooleanString } from "util/zod-common"
 
-export const activitySearchRouter = Router()
-
-activitySearchRouter.use(cacheControl(30))
-
+// Todo: add a query param for the difficulty
 const activitySearchQuerySchema = z
     .object({
-        membershipId: z
-            .union([z.array(numberString).min(1), numberString.transform(s => [s])])
-            .pipe(z.array(z.coerce.bigint())),
+        membershipId: z.array(zBigIntString()).min(1),
         minPlayers: z.coerce.number().int().nonnegative().optional(),
         maxPlayers: z.coerce.number().int().nonnegative().optional(),
         minDate: z.coerce.date().optional(),
         maxDate: z.coerce.date().optional(),
         minSeason: z.coerce.number().int().nonnegative().optional(),
         maxSeason: z.coerce.number().int().nonnegative().optional(),
-        fresh: booleanString.optional(),
-        completed: booleanString.optional(),
-        flawless: booleanString.optional(),
+        fresh: zBooleanString().optional(),
+        completed: zBooleanString().optional(),
+        flawless: zBooleanString().optional(),
         raid: z.coerce
             .number()
             .int()
@@ -47,13 +41,15 @@ const activitySearchQuerySchema = z
         ...q
     }))
 
-// Todo: add a query param for the difficulty
-activitySearchRouter.get("/", zodQueryParser(activitySearchQuerySchema), async (req, res, next) => {
-    try {
-        const activities = await searchActivities(req.query)
-        const results = activities.map(a => {
-            const { raid } = AllRaidHashes[String(a.raid_hash)]
-            return {
+export const activitySearchRoute = new RaidHubRoute({
+    path: "/search",
+    method: "get",
+    middlewares: [cacheControl(30)],
+    query: activitySearchQuerySchema,
+    async handler(req, res, next) {
+        try {
+            const activities = await searchActivities(req.query)
+            const results = activities.map(a => ({
                 instanceId: a.instance_id,
                 raidHash: a.raid_hash,
                 fresh: a.fresh,
@@ -63,26 +59,24 @@ activitySearchRouter.get("/", zodQueryParser(activitySearchQuerySchema), async (
                 dateStarted: a.date_started,
                 dateCompleted: a.date_completed,
                 platformType: a.platform_type,
-                dayOne: isDayOne(raid, a.date_completed),
-                contest: isContest(raid, a.date_started)
-            }
-        })
-        res.status(200).json(
-            success({
-                query: {
-                    ...req.query,
-                    membershipIds: req.query.membershipIds.map(String)
-                },
-                results
-            })
-        )
-    } catch (e) {
-        next(e)
+                dayOne: isDayOne(a.raid_id, a.date_completed),
+                contest: isContest(a.raid_id, a.date_started)
+            }))
+            res.status(200).json(
+                success({
+                    query: req.query,
+                    results
+                })
+            )
+        } catch (e) {
+            next(e)
+        }
     }
 })
 
 type ActivitySearchResult = {
     instance_id: string
+    raid_id: ListedRaid
     raid_hash: string
     fresh: boolean
     completed: boolean
@@ -110,8 +104,8 @@ async function searchActivities({
     count,
     page
 }: z.infer<typeof activitySearchQuerySchema>) {
-    // @ts-ignore
-    const hashes = RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
+    const hashes =
+        raid && RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
     const minSeasonDate = minSeason ? SeasonDates[minSeason - 1] ?? SeasonDates[0] : SeasonDates[0]
     // do plus once because the season dates are the start dates
     const maxSeasonDate = maxSeason
@@ -122,12 +116,15 @@ async function searchActivities({
         WITH activities_union AS (
             SELECT
                 a.*,
+                rd.raid_id,
                 COUNT(pa.membership_id)::int AS _match_count
             FROM
                 activity a
             JOIN
                 player_activity pa ON a.instance_id = pa.instance_id
                 AND pa.membership_id IN (${Prisma.join(membershipIds)})
+            JOIN
+                raid_definition rd ON a.raid_hash = rd.hash
             WHERE
                 ${
                     fresh !== undefined

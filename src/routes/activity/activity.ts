@@ -1,43 +1,46 @@
-import { Request, Response, Router } from "express"
-import { bigIntString, failure, success } from "~/util"
+import { failure, success } from "util/helpers"
 import { prisma } from "~/prisma"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import { AllRaidHashes } from "./manifest"
 import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
 import { cacheControl } from "~/middlewares/cache-control"
-import { zodParamsParser } from "~/middlewares/parsers"
 import { z } from "zod"
+import { RaidHubRoute } from "route"
+import { zBigIntString } from "util/zod-common"
 
-export const activityRouter = Router()
-
-activityRouter.use(cacheControl(300))
-
-const ActivityParamSchema = z.object({
-    instanceId: bigIntString
-})
-
-activityRouter.get("/:instanceId", zodParamsParser(ActivityParamSchema), async (req, res, next) => {
-    const activityId = req.params.instanceId
-
-    try {
-        const data = await getActivity({ activityId })
-        res.status(200).json(success(data))
-    } catch (e) {
-        if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-            res.status(404).json(failure(`No activity found with id ${activityId}`))
-        } else {
-            next(e)
+export const activityRootRoute = new RaidHubRoute({
+    path: "/:instanceId",
+    method: "get",
+    params: z.object({
+        instanceId: zBigIntString()
+    }),
+    middlewares: [cacheControl(300)],
+    async handler(req, res, next) {
+        const instanceId = req.params.instanceId
+        try {
+            const data = await getActivity({ instanceId })
+            res.status(200).json(success(data))
+        } catch (e) {
+            if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
+                res.status(404).json(failure(`No activity found with id ${instanceId}`))
+            } else {
+                next(e)
+            }
         }
     }
 })
 
-async function getActivity({ activityId }: { activityId: bigint }) {
+async function getActivity({ instanceId }: { instanceId: bigint }) {
     const { playerActivity, activityLeaderboardEntry, ...activity } =
         await prisma.activity.findUniqueOrThrow({
             where: {
-                instanceId: activityId
+                instanceId
             },
             include: {
+                raidDefinition: {
+                    select: {
+                        raidId: true
+                    }
+                },
                 playerActivity: {
                     select: {
                         finishedRaid: true,
@@ -53,10 +56,9 @@ async function getActivity({ activityId }: { activityId: bigint }) {
             }
         })
 
-    const { raid } = AllRaidHashes[String(activity.raidHash)]
-    const dayOne = isDayOne(raid, activity.dateCompleted)
-    const contest = isContest(raid, activity.dateStarted)
-    const weekOne = isWeekOne(raid, activity.dateCompleted)
+    const dayOne = isDayOne(activity.raidDefinition.raidId, activity.dateCompleted)
+    const contest = isContest(activity.raidDefinition.raidId, activity.dateStarted)
+    const weekOne = isWeekOne(activity.raidDefinition.raidId, activity.dateCompleted)
 
     return {
         ...activity,

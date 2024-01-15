@@ -1,26 +1,21 @@
-import { Router } from "express"
-import { success } from "~/util"
+import { success } from "util/helpers"
 import { prisma } from "~/prisma"
 import { cacheControl } from "~/middlewares/cache-control"
 import { z } from "zod"
-import { zodParamsParser, zodQueryParser } from "~/middlewares/parsers"
-import { GlobalLeaderboardParams } from "~/data/leaderboards"
 import { Player } from "@prisma/client"
+import { RaidHubRoute } from "route"
+import { zLeaderboardQueryPagination } from "./_schema"
+import { GlobalBoards, GlobalBoardsMap } from "~/data/leaderboards"
 
-export const globalRouter = Router()
-
-globalRouter.use(cacheControl(30))
-
-const IndividualLeaderboardQuery = z.object({
-    page: z.coerce.number().int().positive().default(1),
-    count: z.coerce.number().int().positive().max(100).default(50)
-})
-
-globalRouter.get(
-    "/:category",
-    zodParamsParser(GlobalLeaderboardParams),
-    zodQueryParser(IndividualLeaderboardQuery),
-    async (req, res, next) => {
+export const leaderboardGlobalRoute = new RaidHubRoute({
+    path: "/:category",
+    method: "get",
+    params: z.object({
+        category: z.enum(GlobalBoards).transform(s => GlobalBoardsMap[s])
+    }),
+    query: zLeaderboardQueryPagination,
+    middlewares: [cacheControl(30)],
+    async handler(req, res, next) {
         try {
             const { category } = req.params
             const { page, count } = req.query
@@ -32,14 +27,14 @@ globalRouter.get(
             res.status(200).json(
                 success({
                     params: { category, count, page },
-                    entries: entries
+                    entries
                 })
             )
         } catch (e) {
             next(e)
         }
     }
-)
+})
 
 async function getGlobalLeaderboard(category: keyof Player, opts: { page: number; count: number }) {
     const { page, count } = opts

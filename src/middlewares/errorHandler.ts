@@ -1,6 +1,6 @@
 import { PrismaClientValidationError } from "@prisma/client/runtime/library"
 import e, { ErrorRequestHandler, RequestHandler } from "express"
-import { failure } from "~/util"
+import { failure } from "util/helpers"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {

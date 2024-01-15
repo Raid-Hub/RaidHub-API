@@ -1,6 +1,6 @@
 import { RequestHandler } from "express"
 import { ZodType, z } from "zod"
-import { failure } from "~/util"
+import { failure } from "util/helpers"
 
 export const zodBodyParser =
     <P, Z extends ZodType, ReqQuery>(schema: Z): RequestHandler<P, any, z.infer<Z>, ReqQuery> =>

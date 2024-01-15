@@ -1,30 +1,30 @@
-import { Router } from "express"
-import { bigIntString, failure, success } from "~/util"
+import { failure, success } from "util/helpers"
 import { prisma } from "~/prisma"
 import { gunzipSync } from "zlib"
 import { cacheControl } from "~/middlewares/cache-control"
 import { z } from "zod"
-import { zodParamsParser } from "~/middlewares/parsers"
+import { RaidHubRoute } from "route"
+import { zBigIntString } from "util/zod-common"
 
-export const pgcrRouter = Router()
-
-pgcrRouter.use(cacheControl(86400))
-
-const PgcrParamSchema = z.object({
-    instanceId: bigIntString
-})
-
-pgcrRouter.get("/:instanceId", zodParamsParser(PgcrParamSchema), async (req, res, next) => {
-    const instanceId = req.params.instanceId
-    try {
-        const bytes = await getRawPGCRBytes({ instanceId })
-        const data = decompressGzippedBytes(bytes)
-        res.status(200).json(success(data))
-    } catch (e) {
-        if (e instanceof Error && e.message === "No rows found") {
-            res.status(404).json(failure(`No activity found with id ${instanceId}`))
-        } else {
-            next(e)
+export const pgcrRoute = new RaidHubRoute({
+    path: "/:instanceId",
+    method: "get",
+    params: z.object({
+        instanceId: zBigIntString()
+    }),
+    middlewares: [cacheControl(86400)],
+    async handler(req, res, next) {
+        const instanceId = req.params.instanceId
+        try {
+            const bytes = await getRawPGCRBytes({ instanceId })
+            const data = decompressGzippedBytes(bytes)
+            res.status(200).json(success(data))
+        } catch (e) {
+            if (e instanceof Error && e.message === "No rows found") {
+                res.status(404).json(failure(`No activity found with id ${instanceId}`))
+            } else {
+                next(e)
+            }
         }
     }
 })

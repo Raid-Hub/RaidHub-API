@@ -1,5 +1,5 @@
-import { Router } from "express"
 import {
+    AllRaidHashes,
     ContestRaids,
     Difficulty,
     ListedRaid,
@@ -7,18 +7,15 @@ import {
     MasterRaids,
     PrestigeRaids,
     Raid,
-    RaidHashes,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
 } from "~/data/raids"
-import { includedIn, success } from "~/util"
-import { WorldFirstLeaderboardsForRaid } from "./worldfirst"
+import { groupBy, success } from "util/helpers"
 import { cacheControl } from "~/middlewares/cache-control"
-import { Board, ClearsLeaderboardsForRaid, LeaderboardsForRaid } from "~/data/leaderboards"
-
-export const manifestRouter = Router()
-
-manifestRouter.use(cacheControl(300))
+import { RaidHubRoute } from "route"
+import { prisma } from "~/prisma"
+import { ActivityLeaderboard, WorldFirstLeaderboardType } from "@prisma/client"
+import { MasterReleases, PrestigeReleases, ReleaseDate } from "~/data/raceDates"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -48,79 +45,43 @@ const difficulties: Record<Difficulty, string> = {
     [Difficulty.CONTEST]: "Contest"
 }
 
-export const AllRaidHashes = Object.fromEntries(
-    Object.entries(
-        RaidHashes as unknown as Record<ListedRaid, Partial<Record<Difficulty, string[]>>>
-    )
-        .map(([raid, difficultyDict]) =>
-            Object.entries(difficultyDict).map(([difficulty, hashes]) =>
-                hashes.map(
-                    hash =>
-                        [
-                            hash,
-                            {
-                                raid: parseInt(raid) as ListedRaid,
-                                difficulty: parseInt(difficulty) as Difficulty
-                            }
-                        ] as const
-                )
+export const manifestRoute = new RaidHubRoute({
+    method: "get",
+    middlewares: [cacheControl(60)],
+    async handler(req, res, next) {
+        try {
+            res.status(200).json(
+                success({
+                    raids,
+                    difficulties,
+                    hashes: AllRaidHashes,
+                    listed: ListedRaids,
+                    sunset: SunsetRaids,
+                    contest: ContestRaids,
+                    master: MasterRaids,
+                    prestige: PrestigeRaids,
+                    reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
+                        ([raid, difficulty]) => ({
+                            raid,
+                            difficulty
+                        })
+                    ),
+                    leaderboards: await listLeaderboards()
+                })
             )
-        )
-        .flat(2)
-)
-
-const leaderboards = Object.fromEntries(
-    ListedRaids.map(raid => {
-        const otherBoards: Board[] = []
-        if (
-            includedIn(
-                ReprisedRaidDifficultyPairings.map(pairing => pairing[0]),
-                raid
-            )
-        ) {
-            otherBoards.push("normal")
+        } catch (e) {
+            next(e)
         }
-        if (includedIn(PrestigeRaids, raid)) {
-            otherBoards.push("prestige")
-        }
-        if (includedIn(MasterRaids, raid)) {
-            otherBoards.push("master")
-        }
-        return [
-            raid,
-            {
-                worldFirst: WorldFirstLeaderboardsForRaid[raid],
-                otherFirsts: otherBoards,
-                individualLeaderboards: Object.entries(ClearsLeaderboardsForRaid[raid])
-                    .filter(([_, bool]) => bool)
-                    .map(([key, _]) => key)
-            }
-        ]
-    })
-)
-
-manifestRouter.get("/", async (_, res, next) => {
-    try {
-        res.status(200).json(
-            success({
-                raids,
-                difficulties,
-                hashes: AllRaidHashes,
-                listed: ListedRaids,
-                sunset: SunsetRaids,
-                contest: ContestRaids,
-                master: MasterRaids,
-                prestige: PrestigeRaids,
-                reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
-                    ([raid, difficulty]) => ({
-                        raid,
-                        difficulty
-                    })
-                ),
-                leaderboards: leaderboards
-            })
-        )
-    } catch (e) {
-        next(e)
     }
 })
+
+async function listLeaderboards() {
+    const boards = await prisma.activityLeaderboard.findMany({})
+    const formattedBoards = boards.map(board => ({ ...board, type: board.type.toLowerCase() }))
+
+    return groupBy<(typeof formattedBoards)[number], "raidId", ListedRaid>(
+        formattedBoards,
+        "raidId",
+        true
+    )
+}

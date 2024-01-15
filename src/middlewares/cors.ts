@@ -1,6 +1,6 @@
 import { RequestHandler } from "express"
-import { appendToFile } from "tasks/appendToFile"
-import { failure, includedIn } from "~/util"
+import { appendToFile } from "util/appendToFile"
+import { failure, includedIn } from "util/helpers"
 
 const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.app$/
 

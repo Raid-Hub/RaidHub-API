@@ -178,3 +178,24 @@ export const ReprisedRaidDifficultyPairings = [
     [Raid.KINGS_FALL, Difficulty.CHALLENGE_KF],
     [Raid.CROTAS_END, Difficulty.CHALLENGE_CROTA]
 ] as const
+
+export const AllRaidHashes = Object.fromEntries(
+    Object.entries(
+        RaidHashes as unknown as Record<ListedRaid, Partial<Record<Difficulty, string[]>>>
+    )
+        .map(([raid, difficultyDict]) =>
+            Object.entries(difficultyDict).map(([difficulty, hashes]) =>
+                hashes.map(
+                    hash =>
+                        [
+                            hash,
+                            {
+                                raid: parseInt(raid) as ListedRaid,
+                                difficulty: parseInt(difficulty) as Difficulty
+                            }
+                        ] as const
+                )
+            )
+        )
+        .flat(2)
+)

@@ -1,4 +1,4 @@
-import { includedIn } from "../util"
+import { includedIn } from "../util/helpers"
 import { ContestRaid, ContestRaids, ListedRaid, MasterRaid, PrestigeRaid, Raid } from "./raids"
 
 export function isDayOne(raid: ListedRaid, ended: Date): boolean {
@@ -65,8 +65,6 @@ const WeekOneEnd: Record<Exclude<ListedRaid, ContestRaid>, number> = {
     [Raid.LAST_WISH]: new Date("September 18, 2018 10:00:00 AM PDT").getTime(),
     [Raid.SCOURGE_OF_THE_PAST]: new Date("December 11, 2018 9:00:00 AM PST").getTime()
 }
-
-export const PCLeviathanRelease = new Date("November 1, 2017 1:00:00 PM EDT").getTime()
 
 export const PrestigeReleases: Record<PrestigeRaid, number> = {
     [Raid.LEVIATHAN]: new Date("October 18, 2017 1:00:00 PM EDT").getTime(),
