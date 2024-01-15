@@ -5,17 +5,19 @@
     "main": "index.js",
     "scripts": {
         "dev": "tsnd --respawn -r tsconfig-paths/register src/index.ts",
-        "build": "tsc && tsc-alias",
-        "start": "pm2 start ./dist/index.js --name \"raidhub-api\"  --instances 8 --time",
-        "stop": "pm2 stop raidhub-api",
-        "restart": "yarn && yarn prisma generate && yarn build && pm2 restart \"raidhub-api\" --update-env",
+        "generate": "prisma generate",
         "tunnel": "node prisma/tunnel.js",
         "db:start": "docker-compose -f docker-compose.yml up -d",
         "db:stop": "docker-compose -f docker-compose.yml down",
         "db:push": "prisma db push",
-        "db:migrate": "prisma migrate dev",
+        "db:reset": "prisma migrate reset && prisma db push",
         "db:seed": "ts-node ./prisma/seed.ts",
-        "test": "jest --setupFiles dotenv/config"
+        "db:migrate": "prisma migrate dev --create-only",
+        "test": "jest --setupFiles dotenv/config",
+        "build": "tsc && tsc-alias",
+        "start": "pm2 start ./dist/index.js --name \"raidhub-api\"  --instances 8 --time",
+        "stop": "pm2 stop raidhub-api",
+        "restart": "yarn && prisma generate && yarn build && pm2 restart \"raidhub-api\" --update-env"
     },
     "repository": {
         "type": "git",
