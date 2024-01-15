@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { includedIn } from "~/util"
 import { ListedRaid, Raid } from "./raids"
-import { PlayerStats } from "@prisma/client"
+import { Player, PlayerStats } from "@prisma/client"
 
 export const Boards = ["normal", "prestige", "pc", "challenge", "master"] as const
 export type Board = (typeof Boards)[number]
@@ -34,6 +34,19 @@ const RaidPathSchema = z.object({
             "crotasend"
         ])
         .transform(r => UrlPathsToRaid[r])
+})
+
+const GlobalBoards = ["clears", "sherpas", "fresh"] as const
+export type GlobalBoard = (typeof GlobalBoards)[number]
+
+export const GlobalBoardsMap = {
+    clears: "clears",
+    fresh: "fullClears",
+    sherpas: "sherpas"
+} satisfies Record<GlobalBoard, keyof Player>
+
+export const GlobalLeaderboardParams = z.object({
+    category: z.enum(GlobalBoards).transform(s => GlobalBoardsMap[s])
 })
 
 export const IndividualLeaderboardParams = RaidPathSchema.extend({

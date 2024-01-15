@@ -42,8 +42,6 @@ async function getClearsLeaderboard(
     opts: { page: number; count: number }
 ) {
     const { page, count } = opts
-    // this first query is just used to throw an error if the leaderboard doesn't exist, but also
-    // we might use it later for something else
 
     const entries = await prisma.playerStats.findMany({
         where: {
