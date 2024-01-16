@@ -1,4 +1,5 @@
 const { spawn } = require("child_process")
+const net = require("net")
 
 require("dotenv").config()
 
@@ -12,7 +13,7 @@ function startTunnel() {
 
     // spawn the child process
     const args = [
-        "-L",
+        "-NL",
         `${process.env.POSTGRES_PORT}:localhost:5432`,
         "-o",
         "ProxyCommand=cloudflared access ssh --hostname %h",
@@ -21,11 +22,42 @@ function startTunnel() {
         `${process.env.POSTGRES_USER}@${process.env.SSH_REMOTE_HOST}`
     ]
 
-    spawn("ssh", args, {
-        stdio: "inherit"
-    })
-
     console.log("ssh", ...args)
 
-    console.log(`Connecting to tunnel on ${process.env.SSH_REMOTE_HOST}...`)
+    const childProcess = spawn("ssh", args, { stdio: "inherit" })
+
+    childProcess.on("spawn", () => {
+        console.log(`Connecting to tunnel on ${process.env.SSH_REMOTE_HOST}`)
+    })
+
+    let attempts = 0
+    const interval = setInterval(() => {
+        const client = net.createConnection(
+            { port: process.env.POSTGRES_PORT, host: "localhost" },
+            () => {
+                console.log("Tunnel created")
+                client.end()
+                clear()
+            }
+        )
+
+        client.on("error", err => {
+            if (err.code === "ECONNREFUSED") {
+                if (attempts < 5) {
+                    ++attempts
+                } else {
+                    console.error(err.errors[1])
+                    console.error("Tunnel could not be created. Do you have cloudflared installed?")
+                    clear()
+                    childProcess.kill()
+                }
+            } else {
+                console.error(err)
+            }
+        })
+    }, 1000)
+
+    function clear() {
+        clearInterval(interval)
+    }
 }
