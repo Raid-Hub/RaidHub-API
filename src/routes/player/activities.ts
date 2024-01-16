@@ -1,37 +1,74 @@
-import { success } from "util/helpers"
-import { prisma } from "~/prisma"
-import { isContest, isDayOne } from "~/data/raceDates"
 import { z } from "zod"
-import { RaidHubRoute } from "route"
-import { playerRouterParams } from "."
-import { zBigIntString, zCount } from "util/zod-common"
+import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
+import { playerRouterParams } from "./_schema"
+import { zBigIntString, zCount } from "../../util/zod-common"
+import { prisma } from "../../prisma"
+import { isContest, isDayOne } from "../../data/raceDates"
 
 export const playerActivitiesRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    query: z.object({
-        count: zCount({
-            min: 50,
-            def: 2000,
-            max: 5000
-        }),
-        cursor: zBigIntString().optional()
-    }),
-    async handler(req, res, next) {
-        try {
-            const { membershipId } = req.params
-            const { cursor, count } = req.query
-            const data = await getPlayerActivities({
-                membershipId,
-                cursor,
-                count
-            })
-            // Cache for 1 day if we have a cursor, otherwise 30 seconds
-            res.setHeader("Cache-Control", `max-age=${cursor ? 86400 : 30}`)
-            res.status(200).json(success(data))
-        } catch (e) {
-            next(e)
+    query: z
+        .object({
+            count: zCount({
+                min: 50,
+                def: 2000,
+                max: 5000
+            }),
+            cursor: zBigIntString().optional()
+        })
+        .default({ count: 2000 }),
+    middlewares: [
+        (req, res, next) => {
+            // save the previous send method
+            const _send = res.send.bind(res)
+
+            // override the json method to cache with 200's
+            res.send = body => {
+                if (res.statusCode === 200) {
+                    // Cache for 1 day if we have a cursor, otherwise 30 seconds
+                    res.setHeader("Cache-Control", `max-age=${req.query.cursor ? 86400 : 30}`)
+                }
+                return _send(body)
+            }
+            next()
         }
+    ],
+    async handler(req) {
+        const { membershipId } = req.params
+        const { cursor, count } = req.query
+        const data = await getPlayerActivities({
+            membershipId,
+            cursor,
+            count
+        })
+        if (!data) {
+            return fail({ membershipId, notFound: true }, 404, "Player not found")
+        } else {
+            return ok(data)
+        }
+    },
+    response: {
+        success: z
+            .object({
+                activities: z.array(
+                    z.object({
+                        instanceId: zBigIntString(),
+                        raidHash: zBigIntString(),
+                        dateStarted: z.date(),
+                        dateCompleted: z.date(),
+                        dayOne: z.boolean(),
+                        contest: z.boolean(),
+                        didMemberComplete: z.boolean()
+                    })
+                ),
+                nextCursor: z.string().nullable()
+            })
+            .strict(),
+        error: z.object({
+            notFound: z.boolean(),
+            membershipId: zBigIntString()
+        })
     }
 })
 
@@ -83,28 +120,33 @@ async function getPlayerActivities({
     cursor?: bigint
     count: number
 }) {
-    const [activities, playerActivities] = await Promise.all(
+    const [player, [activities, playerActivities]] = await Promise.all([
+        prisma.player.findUnique({ where: { membershipId } }),
         // If a cursor is provided
-        cursor
-            ? [
-                  prisma.activity.findMany({
-                      cursor: {
-                          instanceId: cursor
-                      },
-                      ...activityQuery(membershipId, count)
-                  }),
-                  prisma.playerActivity.findMany({
-                      ...playerActivityQuery(membershipId, count),
-                      cursor: {
-                          instanceId_membershipId: {
-                              instanceId: cursor,
-                              membershipId: membershipId
+        Promise.all(
+            cursor
+                ? [
+                      prisma.activity.findMany({
+                          cursor: {
+                              instanceId: cursor
+                          },
+                          ...activityQuery(membershipId, count)
+                      }),
+                      prisma.playerActivity.findMany({
+                          ...playerActivityQuery(membershipId, count),
+                          cursor: {
+                              instanceId_membershipId: {
+                                  instanceId: cursor,
+                                  membershipId: membershipId
+                              }
                           }
-                      }
-                  })
-              ]
-            : await getFirstPageOfActivities(membershipId, count)
-    )
+                      })
+                  ]
+                : await getFirstPageOfActivities(membershipId, count)
+        )
+    ])
+
+    if (!player) return null
 
     const countFound = activities.length
 
@@ -127,9 +169,9 @@ async function getPlayerActivities({
         activities: activities.slice(0, count).map((a, i) => {
             return {
                 ...a,
-                instanceId: String(a.instanceId),
-                activityId: String(a.instanceId),
-                raidHash: String(a.raidHash),
+                instanceId: a.instanceId,
+                activityId: a.instanceId,
+                raidHash: a.raidHash,
                 dayOne: isDayOne(a.raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(a.raidDefinition.raidId, a.dateStarted),
                 didMemberComplete: playerActivities[i].finishedRaid

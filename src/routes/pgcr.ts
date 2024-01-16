@@ -1,10 +1,10 @@
-import { failure, success } from "util/helpers"
-import { prisma } from "~/prisma"
+import { prisma } from "../prisma"
 import { gunzipSync } from "zlib"
-import { cacheControl } from "~/middlewares/cache-control"
+import { cacheControl } from "../middlewares/cache-control"
 import { z } from "zod"
-import { RaidHubRoute } from "route"
-import { zBigIntString } from "util/zod-common"
+import { RaidHubRoute, fail, ok } from "../RaidHubRoute"
+import { zBigIntString } from "../util/zod-common"
+import { pgcrSchema } from "../util/pgcr"
 
 export const pgcrRoute = new RaidHubRoute({
     path: "/:instanceId",
@@ -13,19 +13,24 @@ export const pgcrRoute = new RaidHubRoute({
         instanceId: zBigIntString()
     }),
     middlewares: [cacheControl(86400)],
-    async handler(req, res, next) {
-        const instanceId = req.params.instanceId
-        try {
-            const bytes = await getRawPGCRBytes({ instanceId })
-            const data = decompressGzippedBytes(bytes)
-            res.status(200).json(success(data))
-        } catch (e) {
-            if (e instanceof Error && e.message === "No rows found") {
-                res.status(404).json(failure(`No activity found with id ${instanceId}`))
-            } else {
-                next(e)
-            }
-        }
+    async handler({ params }) {
+        const instanceId = params.instanceId
+        const bytes = await getRawPGCRBytes({ instanceId })
+        if (bytes === null)
+            return fail(
+                { notFound: true, instanceId },
+                404,
+                `No activity found with id ${instanceId}`
+            )
+        const data = decompressGzippedBytes(bytes)
+        return ok(data)
+    },
+    response: {
+        success: pgcrSchema.strict(),
+        error: z.object({
+            notFound: z.boolean(),
+            instanceId: zBigIntString()
+        })
     }
 })
 
@@ -35,7 +40,7 @@ async function getRawPGCRBytes({ instanceId }: { instanceId: bigint }) {
     FROM pgcr 
     WHERE instance_id = ${instanceId}`
 
-    if (rows.length !== 1) throw new Error("No rows found")
+    if (rows.length !== 1) return null
 
     return rows[0].data
 }

@@ -1,6 +1,6 @@
 import { Router } from "express"
-import { adminProtected } from "~/middlewares/admin-protect"
 import { adminQueryRoute } from "./query"
+import { adminProtected } from "../../middlewares/admin-protect"
 
 export const adminRouter = Router({
     strict: true

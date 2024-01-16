@@ -5,10 +5,10 @@ export const zCount = ({ min = 1, max, def }: { min: number; max: number; def: n
 
 export const zPage = () => z.number().int().positive().default(1)
 
-export const zDigitString = () => z.coerce.string().regex(/^\d+$/)
+export const zDigitString = () => z.coerce.string().regex(/^\d+n?$/)
 
 export const zBooleanString = () =>
-    z
+    z.coerce
         .string()
         .transform(s => JSON.parse(s))
         .pipe(z.boolean())

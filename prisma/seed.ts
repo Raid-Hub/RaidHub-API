@@ -13,6 +13,8 @@ import {
 } from "bungie-net-core/endpoints/Destiny2"
 import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
 import { gzipSync } from "zlib"
+import { pgcrSchema } from "../src/util/pgcr"
+import { ZodError } from "zod"
 
 dotenv.config()
 const prisma = new PrismaClient()
@@ -98,7 +100,7 @@ async function main() {
     console.log(`PGCRs already in database: ${pgcrs.size}`)
 
     const COUNT = 250
-    const THREADS = 3
+    const THREADS = 100
     const pgcrQueue = new Set<BigInt>()
 
     await Promise.all(
@@ -148,42 +150,48 @@ async function main() {
         const fetchedPGCRs = await Promise.all(
             ids.map(async activityId => {
                 console.log(`Loading activity ${activityId}`)
-                return (
-                    fetch(
-                        `${
-                            process.env.DEV_PROXY_URL || "https://stats.bungie.net"
-                        }/Platform/Destiny2/Stats/PostGameCarnageReport/${activityId}/`,
-                        {
-                            headers: {
-                                "x-api-key": process.env.DEV_BUNGIE_API_KEY!
-                            }
+                return fetch(
+                    `${
+                        process.env.DEV_PROXY_URL || "https://stats.bungie.net"
+                    }/Platform/Destiny2/Stats/PostGameCarnageReport/${activityId}/`,
+                    {
+                        headers: {
+                            "x-api-key": process.env.DEV_BUNGIE_API_KEY!
                         }
-                    )
-                        .then(res => res.json())
-                        // @ts-ignore
-                        .then((res: BungieNetResponse<DestinyPostGameCarnageReportData>) =>
-                            processCarnageReport(res.Response)
-                        )
+                    }
                 )
+                    .then(
+                        res =>
+                            res.json() as Promise<
+                                BungieNetResponse<DestinyPostGameCarnageReportData>
+                            >
+                    )
+                    .then(res => res.Response)
             })
         )
 
         await Promise.all(
-            fetchedPGCRs.map(({ compressed, instanceId }) =>
-                Promise.all([
-                    prisma.pGCR
-                        .create({
+            fetchedPGCRs.map(async report => {
+                try {
+                    const compressed = gzipSync(
+                        Buffer.from(JSON.stringify(pgcrSchema.parse(report)), "utf-8")
+                    )
+                    return Promise.all([
+                        prisma.pGCR.create({
                             data: {
-                                instanceId: instanceId,
+                                instanceId: BigInt(report.activityDetails.instanceId),
                                 data: compressed
                             }
                         })
-                        .catch(console.error)
-                ])
-            )
+                    ]).catch(console.error)
+                } catch (e) {
+                    console.error((e as ZodError).errors)
+                    throw e
+                }
+            })
         )
 
-        for (const { compressed, players, ...pgcr } of fetchedPGCRs) {
+        for (const { players, ...pgcr } of fetchedPGCRs.map(processCarnageReport)) {
             const { raidDefinition } = await prisma.activity.create({
                 data: pgcr,
                 select: {
@@ -311,7 +319,7 @@ async function main() {
                                             }
                                         },
                                         where: {
-                                            player_stats_membership_id_raid_id_key: {
+                                            membershipId_raidId: {
                                                 membershipId: BigInt(destinyUserInfo.membershipId),
                                                 raidId: raidDefinition.raidId
                                             }
@@ -332,7 +340,7 @@ async function main() {
     }
 }
 
-async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
+function processCarnageReport(report: DestinyPostGameCarnageReportData) {
     const players = new Map<string, DestinyPostGameCarnageReportEntry[]>()
 
     report.entries.forEach(e => {
@@ -363,8 +371,7 @@ async function processCarnageReport(report: DestinyPostGameCarnageReportData) {
                 report.entries[0]?.values.activityDurationSeconds.basic.value * 1000
         ),
         platformType: report.activityDetails.membershipType,
-        players,
-        compressed: gzipSync(Buffer.from(JSON.stringify(report), "utf-8"))
+        players
     }
 }
 

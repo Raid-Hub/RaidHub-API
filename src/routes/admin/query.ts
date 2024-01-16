@@ -1,8 +1,7 @@
-import { RaidHubRoute } from "route"
+import { RaidHubRoute, ok } from "../../RaidHubRoute"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../prisma"
 import { z } from "zod"
-import { cacheControl } from "~/middlewares/cache-control"
-import { prisma } from "~/prisma"
-import { failure, success } from "util/helpers"
 
 export const adminQueryRoute = new RaidHubRoute({
     path: "/query",
@@ -11,12 +10,13 @@ export const adminQueryRoute = new RaidHubRoute({
         query: z.string()
     }),
     middlewares: [cacheControl(5)],
-    async handler(req, res, next) {
-        try {
-            const data = await prisma.$queryRawUnsafe<Object[]>(req.body.query)
-            res.status(200).json(success(data))
-        } catch (e) {
-            res.status(500).json(failure(e, "Something went wrong executing the query"))
-        }
+    async handler(req) {
+        const data = await prisma.$queryRawUnsafe<Object[]>(req.body.query)
+
+        return ok(data)
+    },
+    response: {
+        success: z.array(z.object({})),
+        error: z.object({})
     }
 })

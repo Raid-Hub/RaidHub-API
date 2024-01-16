@@ -9,13 +9,12 @@ import {
     Raid,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
-} from "~/data/raids"
-import { groupBy, success } from "util/helpers"
-import { cacheControl } from "~/middlewares/cache-control"
-import { RaidHubRoute } from "route"
-import { prisma } from "~/prisma"
-import { ActivityLeaderboard, WorldFirstLeaderboardType } from "@prisma/client"
-import { MasterReleases, PrestigeReleases, ReleaseDate } from "~/data/raceDates"
+} from "../data/raids"
+import { groupBy } from "../util/helpers"
+import { cacheControl } from "../middlewares/cache-control"
+import { RaidHubRoute, ok } from "../RaidHubRoute"
+import { prisma } from "../prisma"
+import { z } from "zod"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -48,30 +47,55 @@ const difficulties: Record<Difficulty, string> = {
 export const manifestRoute = new RaidHubRoute({
     method: "get",
     middlewares: [cacheControl(60)],
-    async handler(req, res, next) {
-        try {
-            res.status(200).json(
-                success({
-                    raids,
-                    difficulties,
-                    hashes: AllRaidHashes,
-                    listed: ListedRaids,
-                    sunset: SunsetRaids,
-                    contest: ContestRaids,
-                    master: MasterRaids,
-                    prestige: PrestigeRaids,
-                    reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
-                        ([raid, difficulty]) => ({
-                            raid,
-                            difficulty
+    handler: async () =>
+        ok({
+            raids,
+            difficulties,
+            hashes: AllRaidHashes,
+            listed: ListedRaids,
+            sunset: SunsetRaids,
+            contest: ContestRaids,
+            master: MasterRaids,
+            prestige: PrestigeRaids,
+            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
+                raid,
+                difficulty
+            })),
+            leaderboards: await listLeaderboards()
+        }),
+    response: {
+        success: z
+            .object({
+                raids: z.record(z.string()),
+                difficulties: z.record(z.string()),
+                hashes: z.record(
+                    z.object({
+                        raid: z.number(),
+                        difficulty: z.number()
+                    })
+                ),
+                listed: z.array(z.number()).readonly(),
+                sunset: z.array(z.number()).readonly(),
+                contest: z.array(z.number()).readonly(),
+                master: z.array(z.number()).readonly(),
+                prestige: z.array(z.number()).readonly(),
+                reprisedChallengePairings: z.array(
+                    z.object({
+                        raid: z.number(),
+                        difficulty: z.number()
+                    })
+                ),
+                leaderboards: z.record(
+                    z.array(
+                        z.object({
+                            id: z.string(),
+                            type: z.string(),
+                            date: z.date()
                         })
-                    ),
-                    leaderboards: await listLeaderboards()
-                })
-            )
-        } catch (e) {
-            next(e)
-        }
+                    )
+                )
+            })
+            .strict()
     }
 })
 
@@ -82,6 +106,8 @@ async function listLeaderboards() {
     return groupBy<(typeof formattedBoards)[number], "raidId", ListedRaid>(
         formattedBoards,
         "raidId",
-        true
+        {
+            remove: true
+        }
     )
 }

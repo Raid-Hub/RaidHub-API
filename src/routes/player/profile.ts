@@ -1,26 +1,57 @@
-import { RaidHubRoute } from "route"
-import { playerRouterParams } from "."
-import { cacheControl } from "~/middlewares/cache-control"
-import { prisma } from "~/prisma"
-import { failure, success } from "util/helpers"
-import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
-import { ListedRaid } from "~/data/raids"
+import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
+import { playerRouterParams } from "./_schema"
+import { z } from "zod"
+import { cacheControl } from "../../middlewares/cache-control"
+import { zBigIntString } from "../../util/zod-common"
+import { ListedRaid } from "../../data/raids"
+import { prisma } from "../../prisma"
+import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 
 export const playerProfileRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    middlewares: [cacheControl(60)],
-    async handler(req, res, next) {
-        try {
-            const data = await getPlayer({ membershipId: req.params.membershipId })
-            if (!data) {
-                res.status(404).json(failure({}, "Player not found"))
-            } else {
-                res.status(200).json(success(data))
-            }
-        } catch (e) {
-            next(e)
+    middlewares: [cacheControl(30)],
+    async handler(req) {
+        const data = await getPlayer({ membershipId: req.params.membershipId })
+        if (!data) {
+            return fail(
+                { notFound: true, membershipId: req.params.membershipId },
+                404,
+                "Player not found"
+            )
+        } else {
+            return ok(data)
         }
+    },
+    response: {
+        success: z
+            .object({
+                player: z.object({
+                    membershipId: zBigIntString(),
+                    membershipType: z.number().nullable(),
+                    iconPath: z.string().nullable(),
+                    displayName: z.string().nullable(),
+                    bungieGlobalDisplayName: z.string().nullable(),
+                    bungieGlobalDisplayNameCode: z.string().nullable()
+                }),
+                activityLeaderboardEntries: z.record(
+                    z.array(
+                        z.object({
+                            rank: z.number(),
+                            instanceId: zBigIntString(),
+                            raidHash: zBigIntString(),
+                            dayOne: z.boolean(),
+                            contest: z.boolean(),
+                            weekOne: z.boolean()
+                        })
+                    )
+                )
+            })
+            .strict(),
+        error: z.object({
+            notFound: z.boolean(),
+            membershipId: zBigIntString()
+        })
     }
 })
 
@@ -75,10 +106,7 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
     })
 
     return {
-        player: {
-            ...player,
-            membershipId: String(player.membershipId)
-        },
+        player: player,
         activityLeaderboardEntries: Object.fromEntries(
             Array.from(activityLeaderboardEntriesMap.entries()).map(([leaderboardId, entries]) => [
                 leaderboardId,

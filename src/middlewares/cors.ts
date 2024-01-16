@@ -1,6 +1,7 @@
 import { RequestHandler } from "express"
-import { appendToFile } from "util/appendToFile"
-import { failure, includedIn } from "util/helpers"
+import { corsError } from "../RaidHubRoute"
+import { includedIn } from "../util/helpers"
+import { z } from "zod"
 
 const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.app$/
 
@@ -26,12 +27,15 @@ export const cors =
             next()
         } else {
             res.header("Access-Control-Allow-Origin", "https://raidhub.app")
-            if (req.headers.origin) {
-                appendToFile({
-                    contents: req.headers.origin,
-                    filePath: "origins.log"
-                })
-            }
-            res.status(403).send(failure({}, "Request originated from an invalid origin"))
+            res.status(req.headers["x-api-key"] ? 403 : 401).send({
+                message: "Request originated from an invalid origin",
+                minted: new Date(),
+                success: false,
+                statusCode: req.headers["x-api-key"] ? 403 : 401,
+                error: {
+                    apiKeyFound: !!req.headers["x-api-key"],
+                    cors: true
+                }
+            } satisfies z.infer<typeof corsError>)
         }
     }

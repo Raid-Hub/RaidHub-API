@@ -10,19 +10,11 @@
         "noImplicitAny": true,
         "outDir": "./dist",
         "rootDir": "./src",
-        "types": ["node"],
+        "types": ["node", "jest"],
         "lib": ["es6", "esnext"],
         "resolveJsonModule": true,
-        "moduleResolution": "node",
-        "baseUrl": "./src",
-        "paths": {
-            "~/data/*": ["data/*"],
-            "~/routes/*": ["routes/*"],
-            "~/middlewares/*": ["middlewares/*"],
-            "~/util": ["util"],
-            "~/prisma": ["prisma"]
-        }
+        "moduleResolution": "node"
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["node_modules", "tests/*", "scripts/*"]
+    "exclude": ["scripts/*"]
 }

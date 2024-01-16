@@ -1,10 +1,9 @@
-import { success } from "util/helpers"
-import { prisma } from "~/prisma"
-import { cacheControl } from "~/middlewares/cache-control"
+import { cacheControl } from "../../middlewares/cache-control"
 import { z } from "zod"
 import { Player } from "@prisma/client"
-import { RaidHubRoute } from "route"
-import { zCount } from "util/zod-common"
+import { RaidHubRoute, ok } from "../../RaidHubRoute"
+import { zCount } from "../../util/zod-common"
+import { prisma } from "../../prisma"
 
 export const playerSearchRoute = new RaidHubRoute({
     method: "get",
@@ -13,14 +12,39 @@ export const playerSearchRoute = new RaidHubRoute({
         query: z.string().min(1)
     }),
     middlewares: [cacheControl(60)],
-    async handler(req, res, next) {
-        try {
-            const { query, count } = req.query
-            const data = await searchForPlayer(query, count)
-            res.status(200).json(success(data))
-        } catch (e) {
-            next(e)
-        }
+    async handler(req) {
+        const { query, count } = req.query
+        const data = await searchForPlayer(query, count)
+        return ok(data)
+    },
+    response: {
+        success: z
+            .object({
+                params: z.object({
+                    count: z.number(),
+                    term: z.union([
+                        z.object({
+                            displayName: z.string().nullable()
+                        }),
+                        z.object({
+                            bungieGlobalDisplayName: z.string().nullable(),
+                            bungieGlobalDisplayNameCode: z.string().nullable()
+                        })
+                    ])
+                }),
+                results: z.array(
+                    z.object({
+                        membershipId: z.string(),
+                        membershipType: z.number().nullable(),
+                        iconPath: z.string().nullable(),
+                        displayName: z.string().nullable(),
+                        bungieGlobalDisplayName: z.string().nullable(),
+                        bungieGlobalDisplayNameCode: z.string().nullable(),
+                        lastSeen: z.date().nullable()
+                    })
+                )
+            })
+            .strict()
     }
 })
 

@@ -1,6 +1,4 @@
 import { Router } from "express"
-import { z } from "zod"
-import { zBigIntString } from "util/zod-common"
 import { playerBasicRoute } from "./basic"
 import { playerActivitiesRoute } from "./activities"
 import { playerProfileRoute } from "./profile"
@@ -17,7 +15,3 @@ export const playerRouter = Router({
             .use("/profile", playerProfileRoute.express)
     )
     .use("/search", playerSearchRoute.express)
-
-export const playerRouterParams = z.object({
-    membershipId: zBigIntString()
-})

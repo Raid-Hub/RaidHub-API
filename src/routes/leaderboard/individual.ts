@@ -1,11 +1,16 @@
-import { ListedRaid, Raid } from "~/data/raids"
-import { includedIn, success } from "util/helpers"
-import { prisma } from "~/prisma"
-import { cacheControl } from "~/middlewares/cache-control"
+import { includedIn } from "../../util/helpers"
 import { z } from "zod"
-import { ClearsLeaderboardsForRaid, IndividualBoard, IndividualBoards } from "~/data/leaderboards"
-import { RaidHubRoute } from "route"
+import { RaidHubRoute, ok } from "../../RaidHubRoute"
 import { RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
+import {
+    ClearsLeaderboardsForRaid,
+    IndividualBoard,
+    IndividualBoards
+} from "../../data/leaderboards"
+import { cacheControl } from "../../middlewares/cache-control"
+import { zBigIntString } from "../../util/zod-common"
+import { ListedRaid } from "../../data/raids"
+import { prisma } from "../../prisma"
 
 export const leaderboardRaidIndividualRoute = new RaidHubRoute({
     path: "/:category",
@@ -18,24 +23,45 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
     ),
     query: zLeaderboardQueryPagination,
     middlewares: [cacheControl(30)],
-    async handler(req, res, next) {
-        try {
-            const { raid, category } = req.params
-            const { page, count } = req.query
+    async handler(req) {
+        const { raid, category } = req.params
+        const { page, count } = req.query
 
-            const entries = await getClearsLeaderboard(category, raid, {
-                page,
-                count
+        const entries = await getClearsLeaderboard(category, raid, {
+            page,
+            count
+        })
+
+        return ok({
+            params: { raid, category, count, page },
+            entries
+        })
+    },
+    response: {
+        success: z
+            .object({
+                params: z.object({
+                    raid: z.number(),
+                    category: z.enum(IndividualBoards),
+                    count: z.number(),
+                    page: z.number()
+                }),
+                entries: z.array(
+                    z.object({
+                        rank: z.number(),
+                        value: z.number(),
+                        player: z.object({
+                            membershipId: zBigIntString(),
+                            membershipType: z.number().nullable(),
+                            iconPath: z.string().nullable(),
+                            displayName: z.string().nullable(),
+                            bungieGlobalDisplayName: z.string().nullable(),
+                            bungieGlobalDisplayNameCode: z.string().nullable()
+                        })
+                    })
+                )
             })
-            res.status(200).json(
-                success({
-                    params: { raid, category, count, page },
-                    entries
-                })
-            )
-        } catch (e) {
-            next(e)
-        }
+            .strict()
     }
 })
 
@@ -81,9 +107,6 @@ async function getClearsLeaderboard(
     return entries.map((e, idx) => ({
         rank: (page - 1) * count + idx + 1,
         value: e[category],
-        player: {
-            ...e.player,
-            membershipId: String(e.player.membershipId)
-        }
+        player: e.player
     }))
 }

@@ -1,11 +1,11 @@
-import { success } from "util/helpers"
-import { prisma } from "~/prisma"
-import { cacheControl } from "~/middlewares/cache-control"
 import { z } from "zod"
 import { Player } from "@prisma/client"
-import { RaidHubRoute } from "route"
+import { RaidHubRoute, ok } from "../../RaidHubRoute"
 import { zLeaderboardQueryPagination } from "./_schema"
-import { GlobalBoards, GlobalBoardsMap } from "~/data/leaderboards"
+import { prisma } from "../../prisma"
+import { zBigIntString } from "../../util/zod-common"
+import { GlobalBoards, GlobalBoardsMap } from "../../data/leaderboards"
+import { cacheControl } from "../../middlewares/cache-control"
 
 export const leaderboardGlobalRoute = new RaidHubRoute({
     path: "/:category",
@@ -15,28 +15,50 @@ export const leaderboardGlobalRoute = new RaidHubRoute({
     }),
     query: zLeaderboardQueryPagination,
     middlewares: [cacheControl(30)],
-    async handler(req, res, next) {
-        try {
-            const { category } = req.params
-            const { page, count } = req.query
+    async handler(req) {
+        const { category } = req.params
+        const { page, count } = req.query
 
-            const entries = await getGlobalLeaderboard(category, {
-                page,
-                count
+        const entries = await getGlobalLeaderboard(category, {
+            page,
+            count
+        })
+        return ok({
+            params: { category, count, page },
+            entries
+        })
+    },
+    response: {
+        success: z
+            .object({
+                params: z.object({
+                    category: z.string(),
+                    count: z.number(),
+                    page: z.number()
+                }),
+                entries: z.array(
+                    z.object({
+                        rank: z.number(),
+                        value: z.number(),
+                        player: z.object({
+                            membershipId: zBigIntString(),
+                            membershipType: z.number().nullable(),
+                            iconPath: z.string().nullable(),
+                            displayName: z.string().nullable(),
+                            bungieGlobalDisplayName: z.string().nullable(),
+                            bungieGlobalDisplayNameCode: z.string().nullable()
+                        })
+                    })
+                )
             })
-            res.status(200).json(
-                success({
-                    params: { category, count, page },
-                    entries
-                })
-            )
-        } catch (e) {
-            next(e)
-        }
+            .strict()
     }
 })
 
-async function getGlobalLeaderboard(category: keyof Player, opts: { page: number; count: number }) {
+async function getGlobalLeaderboard(
+    category: keyof Player & ("clears" | "fullClears" | "sherpas"),
+    opts: { page: number; count: number }
+) {
     const { page, count } = opts
 
     const entries = await prisma.player.findMany({

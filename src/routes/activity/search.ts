@@ -1,18 +1,20 @@
-import { includedIn, success } from "util/helpers"
-import { prisma } from "~/prisma"
+import { includedIn } from "../../util/helpers"
 import { z } from "zod"
-import { type ListedRaid, ListedRaids, RaidHashes } from "~/data/raids"
-import { SeasonDates } from "~/data/seasonDates"
 import { Prisma } from "@prisma/client"
-import { isContest, isDayOne } from "~/data/raceDates"
-import { cacheControl } from "~/middlewares/cache-control"
-import { RaidHubRoute } from "route"
-import { zBigIntString, zBooleanString } from "util/zod-common"
+import { RaidHubRoute, ok } from "../../RaidHubRoute"
+import { zBigIntString, zBooleanString } from "../../util/zod-common"
+import { type ListedRaid, ListedRaids, RaidHashes } from "../../data/raids"
+import { cacheControl } from "../../middlewares/cache-control"
+import { SeasonDates } from "../../data/seasonDates"
+import { prisma } from "../../prisma"
+import { isContest, isDayOne } from "../../data/raceDates"
 
 // Todo: add a query param for the difficulty
-const activitySearchQuerySchema = z
+export const activitySearchQuerySchema = z
     .object({
-        membershipId: z.array(zBigIntString()).min(1),
+        membershipId: z
+            .union([zBigIntString().transform(m => [m]), z.array(zBigIntString())])
+            .pipe(z.array(zBigIntString()).min(1)),
         minPlayers: z.coerce.number().int().nonnegative().optional(),
         maxPlayers: z.coerce.number().int().nonnegative().optional(),
         minDate: z.coerce.date().optional(),
@@ -34,7 +36,7 @@ const activitySearchQuerySchema = z
         count: z.coerce.number().int().positive().default(25),
         page: z.coerce.number().int().positive().default(1)
     })
-    .strict()
+    .strip()
     .transform(({ membershipId, raid, ...q }) => ({
         membershipIds: membershipId,
         raid: raid as ListedRaid | undefined,
@@ -46,31 +48,48 @@ export const activitySearchRoute = new RaidHubRoute({
     method: "get",
     middlewares: [cacheControl(30)],
     query: activitySearchQuerySchema,
-    async handler(req, res, next) {
-        try {
-            const activities = await searchActivities(req.query)
-            const results = activities.map(a => ({
-                instanceId: a.instance_id,
-                raidHash: a.raid_hash,
-                fresh: a.fresh,
-                completed: a.completed,
-                flawless: a.flawless,
-                playerCount: a.player_count,
-                dateStarted: a.date_started,
-                dateCompleted: a.date_completed,
-                platformType: a.platform_type,
-                dayOne: isDayOne(a.raid_id, a.date_completed),
-                contest: isContest(a.raid_id, a.date_started)
-            }))
-            res.status(200).json(
-                success({
-                    query: req.query,
-                    results
-                })
-            )
-        } catch (e) {
-            next(e)
-        }
+    async handler(req) {
+        const activities = await searchActivities(req.query)
+        const results = activities.map(a => ({
+            instanceId: a.instance_id,
+            raidHash: a.raid_hash,
+            fresh: a.fresh,
+            completed: a.completed,
+            flawless: a.flawless,
+            playerCount: a.player_count,
+            dateStarted: a.date_started,
+            dateCompleted: a.date_completed,
+            platformType: a.platform_type,
+            dayOne: isDayOne(a.raid_id, a.date_completed),
+            contest: isContest(a.raid_id, a.date_started)
+        }))
+
+        return ok({
+            query: req.query,
+            results
+        })
+    },
+    response: {
+        success: z
+            .object({
+                query: z.record(z.any()),
+                results: z.array(
+                    z.object({
+                        instanceId: z.string(),
+                        raidHash: z.string(),
+                        fresh: z.boolean(),
+                        completed: z.boolean(),
+                        flawless: z.boolean(),
+                        playerCount: z.number(),
+                        dateStarted: z.date(),
+                        dateCompleted: z.date(),
+                        platformType: z.number(),
+                        dayOne: z.boolean(),
+                        contest: z.boolean()
+                    })
+                )
+            })
+            .strict()
     }
 })
 
@@ -147,7 +166,7 @@ async function searchActivities({
                 }
                 ${
                     platformType !== undefined
-                        ? Prisma.sql`WHERE a.platform_type = ${platformType}::int AND`
+                        ? Prisma.sql`a.platform_type = ${platformType}::int AND`
                         : Prisma.empty
                 }
                 a.player_count BETWEEN ${minPlayers ?? 1} AND ${maxPlayers ?? 16384} AND
@@ -156,7 +175,8 @@ async function searchActivities({
                     maxDate ?? new Date()
                 }::timestamp
             GROUP BY
-                a.instance_id
+                a.instance_id, 
+                rd.raid_id
         )
         SELECT
             instance_id::text,

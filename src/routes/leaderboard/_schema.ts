@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { zCount, zPage } from "util/zod-common"
-import { UrlPathsToRaid } from "~/data/leaderboards"
+import { zCount, zPage } from "../../util/zod-common"
+import { UrlPathsToRaid } from "../../data/leaderboards"
 
 export const zLeaderboardQueryPagination = z.object({
     count: zCount({ min: 25, max: 100, def: 50 }),

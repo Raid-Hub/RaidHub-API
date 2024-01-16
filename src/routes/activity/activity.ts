@@ -1,11 +1,9 @@
-import { failure, success } from "util/helpers"
-import { prisma } from "~/prisma"
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import { isContest, isDayOne, isWeekOne } from "~/data/raceDates"
-import { cacheControl } from "~/middlewares/cache-control"
 import { z } from "zod"
-import { RaidHubRoute } from "route"
-import { zBigIntString } from "util/zod-common"
+import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
+import { zBigIntString } from "../../util/zod-common"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../prisma"
+import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 
 export const activityRootRoute = new RaidHubRoute({
     path: "/:instanceId",
@@ -14,65 +12,106 @@ export const activityRootRoute = new RaidHubRoute({
         instanceId: zBigIntString()
     }),
     middlewares: [cacheControl(300)],
-    async handler(req, res, next) {
+    async handler(req) {
         const instanceId = req.params.instanceId
-        try {
-            const data = await getActivity({ instanceId })
-            res.status(200).json(success(data))
-        } catch (e) {
-            if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-                res.status(404).json(failure(`No activity found with id ${instanceId}`))
-            } else {
-                next(e)
-            }
+
+        const data = await getActivity({ instanceId })
+
+        if (!data) {
+            return fail(
+                { notFound: true, instanceId: req.params.instanceId },
+                404,
+                "Activity not found"
+            )
+        } else {
+            return ok(data)
         }
+    },
+    response: {
+        success: z
+            .object({
+                instanceId: zBigIntString(),
+                raidHash: zBigIntString(),
+                dateStarted: z.date(),
+                dateCompleted: z.date(),
+                fresh: z.boolean().nullable(),
+                flawless: z.boolean().nullable(),
+                completed: z.boolean(),
+                playerCount: z.number(),
+                platformType: z.number(),
+                leaderboardEntries: z.record(z.number()),
+                players: z.record(
+                    z.object({
+                        finishedRaid: z.boolean(),
+                        sherpas: z.number(),
+                        isFirstClear: z.boolean()
+                    })
+                ),
+                dayOne: z.boolean(),
+                contest: z.boolean(),
+                weekOne: z.boolean()
+            })
+            .strict(),
+        error: z.object({
+            notFound: z.boolean(),
+            instanceId: zBigIntString()
+        })
     }
 })
 
 async function getActivity({ instanceId }: { instanceId: bigint }) {
-    const { playerActivity, activityLeaderboardEntry, ...activity } =
-        await prisma.activity.findUniqueOrThrow({
-            where: {
-                instanceId
+    const result = await prisma.activity.findUnique({
+        where: {
+            instanceId: instanceId
+        },
+        include: {
+            raidDefinition: {
+                select: {
+                    raidId: true
+                }
             },
-            include: {
-                raidDefinition: {
-                    select: {
-                        raidId: true
-                    }
-                },
-                playerActivity: {
-                    select: {
-                        finishedRaid: true,
-                        membershipId: true
-                    }
-                },
-                activityLeaderboardEntry: {
-                    select: {
-                        leaderboardId: true,
-                        rank: true
-                    }
+            playerActivity: {
+                select: {
+                    finishedRaid: true,
+                    membershipId: true,
+                    sherpas: true,
+                    isFirstClear: true
+                }
+            },
+            activityLeaderboardEntry: {
+                select: {
+                    leaderboardId: true,
+                    rank: true
                 }
             }
-        })
+        }
+    })
 
-    const dayOne = isDayOne(activity.raidDefinition.raidId, activity.dateCompleted)
-    const contest = isContest(activity.raidDefinition.raidId, activity.dateStarted)
-    const weekOne = isWeekOne(activity.raidDefinition.raidId, activity.dateCompleted)
+    if (!result) return false
+
+    const { activityLeaderboardEntry, playerActivity, raidDefinition, ...activity } = result
+
+    const dayOne = isDayOne(raidDefinition.raidId, activity.dateCompleted)
+    const contest = isContest(raidDefinition.raidId, activity.dateStarted)
+    const weekOne = isWeekOne(raidDefinition.raidId, activity.dateCompleted)
 
     return {
         ...activity,
         leaderboardEntries: Object.fromEntries(
             activityLeaderboardEntry.map(e => [e.leaderboardId, e.rank])
         ),
-        instanceId: String(activity.instanceId),
-        raidHash: String(activity.raidHash),
-        activityId: String(activity.instanceId),
         dayOne,
         contest,
         weekOne,
         players: Object.fromEntries(
-            playerActivity.map(pa => [String(pa.membershipId), pa.finishedRaid])
+            playerActivity.map(pa => [
+                String(pa.membershipId),
+                {
+                    finishedRaid: pa.finishedRaid,
+                    sherpas: pa.sherpas,
+                    isFirstClear: pa.isFirstClear
+                }
+            ])
         )
     }
 }
