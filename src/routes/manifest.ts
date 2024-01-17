@@ -15,7 +15,11 @@ import { cacheControl } from "../middlewares/cache-control"
 import { RaidHubRoute, ok } from "../RaidHubRoute"
 import { prisma } from "../prisma"
 import { z } from "zod"
-import { ClearsLeaderboardsForRaid } from "../data/leaderboards"
+import {
+    ClearsLeaderboardsForRaid,
+    IndividualBoard,
+    IndividualBoardNames
+} from "../data/leaderboards"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -64,7 +68,17 @@ export const manifestRoute = new RaidHubRoute({
             })),
             leaderboards: {
                 worldFirst: await listLeaderboards(),
-                individual: ClearsLeaderboardsForRaid
+                individual: Object.fromEntries(
+                    Object.entries(ClearsLeaderboardsForRaid).map(([raid, boards]) => [
+                        raid,
+                        Object.entries(boards)
+                            .filter(([_, v]) => v)
+                            .map(([k, _]) => ({
+                                name: IndividualBoardNames[k as IndividualBoard],
+                                category: k
+                            }))
+                    ])
+                )
             }
         }),
     response: {
@@ -99,7 +113,14 @@ export const manifestRoute = new RaidHubRoute({
                             })
                         )
                     ),
-                    individual: z.record(z.record(z.boolean()))
+                    individual: z.record(
+                        z.array(
+                            z.object({
+                                name: z.string(),
+                                category: z.string()
+                            })
+                        )
+                    )
                 })
             })
             .strict()

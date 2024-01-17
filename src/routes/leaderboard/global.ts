@@ -8,7 +8,6 @@ import { GlobalBoards, GlobalBoardsMap } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
 
 export const leaderboardGlobalRoute = new RaidHubRoute({
-    path: "/:category",
     method: "get",
     params: z.object({
         category: z.enum(GlobalBoards).transform(s => GlobalBoardsMap[s])

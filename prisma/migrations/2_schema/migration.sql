@@ -8,6 +8,7 @@ CREATE TABLE "activity" (
     "player_count" INTEGER NOT NULL,
     "date_started" TIMESTAMP(3) NOT NULL,
     "date_completed" TIMESTAMP(3) NOT NULL,
+    "duration" INTEGER NOT NULL,
     "platform_type" INTEGER NOT NULL,
 
     CONSTRAINT "activity_pkey" PRIMARY KEY ("instance_id")
@@ -157,6 +158,9 @@ CREATE INDEX "idx_raid_definition_version_id" ON "raid_definition"("version_id")
 
 -- CreateIndex
 CREATE UNIQUE INDEX "leaderboard_raid_hash_type_key" ON "leaderboard"("raid_id", "type");
+
+-- CreateIndex
+CREATE INDEX "speedrun_index" ON "activity"("raid_hash", "completed", "fresh", "duration" ASC);
 
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;

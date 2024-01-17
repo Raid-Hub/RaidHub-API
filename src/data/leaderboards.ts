@@ -62,107 +62,116 @@ export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, WorldFirstLeaderb
 
 export const ClearsLeaderboardsForRaid = {
     [Raid.LEVIATHAN]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.EATER_OF_WORLDS]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.SPIRE_OF_STARS]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: false,
         duos: false,
         solos: false
     },
     [Raid.LAST_WISH]: {
+        fresh: false,
         clears: true,
-        fresh: true,
         sherpas: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.SCOURGE_OF_THE_PAST]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.CROWN_OF_SORROW]: {
-        clears: true,
-        fresh: true,
         sherpas: true,
+        fresh: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.GARDEN_OF_SALVATION]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.DEEP_STONE_CRYPT]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.VAULT_OF_GLASS]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.VOW_OF_THE_DISCIPLE]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: false,
         solos: false
     },
     [Raid.KINGS_FALL]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.ROOT_OF_NIGHTMARES]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.CROTAS_END]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     }
 } satisfies Record<ListedRaid, Record<IndividualBoard, boolean>>
+
+export const IndividualBoardNames: Record<IndividualBoard, string> = {
+    fresh: "Full Clears",
+    clears: "Clears",
+    sherpas: "Sherpas",
+    trios: "Trios",
+    duos: "Duos",
+    solos: "Solos"
+}

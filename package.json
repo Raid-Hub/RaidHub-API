@@ -10,7 +10,7 @@
         "db:start": "docker-compose -f docker-compose.yml up -d",
         "db:stop": "docker-compose -f docker-compose.yml down",
         "db:push": "prisma db push",
-        "db:reset": "prisma migrate reset && prisma db push",
+        "db:reset": "prisma migrate reset --force",
         "db:seed": "ts-node ./prisma/seed.ts",
         "db:migrate": "prisma migrate dev --create-only",
         "test": "jest",

@@ -7,7 +7,6 @@ import { zBigIntString } from "../util/zod-common"
 import { pgcrSchema } from "../util/pgcr"
 
 export const pgcrRoute = new RaidHubRoute({
-    path: "/:instanceId",
     method: "get",
     params: z.object({
         instanceId: zBigIntString()

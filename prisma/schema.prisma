@@ -17,6 +17,7 @@ model Activity {
   playerCount              Int                        @map("player_count")
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
+  duration                 Int                        
   platformType             Int                        @map("platform_type")
   raidDefinition           RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
@@ -24,6 +25,7 @@ model Activity {
 
   @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
   @@index([dateCompleted(sort: Desc)], map: "date_index")
+  @@index([raidHash, completed, fresh, duration(sort: Asc)], map: "speedrun_index")
   @@index([completed, playerCount, fresh, flawless], map: "tag_index")
   @@map("activity")
 }

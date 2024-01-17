@@ -286,9 +286,6 @@ async function seedPlayer(name: string) {
                               }
                             : null)
                     }
-                    const durationSeconds = Math.floor(
-                        pgcr.dateCompleted.getTime() - pgcr.dateStarted.getTime() / 1000
-                    )
 
                     const statsCreate = {
                         clears: didFinish ? 1 : 0,
@@ -381,6 +378,9 @@ function processCarnageReport(report: DestinyPostGameCarnageReportData) {
     )
     const fresh = isFresh(report)
     const startDate = new Date(report.period)
+    const endDate = new Date(
+        startDate.getTime() + report.entries[0]?.values.activityDurationSeconds.basic.value * 1000
+    )
 
     return {
         instanceId: BigInt(report.activityDetails.instanceId),
@@ -391,10 +391,8 @@ function processCarnageReport(report: DestinyPostGameCarnageReportData) {
         fresh: fresh,
         playerCount: players.size,
         dateStarted: startDate,
-        dateCompleted: new Date(
-            startDate.getTime() +
-                report.entries[0]?.values.activityDurationSeconds.basic.value * 1000
-        ),
+        dateCompleted: endDate,
+        duration: (endDate.getTime() - startDate.getTime()) / 1000,
         platformType: report.activityDetails.membershipType,
         players
     }
@@ -467,7 +465,7 @@ async function seed() {
                     }
 
                     // temporary way to determine the date when the race started, not correct for all races (.e. crown)
-                    const date = entries[1].dateStarted
+                    const date = entries[0].dateStarted
                     date.setUTCHours(date.getUTCHours() - 17)
                     date.setUTCHours(17, 0, 0)
 
@@ -475,7 +473,7 @@ async function seed() {
                         .create({
                             data: {
                                 id: crypto.randomUUID(),
-                                date: entries[1].dateStarted,
+                                date: date,
                                 raid: {
                                     connect: {
                                         id: raid
