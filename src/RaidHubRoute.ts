@@ -49,6 +49,7 @@ export class RaidHubRoute<
     readonly responseSchema: ResponseBody
     readonly errorSchema: ErrorResponseBody | null
 
+    // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
         path?: string
         method: M
@@ -156,7 +157,7 @@ export class RaidHubRoute<
         }
     }
 
-    // This is the actual controller that is passed to express
+    // This is the actual controller that is passed to express as a handler
     private controller: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> =
         async (req, res, next) => {
             try {
@@ -171,6 +172,7 @@ export class RaidHubRoute<
             }
         }
 
+    // This is the express router that is returnedand used to create the actual express route
     get express() {
         const args = [
             this.path ?? "/",
@@ -199,6 +201,9 @@ export class RaidHubRoute<
             body: this.bodySchema?.parse(req.body) ?? req.body
         })
 
+        // We essentially can use this type to narrow down the type of res in our unit tests
+        // This will guarantee that we are testing the correct type of response and that
+        // also the shape matches the schema
         if (res.success) {
             return {
                 type: "ok",
@@ -231,6 +236,11 @@ export function fail<E>(error: E, code: number, message?: string) {
         success: false
     } satisfies RaidHubResponse<any, E>
 }
+
+/**
+ * The below errors are various errors that middleware can throw
+ */
+//
 
 export const validationError = z.object({
     minted: z.date(),
