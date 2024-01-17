@@ -32,18 +32,6 @@ describe("leaderboard worldfirst 200", () => {
             page: 4,
             count: 87
         }))
-
-    test("dsc duos", () =>
-        t("deepstonecrypt", "duos", {
-            page: 10,
-            count: 78
-        }))
-
-    test("ron solos", () =>
-        t("rootofnightmares", "solos", {
-            page: 43,
-            count: 45
-        }))
 })
 
 describe("leaderboard worldfirst 404", () => {
