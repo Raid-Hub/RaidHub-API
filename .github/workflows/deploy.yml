@@ -23,7 +23,7 @@ jobs:
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
                   name: gapk
-                  if_key_exists: fail
+                  if_key_exists: ignore
 
             - name: Deploy API
               run: |
