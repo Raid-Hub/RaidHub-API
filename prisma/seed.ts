@@ -41,6 +41,8 @@ const bungieClient: BungieClientProtocol = {
 }
 
 main()
+    .catch(main)
+    .catch(main)
     .then(() => console.log("Seeding complete"))
     .then(() => process.exit(0))
 
@@ -58,9 +60,85 @@ async function main() {
     }
 }
 
+async function seed() {
+    await prisma.activityLeaderboard
+        .deleteMany({})
+        .then(c => console.log("Deleted", c.count, "entries"))
+    await Promise.all(
+        ListedRaids.map(async raid => {
+            const types: [WorldFirstLeaderboardType, Difficulty[]][] = [
+                [WorldFirstLeaderboardType.Normal, [Difficulty.NORMAL]],
+                [WorldFirstLeaderboardType.Prestige, [Difficulty.PRESTIGE]],
+                [
+                    WorldFirstLeaderboardType.Challenge,
+                    [Difficulty.CHALLENGE_VOG, Difficulty.CHALLENGE_KF, Difficulty.CHALLENGE_CROTA]
+                ],
+                [WorldFirstLeaderboardType.Master, [Difficulty.MASTER]]
+            ]
+
+            await Promise.all(
+                types.map(async ([type, difficulty]) => {
+                    const entries = await prisma.activity.findMany({
+                        select: { instanceId: true, dateStarted: true },
+                        where: {
+                            completed: true,
+                            raidDefinition: {
+                                raidId: raid,
+                                versionId: {
+                                    in: difficulty
+                                }
+                            }
+                        },
+                        orderBy: {
+                            dateCompleted: "asc"
+                        },
+                        take: 100
+                    })
+
+                    if (entries.length === 0) {
+                        return
+                    }
+
+                    // temporary way to determine the date when the race started, not correct for all races (.e. crown)
+                    const date = entries[0].dateStarted
+                    date.setUTCHours(date.getUTCHours() - 17)
+                    date.setUTCHours(17, 0, 0)
+
+                    await prisma.activityLeaderboard
+                        .create({
+                            data: {
+                                id: crypto.randomUUID(),
+                                date: date,
+                                raid: {
+                                    connect: {
+                                        id: raid
+                                    }
+                                },
+                                entries: {
+                                    createMany: {
+                                        data: entries.map((e, i) => ({
+                                            rank: i + 1,
+                                            instanceId: e.instanceId
+                                        })),
+                                        skipDuplicates: true
+                                    }
+                                },
+                                type: type
+                            },
+                            select: {
+                                raid: true
+                            }
+                        })
+                        .then(r => console.log(`Seeded ${r.raid.name} ${type}`))
+                })
+            )
+        })
+    )
+}
+
 async function seedPlayers(names: string[]) {
     const COUNT = 250
-    const THREADS = 100
+    const THREADS = 60
     const pgcrQueue = new Set<BigInt>()
 
     const characters = await Promise.all(names.map(findCharacters)).then(c => c.flat())
@@ -150,6 +228,7 @@ async function seedPlayers(names: string[]) {
             })
         )
 
+        console.log(`Inserting ${fetchedPGCRs.length} activities & updating players`)
         for (const { players, ...pgcr } of fetchedPGCRs.map(processCarnageReport)) {
             const { raidDefinition } = await prisma.activity
                 .create({
@@ -177,142 +256,148 @@ async function seedPlayers(names: string[]) {
                 })
 
             await Promise.all(
-                Array.from(players.values()).map(async p => {
-                    const destinyUserInfo = p[0].player.destinyUserInfo
-                    const didFinish = p.some(
-                        e =>
-                            e.values.completed?.basic.value &&
-                            e.values.completionReason?.basic.value === 0
-                    )
-                    const activityDuration = p[0].values.activityDurationSeconds?.basic.value ?? 0
-                    const maxActivityDuration =
-                        activityDuration === 32767 ? Infinity : activityDuration
-                    const { kills, deaths, assists, timePlayedSeconds } = p.reduce(
-                        (curr, nxt) => ({
-                            kills: curr.kills + (nxt.values.kills?.basic.value ?? 0),
-                            deaths: curr.deaths + (nxt.values.deaths?.basic.value ?? 0),
-                            assists: curr.assists + (nxt.values.assists?.basic.value ?? 0),
-                            timePlayedSeconds: Math.min(
-                                curr.timePlayedSeconds +
-                                    (nxt.values.timePlayedSeconds?.basic.value ?? 0),
-                                maxActivityDuration
-                            )
-                        }),
-                        {
-                            kills: 0,
-                            deaths: 0,
-                            assists: 0,
-                            timePlayedSeconds: 0
-                        }
-                    )
-                    const data = {
-                        lastSeen: pgcr.dateCompleted,
-                        playerActivities: {
-                            create: {
-                                finishedRaid: didFinish,
-                                kills,
-                                deaths,
-                                assists,
-                                timePlayedSeconds,
-                                instanceId: pgcr.instanceId,
-                                classHash: BigInt(p[0].player.classHash)
+                Array.from(players.values())
+                    .slice(0, 50)
+                    .map(async p => {
+                        const destinyUserInfo = p[0].player.destinyUserInfo
+                        const didFinish = p.some(
+                            e =>
+                                e.values.completed?.basic.value &&
+                                e.values.completionReason?.basic.value === 0
+                        )
+                        const activityDuration =
+                            p[0].values.activityDurationSeconds?.basic.value ?? 0
+                        const maxActivityDuration =
+                            activityDuration === 32767 ? Infinity : activityDuration
+                        const { kills, deaths, assists, timePlayedSeconds } = p.reduce(
+                            (curr, nxt) => ({
+                                kills: curr.kills + (nxt.values.kills?.basic.value ?? 0),
+                                deaths: curr.deaths + (nxt.values.deaths?.basic.value ?? 0),
+                                assists: curr.assists + (nxt.values.assists?.basic.value ?? 0),
+                                timePlayedSeconds: Math.min(
+                                    curr.timePlayedSeconds +
+                                        (nxt.values.timePlayedSeconds?.basic.value ?? 0),
+                                    maxActivityDuration
+                                )
+                            }),
+                            {
+                                kills: 0,
+                                deaths: 0,
+                                assists: 0,
+                                timePlayedSeconds: 0
                             }
-                        },
-                        ...(destinyUserInfo.membershipType !== 0
-                            ? {
-                                  membershipType: destinyUserInfo.membershipType,
-                                  iconPath: destinyUserInfo.iconPath,
-                                  displayName: destinyUserInfo.displayName,
-                                  bungieGlobalDisplayName:
-                                      destinyUserInfo.bungieGlobalDisplayName || null,
-                                  bungieGlobalDisplayNameCode:
-                                      destinyUserInfo.bungieGlobalDisplayNameCode
-                                          ? fixBungieCode(
-                                                destinyUserInfo.bungieGlobalDisplayNameCode
-                                            )
-                                          : null
-                              }
-                            : null)
-                    }
-
-                    const statsCreate = {
-                        clears: didFinish ? 1 : 0,
-                        fresh: didFinish && pgcr.fresh ? 1 : 0,
-                        trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
-                        duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
-                        solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
-                        raid: {
-                            connect: {
-                                id: raidDefinition.raidId
-                            }
-                        }
-                    }
-
-                    return prisma.player
-                        .upsert({
-                            create: {
-                                ...data,
-                                clears: didFinish ? 1 : 0,
-                                membershipId: BigInt(destinyUserInfo.membershipId),
-                                stats: {
-                                    create: statsCreate
+                        )
+                        const data = {
+                            lastSeen: pgcr.dateCompleted,
+                            playerActivities: {
+                                create: {
+                                    finishedRaid: didFinish,
+                                    kills,
+                                    deaths,
+                                    assists,
+                                    timePlayedSeconds,
+                                    instanceId: pgcr.instanceId,
+                                    classHash: BigInt(p[0].player.classHash)
                                 }
                             },
-                            update: {
-                                ...data,
-                                clears: didFinish
-                                    ? {
-                                          increment: 1
-                                      }
-                                    : undefined,
+                            ...(destinyUserInfo.membershipType !== 0
+                                ? {
+                                      membershipType: destinyUserInfo.membershipType,
+                                      iconPath: destinyUserInfo.iconPath,
+                                      displayName: destinyUserInfo.displayName,
+                                      bungieGlobalDisplayName:
+                                          destinyUserInfo.bungieGlobalDisplayName || null,
+                                      bungieGlobalDisplayNameCode:
+                                          destinyUserInfo.bungieGlobalDisplayNameCode
+                                              ? fixBungieCode(
+                                                    destinyUserInfo.bungieGlobalDisplayNameCode
+                                                )
+                                              : null
+                                  }
+                                : null)
+                        }
 
-                                fullClears:
-                                    didFinish && pgcr.fresh
+                        const statsCreate = {
+                            clears: didFinish ? 1 : 0,
+                            fresh: didFinish && pgcr.fresh ? 1 : 0,
+                            trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
+                            duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
+                            solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
+                            raid: {
+                                connect: {
+                                    id: raidDefinition.raidId
+                                }
+                            }
+                        }
+
+                        return prisma.player
+                            .upsert({
+                                create: {
+                                    ...data,
+                                    clears: didFinish ? 1 : 0,
+                                    membershipId: BigInt(destinyUserInfo.membershipId),
+                                    stats: {
+                                        create: statsCreate
+                                    }
+                                },
+                                update: {
+                                    ...data,
+                                    clears: didFinish
                                         ? {
                                               increment: 1
                                           }
                                         : undefined,
-                                stats: {
-                                    upsert: {
-                                        create: statsCreate,
-                                        update: {
-                                            clears: {
-                                                increment: didFinish ? 1 : 0
+
+                                    fullClears:
+                                        didFinish && pgcr.fresh
+                                            ? {
+                                                  increment: 1
+                                              }
+                                            : undefined,
+                                    stats: {
+                                        upsert: {
+                                            create: statsCreate,
+                                            update: {
+                                                clears: {
+                                                    increment: didFinish ? 1 : 0
+                                                },
+                                                fresh: {
+                                                    increment: didFinish && pgcr.fresh ? 1 : 0
+                                                },
+                                                trios: {
+                                                    increment:
+                                                        didFinish && pgcr.playerCount === 3 ? 1 : 0
+                                                },
+                                                duos: {
+                                                    increment:
+                                                        didFinish && pgcr.playerCount === 2 ? 1 : 0
+                                                },
+                                                solos: {
+                                                    increment:
+                                                        didFinish && pgcr.playerCount === 1 ? 1 : 0
+                                                }
                                             },
-                                            fresh: {
-                                                increment: didFinish && pgcr.fresh ? 1 : 0
-                                            },
-                                            trios: {
-                                                increment:
-                                                    didFinish && pgcr.playerCount === 3 ? 1 : 0
-                                            },
-                                            duos: {
-                                                increment:
-                                                    didFinish && pgcr.playerCount === 2 ? 1 : 0
-                                            },
-                                            solos: {
-                                                increment:
-                                                    didFinish && pgcr.playerCount === 1 ? 1 : 0
-                                            }
-                                        },
-                                        where: {
-                                            membershipId_raidId: {
-                                                membershipId: BigInt(destinyUserInfo.membershipId),
-                                                raidId: raidDefinition.raidId
+                                            where: {
+                                                membershipId_raidId: {
+                                                    membershipId: BigInt(
+                                                        destinyUserInfo.membershipId
+                                                    ),
+                                                    raidId: raidDefinition.raidId
+                                                }
                                             }
                                         }
                                     }
+                                },
+                                where: {
+                                    membershipId: BigInt(destinyUserInfo.membershipId)
                                 }
-                            },
-                            where: {
-                                membershipId: BigInt(destinyUserInfo.membershipId)
-                            }
-                        })
-                        .catch(console.error)
-                })
+                            })
+                            .catch(console.error)
+                    })
             )
         }
 
+        console.log(`Inserting ${fetchedPGCRs.length} raw pgcrs`)
         await Promise.all(
             fetchedPGCRs.map(async report => {
                 try {
@@ -444,83 +529,4 @@ function fixBungieCode(code: number) {
     const str = String(code)
     const missingZeroes = 4 - str.length
     return `${"0".repeat(missingZeroes)}${str}`
-}
-
-async function seed() {
-    await prisma.activityLeaderboard
-        .deleteMany({})
-        .then(c => console.log("Deleted", c.count, "entries"))
-    await Promise.all(
-        ListedRaids.map(async raid => {
-            // todo get real dates / ids
-            const date = SeasonDates[Math.floor(Math.random() * SeasonDates.length)]
-
-            const types: [WorldFirstLeaderboardType, Difficulty[]][] = [
-                [WorldFirstLeaderboardType.Normal, [Difficulty.NORMAL]],
-                [WorldFirstLeaderboardType.Prestige, [Difficulty.PRESTIGE]],
-                [
-                    WorldFirstLeaderboardType.Challenge,
-                    [Difficulty.CHALLENGE_VOG, Difficulty.CHALLENGE_KF, Difficulty.CHALLENGE_CROTA]
-                ],
-                [WorldFirstLeaderboardType.Master, [Difficulty.MASTER]]
-            ]
-
-            await Promise.all(
-                types.map(async ([type, difficulty]) => {
-                    const entries = await prisma.activity.findMany({
-                        select: { instanceId: true, dateStarted: true },
-                        where: {
-                            completed: true,
-                            raidDefinition: {
-                                raidId: raid,
-                                versionId: {
-                                    in: difficulty
-                                }
-                            }
-                        },
-                        orderBy: {
-                            dateCompleted: "asc"
-                        },
-                        take: 100
-                    })
-
-                    if (entries.length === 0) {
-                        return
-                    }
-
-                    // temporary way to determine the date when the race started, not correct for all races (.e. crown)
-                    const date = entries[0].dateStarted
-                    date.setUTCHours(date.getUTCHours() - 17)
-                    date.setUTCHours(17, 0, 0)
-
-                    await prisma.activityLeaderboard
-                        .create({
-                            data: {
-                                id: crypto.randomUUID(),
-                                date: date,
-                                raid: {
-                                    connect: {
-                                        id: raid
-                                    }
-                                },
-                                entries: {
-                                    createMany: {
-                                        data: entries.map((e, i) => ({
-                                            rank: i + 1,
-                                            instanceId: e.instanceId
-                                        })),
-                                        skipDuplicates: true
-                                    }
-                                },
-                                type: type
-                            },
-                            select: {
-                                raid: true
-                            }
-                        })
-                        .then(r => console.log(`Seeded ${r.raid.name} ${type}`))
-                })
-            )
-        })
-    )
 }
