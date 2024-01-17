@@ -33,6 +33,8 @@ jobs:
                   ssh -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h -H 'CF-Access-Client-Id: ${{ secrets.CF_GHA_CLIENT_ID }}' -H 'CF-Access-Client-Secret: ${{ secrets.CF_GHA_CLIENT_SECRET }}'" -i ~/.ssh/gapk root@ssh.raidhub.app &
 
             - name: Run Tests
+              env:
+                  DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
                   yarn test
