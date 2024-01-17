@@ -46,63 +46,32 @@ main()
 
 async function main() {
     dotenv.config()
-    const name = process.argv[2]
-    if (!name) {
+    const names = process.argv.slice(2)
+    if (!names.length) {
         console.log("Seeding database")
         await seed()
     } else {
-        console.log("Seeding player " + name)
-        await seedPlayer(name)
+        console.log("Seeding players " + names.join(", "))
+        await seedPlayers(names)
         console.log("Seeding database")
         await seed()
     }
 }
 
-async function seedPlayer(name: string) {
-    const [displayName, displayNameCode] = name.split("#")
+async function seedPlayers(names: string[]) {
+    const COUNT = 250
+    const THREADS = 100
+    const pgcrQueue = new Set<BigInt>()
 
-    if (!displayName || !displayNameCode) {
-        console.error(`Invalid username to seed: ${name}`)
-        process.exit(1)
-    }
-
-    // Find the we are going to seed
-    const user = await searchDestinyPlayerByBungieName(
-        bungieClient,
-        {
-            membershipType: -1
-        },
-        {
-            displayName,
-            displayNameCode: Number(displayNameCode)
-        }
-    )
-        .then(res => res.Response[0])
-        .catch(e => {
-            console.error(e)
-            process.exit(1)
-        })
-
-    console.log(`Found user ${user.membershipId}`)
-
-    const characters = await getProfile(bungieClient, {
-        membershipType: user.membershipType,
-        destinyMembershipId: user.membershipId,
-        components: [200]
-    })
-        .then(res => Object.keys(res.Response.characters?.data ?? {}))
-        .catch(e => {
-            console.error(e)
-            process.exit(1)
-        })
-
-    console.log(`Found characters ${characters.join(", ")}`)
+    const characters = await Promise.all(names.map(findCharacters)).then(c => c.flat())
 
     const pgcrs = await prisma.playerActivity
         .findMany({
             where: {
                 player: {
-                    membershipId: BigInt(user.membershipId)
+                    membershipId: {
+                        in: characters.map(c => BigInt(c.membershipId))
+                    }
                 }
             },
             select: {
@@ -111,22 +80,16 @@ async function seedPlayer(name: string) {
         })
         .then(data => new Set(data.map(r => r.instanceId)))
 
-    console.log(`PGCRs already in database: ${pgcrs.size}`)
-
-    const COUNT = 250
-    const THREADS = 100
-    const pgcrQueue = new Set<BigInt>()
-
     await Promise.all(
-        characters.map(async characterId => {
+        characters.map(async char => {
             let page = 0
             while (true) {
                 const activities = await Promise.all(
-                    new Array(THREADS).fill(undefined).map((_, i) =>
+                    new Array(THREADS / 20).fill(undefined).map((_, i) =>
                         getActivityHistory(bungieClient, {
-                            characterId,
-                            destinyMembershipId: user.membershipId,
-                            membershipType: user.membershipType,
+                            characterId: char.characterId,
+                            destinyMembershipId: char.membershipId,
+                            membershipType: char.membershipType,
                             mode: DestinyActivityModeType.Raid,
                             page: page + i,
                             count: COUNT
@@ -134,7 +97,9 @@ async function seedPlayer(name: string) {
                     )
                 ).then(activities => activities.flat())
 
-                console.log(`Found ${activities.length} activities on characterId ${characterId}`)
+                console.log(
+                    `Found ${activities.length} activities on characterId ${char.characterId}`
+                )
 
                 activities.filter(Boolean).forEach(a => {
                     const id = BigInt(a.activityDetails.instanceId)
@@ -143,15 +108,17 @@ async function seedPlayer(name: string) {
                     }
                 })
 
-                page += THREADS
+                page += THREADS / 20
 
-                if (activities.length < THREADS * COUNT) {
+                if (activities.length < (THREADS / 20) * COUNT) {
                     break
                 }
             }
             return
         })
     )
+
+    console.log(`PGCRs already in database: ${pgcrs.size}`)
 
     let i = 0
     const arr = Array.from(pgcrQueue).sort((a, b) => Number(a) - Number(b))
@@ -180,25 +147,6 @@ async function seedPlayer(name: string) {
                             >
                     )
                     .then(res => res.Response)
-                    .then(async report => {
-                        try {
-                            const compressed = gzipSync(
-                                Buffer.from(JSON.stringify(pgcrSchema.parse(report)), "utf-8")
-                            )
-                            await Promise.all([
-                                prisma.pGCR.create({
-                                    data: {
-                                        instanceId: BigInt(report.activityDetails.instanceId),
-                                        data: compressed
-                                    }
-                                })
-                            ]).catch(console.error)
-                        } catch (e) {
-                            console.error((e as ZodError).errors)
-                            throw e
-                        }
-                        return report
-                    })
             })
         )
 
@@ -317,6 +265,13 @@ async function seedPlayer(name: string) {
                                           increment: 1
                                       }
                                     : undefined,
+
+                                fullClears:
+                                    didFinish && pgcr.fresh
+                                        ? {
+                                              increment: 1
+                                          }
+                                        : undefined,
                                 stats: {
                                     upsert: {
                                         create: statsCreate,
@@ -358,8 +313,77 @@ async function seedPlayer(name: string) {
             )
         }
 
+        await Promise.all(
+            fetchedPGCRs.map(async report => {
+                try {
+                    const compressed = gzipSync(
+                        Buffer.from(JSON.stringify(pgcrSchema.parse(report)), "utf-8")
+                    )
+                    await Promise.all([
+                        prisma.pGCR.create({
+                            data: {
+                                instanceId: BigInt(report.activityDetails.instanceId),
+                                data: compressed
+                            }
+                        })
+                    ]).catch(console.error)
+                } catch (e) {
+                    console.error((e as ZodError).errors)
+                    throw e
+                }
+                return report
+            })
+        )
+
         i += THREADS
     }
+}
+
+async function findCharacters(name: string) {
+    const [displayName, displayNameCode] = name.split("#")
+
+    if (!displayName || !displayNameCode) {
+        console.error(`Invalid username to seed: ${name}`)
+        process.exit(1)
+    }
+
+    // Find the we are going to seed
+    const user = await searchDestinyPlayerByBungieName(
+        bungieClient,
+        {
+            membershipType: -1
+        },
+        {
+            displayName,
+            displayNameCode: Number(displayNameCode)
+        }
+    )
+        .then(res => res.Response[0])
+        .catch(e => {
+            console.error(e)
+            process.exit(1)
+        })
+
+    console.log(`Found user ${user.membershipId}`)
+
+    const characterIds = await getProfile(bungieClient, {
+        membershipType: user.membershipType,
+        destinyMembershipId: user.membershipId,
+        components: [200]
+    })
+        .then(res => Object.keys(res.Response.characters?.data ?? {}))
+        .catch(e => {
+            console.error(e)
+            process.exit(1)
+        })
+
+    console.log(`Found characters ${characterIds.join(", ")}`)
+
+    return characterIds.map(id => ({
+        characterId: id,
+        membershipId: user.membershipId,
+        membershipType: user.membershipType
+    }))
 }
 
 function processCarnageReport(report: DestinyPostGameCarnageReportData) {

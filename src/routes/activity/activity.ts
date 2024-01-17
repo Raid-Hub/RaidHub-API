@@ -33,6 +33,7 @@ export const activityRootRoute = new RaidHubRoute({
                 raidHash: zBigIntString(),
                 dateStarted: z.date(),
                 dateCompleted: z.date(),
+                duration: z.number(),
                 fresh: z.boolean().nullable(),
                 flawless: z.boolean().nullable(),
                 completed: z.boolean(),
