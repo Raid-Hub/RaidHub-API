@@ -5,5 +5,6 @@ import { activitySearchRoute } from "./search"
 export const activityRouter = Router({
     strict: true
 })
-    .use(activityRootRoute.express)
-    .use(activitySearchRoute.express)
+
+activityRouter.use("/search", activitySearchRoute.express)
+activityRouter.use("/:instanceId", activityRootRoute.express)

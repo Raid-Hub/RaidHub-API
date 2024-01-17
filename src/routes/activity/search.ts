@@ -44,7 +44,6 @@ export const activitySearchQuerySchema = z
     }))
 
 export const activitySearchRoute = new RaidHubRoute({
-    path: "/search",
     method: "get",
     middlewares: [cacheControl(30)],
     query: activitySearchQuerySchema,
@@ -61,7 +60,8 @@ export const activitySearchRoute = new RaidHubRoute({
             dateCompleted: a.date_completed,
             platformType: a.platform_type,
             dayOne: isDayOne(a.raid_id, a.date_completed),
-            contest: isContest(a.raid_id, a.date_started)
+            contest: isContest(a.raid_id, a.date_started),
+            weekOne: isContest(a.raid_id, a.date_completed)
         }))
 
         return ok({
@@ -74,19 +74,22 @@ export const activitySearchRoute = new RaidHubRoute({
             .object({
                 query: z.record(z.any()),
                 results: z.array(
-                    z.object({
-                        instanceId: z.string(),
-                        raidHash: z.string(),
-                        fresh: z.boolean(),
-                        completed: z.boolean(),
-                        flawless: z.boolean(),
-                        playerCount: z.number(),
-                        dateStarted: z.date(),
-                        dateCompleted: z.date(),
-                        platformType: z.number(),
-                        dayOne: z.boolean(),
-                        contest: z.boolean()
-                    })
+                    z
+                        .object({
+                            instanceId: z.string(),
+                            raidHash: z.string(),
+                            fresh: z.boolean(),
+                            completed: z.boolean(),
+                            flawless: z.boolean(),
+                            playerCount: z.number(),
+                            dateStarted: z.date(),
+                            dateCompleted: z.date(),
+                            platformType: z.number(),
+                            dayOne: z.boolean(),
+                            contest: z.boolean(),
+                            weekOne: z.boolean()
+                        })
+                        .strict()
                 )
             })
             .strict()

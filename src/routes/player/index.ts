@@ -7,11 +7,11 @@ import { playerSearchRoute } from "./search"
 export const playerRouter = Router({
     strict: true
 })
-    .use(
-        "/:membershipId",
-        Router({ mergeParams: true, strict: true })
-            .use("/activities", playerActivitiesRoute.express)
-            .use("/basic", playerBasicRoute.express)
-            .use("/profile", playerProfileRoute.express)
-    )
-    .use("/search", playerSearchRoute.express)
+
+const membershipIdRouter = Router({ mergeParams: true, strict: true })
+playerRouter.use("/:membershipId", membershipIdRouter)
+membershipIdRouter.use("/activities", playerActivitiesRoute.express)
+membershipIdRouter.use("/basic", playerBasicRoute.express)
+membershipIdRouter.use("/profile", playerProfileRoute.express)
+
+playerRouter.use("/search", playerSearchRoute.express)

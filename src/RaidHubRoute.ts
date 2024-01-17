@@ -28,7 +28,6 @@ export class RaidHubRoute<
     Body extends ZodType = ZodUnknown
 > {
     private readonly router: Router
-    readonly path?: string
     readonly method: M
     readonly paramsSchema: Params | null
     readonly querySchema: Query | null
@@ -51,7 +50,6 @@ export class RaidHubRoute<
 
     // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
-        path?: string
         method: M
         params?: Params
         query?: Query
@@ -73,7 +71,6 @@ export class RaidHubRoute<
             strict: true,
             mergeParams: true
         })
-        this.path = args.path
         this.method = args.method
         this.paramsSchema = args.params ?? null
         this.querySchema = args.query ?? null
@@ -175,7 +172,6 @@ export class RaidHubRoute<
     // This is the express router that is returnedand used to create the actual express route
     get express() {
         const args = [
-            this.path ?? "/",
             ...this.middlewares,
             this.validateParams,
             this.validateQuery,
@@ -185,9 +181,9 @@ export class RaidHubRoute<
 
         switch (this.method) {
             case "get":
-                return this.router.get(...args)
+                return this.router.get("/", ...args)
             case "post":
-                return this.router.post(...args)
+                return this.router.post("/", ...args)
             default:
                 throw new Error("Invalid method")
         }

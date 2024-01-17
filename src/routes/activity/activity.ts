@@ -6,7 +6,6 @@ import { prisma } from "../../prisma"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 
 export const activityRootRoute = new RaidHubRoute({
-    path: "/:instanceId",
     method: "get",
     params: z.object({
         instanceId: zBigIntString()
@@ -80,7 +79,11 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
             },
             activityLeaderboardEntry: {
                 select: {
-                    leaderboardId: true,
+                    leaderboard: {
+                        select: {
+                            type: true
+                        }
+                    },
                     rank: true
                 }
             }
@@ -98,7 +101,7 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
     return {
         ...activity,
         leaderboardEntries: Object.fromEntries(
-            activityLeaderboardEntry.map(e => [e.leaderboardId, e.rank])
+            activityLeaderboardEntry.map(e => [e.leaderboard.type.toLowerCase(), e.rank])
         ),
         dayOne,
         contest,

@@ -13,7 +13,6 @@ import { ListedRaid } from "../../data/raids"
 import { prisma } from "../../prisma"
 
 export const leaderboardRaidIndividualRoute = new RaidHubRoute({
-    path: "/:category",
     method: "get",
     params: RaidPathSchema.extend({
         category: z.enum(IndividualBoards)

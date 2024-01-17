@@ -4,7 +4,6 @@ import { prisma } from "../../prisma"
 import { z } from "zod"
 
 export const adminQueryRoute = new RaidHubRoute({
-    path: "/query",
     method: "post",
     body: z.object({
         query: z.string()
