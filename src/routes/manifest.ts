@@ -1,5 +1,5 @@
-import { Router } from "express"
 import {
+    AllRaidHashes,
     ContestRaids,
     Difficulty,
     ListedRaid,
@@ -7,18 +7,19 @@ import {
     MasterRaids,
     PrestigeRaids,
     Raid,
-    RaidHashes,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
-} from "~/data/raids"
-import { success } from "~/util"
-import { WorldFirstLeaderboardsForRaid } from "./worldfirst"
-import { cacheControl } from "~/middlewares/cache-control"
-import { LeaderboardsForRaid } from "~/data/leaderboards"
-
-export const manifestRouter = Router()
-
-manifestRouter.use(cacheControl(300))
+} from "../data/raids"
+import { groupBy } from "../util/helpers"
+import { cacheControl } from "../middlewares/cache-control"
+import { RaidHubRoute, ok } from "../RaidHubRoute"
+import { prisma } from "../prisma"
+import { z } from "zod"
+import {
+    ClearsLeaderboardsForRaid,
+    IndividualBoard,
+    IndividualBoardNames
+} from "../data/leaderboards"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -48,50 +49,93 @@ const difficulties: Record<Difficulty, string> = {
     [Difficulty.CONTEST]: "Contest"
 }
 
-export const AllRaidHashes = Object.fromEntries(
-    Object.entries(
-        RaidHashes as unknown as Record<ListedRaid, Partial<Record<Difficulty, string[]>>>
-    )
-        .map(([raid, difficultyDict]) =>
-            Object.entries(difficultyDict).map(([difficulty, hashes]) =>
-                hashes.map(
-                    hash =>
-                        [
-                            hash,
-                            {
-                                raid: parseInt(raid) as ListedRaid,
-                                difficulty: parseInt(difficulty) as Difficulty
-                            }
-                        ] as const
-                )
-            )
-        )
-        .flat(2)
-)
-
-manifestRouter.get("/", async (_, res, next) => {
-    try {
-        res.status(200).json(
-            success({
-                raids,
-                difficulties,
-                hashes: AllRaidHashes,
-                listed: ListedRaids,
-                sunset: SunsetRaids,
-                contest: ContestRaids,
-                master: MasterRaids,
-                prestige: PrestigeRaids,
-                reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
-                    ([raid, difficulty]) => ({
+export const manifestRoute = new RaidHubRoute({
+    method: "get",
+    middlewares: [cacheControl(60)],
+    handler: async () =>
+        ok({
+            raids,
+            difficulties,
+            hashes: AllRaidHashes,
+            listed: ListedRaids,
+            sunset: SunsetRaids,
+            contest: ContestRaids,
+            master: MasterRaids,
+            prestige: PrestigeRaids,
+            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
+                raid,
+                difficulty
+            })),
+            leaderboards: {
+                worldFirst: await listLeaderboards(),
+                individual: Object.fromEntries(
+                    Object.entries(ClearsLeaderboardsForRaid).map(([raid, boards]) => [
                         raid,
-                        difficulty
+                        Object.entries(boards)
+                            .filter(([_, v]) => v)
+                            .map(([k, _]) => ({
+                                name: IndividualBoardNames[k as IndividualBoard],
+                                category: k
+                            }))
+                    ])
+                )
+            }
+        }),
+    response: {
+        success: z
+            .object({
+                raids: z.record(z.string()),
+                difficulties: z.record(z.string()),
+                hashes: z.record(
+                    z.object({
+                        raid: z.number(),
+                        difficulty: z.number()
                     })
                 ),
-                activityLeaderboards: LeaderboardsForRaid,
-                worldFirstBoards: WorldFirstLeaderboardsForRaid
+                listed: z.array(z.number()).readonly(),
+                sunset: z.array(z.number()).readonly(),
+                contest: z.array(z.number()).readonly(),
+                master: z.array(z.number()).readonly(),
+                prestige: z.array(z.number()).readonly(),
+                reprisedChallengePairings: z.array(
+                    z.object({
+                        raid: z.number(),
+                        difficulty: z.number()
+                    })
+                ),
+                leaderboards: z.object({
+                    worldFirst: z.record(
+                        z.array(
+                            z.object({
+                                id: z.string(),
+                                type: z.string(),
+                                date: z.date()
+                            })
+                        )
+                    ),
+                    individual: z.record(
+                        z.array(
+                            z.object({
+                                name: z.string(),
+                                category: z.string()
+                            })
+                        )
+                    )
+                })
             })
-        )
-    } catch (e) {
-        next(e)
+            .strict()
     }
 })
+
+async function listLeaderboards() {
+    const boards = await prisma.activityLeaderboard.findMany({})
+    const formattedBoards = boards.map(board => ({ ...board, type: board.type.toLowerCase() }))
+
+    return groupBy<(typeof formattedBoards)[number], "raidId", ListedRaid>(
+        formattedBoards,
+        "raidId",
+        {
+            remove: true
+        }
+    )
+}

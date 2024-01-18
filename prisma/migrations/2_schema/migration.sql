@@ -8,6 +8,7 @@ CREATE TABLE "activity" (
     "player_count" INTEGER NOT NULL,
     "date_started" TIMESTAMP(3) NOT NULL,
     "date_completed" TIMESTAMP(3) NOT NULL,
+    "duration" INTEGER NOT NULL,
     "platform_type" INTEGER NOT NULL,
 
     CONSTRAINT "activity_pkey" PRIMARY KEY ("instance_id")
@@ -59,9 +60,14 @@ CREATE TABLE "player_stats" (
     CONSTRAINT "player_stats_pkey" PRIMARY KEY ("membership_id","raid_id")
 );
 
+CREATE TYPE "WorldFirstLeaderboardType" AS ENUM ('Normal', 'Challenge', 'Prestige', 'Master');
+
 -- CreateTable
 CREATE TABLE "leaderboard" (
     "id" TEXT NOT NULL,
+    "raid_id" INTEGER NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "type" "WorldFirstLeaderboardType" NOT NULL,
 
     CONSTRAINT "leaderboard_pkey" PRIMARY KEY ("id")
 );
@@ -150,6 +156,12 @@ CREATE INDEX "idx_raid_definition_raid_id" ON "raid_definition"("raid_id");
 -- CreateIndex
 CREATE INDEX "idx_raid_definition_version_id" ON "raid_definition"("version_id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "leaderboard_raid_hash_type_key" ON "leaderboard"("raid_id", "type");
+
+-- CreateIndex
+CREATE INDEX "speedrun_index" ON "activity"("raid_hash", "completed", "fresh", "duration" ASC);
+
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
@@ -179,3 +191,6 @@ ALTER TABLE "raid_definition" ADD CONSTRAINT "raid_definition_raid_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "raid_definition" ADD CONSTRAINT "raid_definition_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "raid_version"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "leaderboard" ADD CONSTRAINT "leaderboard_raid_id_fkey" FOREIGN KEY ("raid_id") REFERENCES "raid"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

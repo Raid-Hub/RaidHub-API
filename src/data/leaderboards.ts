@@ -1,10 +1,14 @@
-import { z } from "zod"
-import { includedIn } from "~/util"
 import { ListedRaid, Raid } from "./raids"
-import { PlayerStats } from "@prisma/client"
+import { Player, PlayerStats, WorldFirstLeaderboardType } from "@prisma/client"
 
-export const Boards = ["normal", "prestige", "pc", "challenge", "master"] as const
-export type Board = (typeof Boards)[number]
+export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
+export type WorldFirstBoard = (typeof WorldFirstBoards)[number]
+export const WorldFirstBoardsMap = {
+    normal: WorldFirstLeaderboardType.Normal,
+    challenge: WorldFirstLeaderboardType.Challenge,
+    prestige: WorldFirstLeaderboardType.Prestige,
+    master: WorldFirstLeaderboardType.Master
+} satisfies Record<WorldFirstBoard, WorldFirstLeaderboardType>
 
 export const IndividualBoards = [
     "fresh",
@@ -16,42 +20,13 @@ export const IndividualBoards = [
 ] as const satisfies (keyof PlayerStats)[]
 export type IndividualBoard = (typeof IndividualBoards)[number]
 
-const RaidPathSchema = z.object({
-    raid: z
-        .enum([
-            "leviathan",
-            "eaterofworlds",
-            "spireofstars",
-            "lastwish",
-            "scourgeofthepast",
-            "crownofsorrow",
-            "gardenofsalvation",
-            "deepstonecrypt",
-            "vaultofglass",
-            "vowofthedisciple",
-            "kingsfall",
-            "rootofnightmares",
-            "crotasend"
-        ])
-        .transform(r => UrlPathsToRaid[r])
-})
-
-export const IndividualLeaderboardParams = RaidPathSchema.extend({
-    category: z
-        .string()
-        .transform(s => s.toLowerCase())
-        .pipe(z.enum(IndividualBoards))
-}).refine(
-    schema => includedIn(Object.keys(ClearsLeaderboardsForRaid[schema.raid]), schema.category),
-    "This leaderboard is not available for this raid"
-)
-
-export const ActivityLeaderboardParams = RaidPathSchema.extend({
-    category: z.enum(Boards)
-}).refine(
-    schema => includedIn(Object.keys(LeaderboardsForRaid[schema.raid]), schema.category),
-    "This leaderboard is not available for this raid"
-)
+export const GlobalBoards = ["clears", "sherpas", "fresh"] as const
+export type GlobalBoard = (typeof GlobalBoards)[number]
+export const GlobalBoardsMap = {
+    clears: "clears",
+    fresh: "fullClears",
+    sherpas: "sherpas"
+} satisfies Record<GlobalBoard, keyof Player>
 
 export const UrlPathsToRaid = {
     leviathan: Raid.LEVIATHAN,
@@ -69,163 +44,134 @@ export const UrlPathsToRaid = {
     crotasend: Raid.CROTAS_END
 } satisfies Record<string, ListedRaid>
 
-export const LeaderboardsForRaid = {
-    [Raid.LEVIATHAN]: {
-        normal: "wf_levi",
-        prestige: "levi_prestige",
-        pc: "levi_pc"
-    },
-    [Raid.EATER_OF_WORLDS]: {
-        normal: "wf_eow",
-        prestige: "eow_prestige"
-    },
-    [Raid.SPIRE_OF_STARS]: {
-        normal: "wf_spire",
-        prestige: "spire_prestige"
-    },
-    [Raid.LAST_WISH]: {
-        normal: "wf_wish"
-    },
-    [Raid.SCOURGE_OF_THE_PAST]: {
-        normal: "wf_sotp"
-    },
-    [Raid.CROWN_OF_SORROW]: {
-        normal: "wf_cos"
-    },
-    [Raid.GARDEN_OF_SALVATION]: {
-        normal: "wf_gos"
-    },
-    [Raid.DEEP_STONE_CRYPT]: {
-        normal: "wf_dsc"
-    },
-    [Raid.VAULT_OF_GLASS]: {
-        normal: "vog_normal",
-        challenge: "wf_vog",
-        master: "vog_master"
-    },
-    [Raid.VOW_OF_THE_DISCIPLE]: {
-        normal: "wf_vow",
-        master: "vow_master"
-    },
-    [Raid.KINGS_FALL]: {
-        normal: "kf_normal",
-        challenge: "wf_kf",
-        master: "kf_master"
-    },
-    [Raid.ROOT_OF_NIGHTMARES]: {
-        normal: "wf_ron",
-        master: "ron_master"
-    },
-    [Raid.CROTAS_END]: {
-        normal: "crota_normal",
-        challenge: "wf_crota",
-        master: "crota_master"
-    }
-} satisfies Record<ListedRaid, Partial<Record<Board, string>>>
+export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, WorldFirstLeaderboardType> = {
+    [Raid.LEVIATHAN]: WorldFirstLeaderboardType.Normal,
+    [Raid.EATER_OF_WORLDS]: WorldFirstLeaderboardType.Normal,
+    [Raid.SPIRE_OF_STARS]: WorldFirstLeaderboardType.Normal,
+    [Raid.LAST_WISH]: WorldFirstLeaderboardType.Normal,
+    [Raid.SCOURGE_OF_THE_PAST]: WorldFirstLeaderboardType.Normal,
+    [Raid.CROWN_OF_SORROW]: WorldFirstLeaderboardType.Normal,
+    [Raid.GARDEN_OF_SALVATION]: WorldFirstLeaderboardType.Normal,
+    [Raid.DEEP_STONE_CRYPT]: WorldFirstLeaderboardType.Normal,
+    [Raid.VAULT_OF_GLASS]: WorldFirstLeaderboardType.Challenge,
+    [Raid.VOW_OF_THE_DISCIPLE]: WorldFirstLeaderboardType.Normal,
+    [Raid.KINGS_FALL]: WorldFirstLeaderboardType.Challenge,
+    [Raid.ROOT_OF_NIGHTMARES]: WorldFirstLeaderboardType.Normal,
+    [Raid.CROTAS_END]: WorldFirstLeaderboardType.Challenge
+}
 
 export const ClearsLeaderboardsForRaid = {
     [Raid.LEVIATHAN]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.EATER_OF_WORLDS]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.SPIRE_OF_STARS]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: false,
         duos: false,
         solos: false
     },
     [Raid.LAST_WISH]: {
+        fresh: false,
         clears: true,
-        fresh: true,
         sherpas: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.SCOURGE_OF_THE_PAST]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.CROWN_OF_SORROW]: {
-        clears: true,
-        fresh: true,
         sherpas: true,
+        fresh: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.GARDEN_OF_SALVATION]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.DEEP_STONE_CRYPT]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.VAULT_OF_GLASS]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.VOW_OF_THE_DISCIPLE]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: false,
         solos: false
     },
     [Raid.KINGS_FALL]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.ROOT_OF_NIGHTMARES]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.CROTAS_END]: {
-        clears: true,
         fresh: true,
         sherpas: true,
+        clears: true,
         trios: true,
         duos: true,
         solos: false
     }
 } satisfies Record<ListedRaid, Record<IndividualBoard, boolean>>
+
+export const IndividualBoardNames: Record<IndividualBoard, string> = {
+    fresh: "Full Clears",
+    clears: "Clears",
+    sherpas: "Sherpas",
+    trios: "Trios",
+    duos: "Duos",
+    solos: "Solos"
+}

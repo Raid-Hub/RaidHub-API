@@ -1,6 +1,7 @@
 import { PrismaClientValidationError } from "@prisma/client/runtime/library"
-import e, { ErrorRequestHandler, RequestHandler } from "express"
-import { failure } from "~/util"
+import { ErrorRequestHandler } from "express"
+import { serverError } from "../RaidHubRoute"
+import { z } from "zod"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
@@ -14,5 +15,11 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
 
     console.error(err)
 
-    res.status(500).send(failure(details, "Something went wrong."))
+    res.status(500).send({
+        message: "Something went wrong.",
+        minted: new Date(),
+        success: false,
+        statusCode: 500,
+        error: details
+    } satisfies z.infer<typeof serverError>)
 }

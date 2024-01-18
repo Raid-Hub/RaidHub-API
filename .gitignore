@@ -17,3 +17,4 @@ test.js
 *.dbml
 
 prisma/scripts/*
+prisma/migration.sql

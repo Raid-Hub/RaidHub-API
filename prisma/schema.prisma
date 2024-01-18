@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -16,6 +17,7 @@ model Activity {
   playerCount              Int                        @map("player_count")
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
+  duration                 Int                        
   platformType             Int                        @map("platform_type")
   raidDefinition           RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
@@ -23,6 +25,7 @@ model Activity {
 
   @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
   @@index([dateCompleted(sort: Desc)], map: "date_index")
+  @@index([raidHash, completed, fresh, duration(sort: Asc)], map: "speedrun_index")
   @@index([completed, playerCount, fresh, flawless], map: "tag_index")
   @@map("activity")
 }
@@ -94,10 +97,22 @@ model PlayerStats {
   @@map("player_stats")
 }
 
+enum WorldFirstLeaderboardType {
+  Normal
+  Challenge
+  Prestige
+  Master
+}
+
 model ActivityLeaderboard {
   id      String                     @id
+  raidId  Int                        @map("raid_id")
+  date    DateTime                   @map("date")
+  type    WorldFirstLeaderboardType  @map("type")
+  raid    Raid                       @relation("leaderboards", fields: [raidId], references: [id], onDelete: Restrict)
   entries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
 
+  @@unique([raidId, type], map: "leaderboard_raid_hash_type_key")
   @@map("leaderboard")
 }
 
@@ -114,15 +129,18 @@ model ActivityLeaderboardEntry {
 }
 
 model Raid {
-  id                     Int              @id
+  id                     Int                   @id
   name                   String
-  playerStats            PlayerStats[]    @relation("player_stats_raid")
-  AssociatedRaidVersions RaidVersion[]    @relation("associated_raid_version")
-  RaidDefinition         RaidDefinition[] @relation("raid_name_definition")
+  playerStats            PlayerStats[]         @relation("player_stats_raid")
+  AssociatedRaidVersions RaidVersion[]         @relation("associated_raid_version")
+  RaidDefinition         RaidDefinition[]      @relation("raid_name_definition")
+  leaderboards           ActivityLeaderboard[] @relation("leaderboards")
 
   @@map("raid")
 }
 
+// This model is used to associate a raid with a specific version of that raid. For example, Normal, Prestige, Master, and Regicide. 
+// Regicide might be associated exclusively with King's Fall. 
 model RaidVersion {
   id               Int    @id
   name             String
@@ -138,9 +156,9 @@ model RaidDefinition {
   raidHash   BigInt      @id @map("hash")
   raidId     Int         @map("raid_id")
   versionId  Int         @map("version_id")
+  activities Activity[]  @relation("raid_defintion")
   raid       Raid        @relation("raid_name_definition", fields: [raidId], references: [id])
   version    RaidVersion @relation("raid_version_definition", fields: [versionId], references: [id])
-  activities Activity[]  @relation("raid_defintion")
 
   @@index([raidId], map: "idx_raid_definition_raid_id")
   @@index([versionId], map: "idx_raid_definition_version_id")

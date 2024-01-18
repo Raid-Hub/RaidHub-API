@@ -1,4 +1,6 @@
 import { RequestHandler } from "express"
+import { adminProtectedError } from "../RaidHubRoute"
+import { z } from "zod"
 
 export const adminProtected =
     (prod: boolean): RequestHandler =>
@@ -9,6 +11,14 @@ export const adminProtected =
         ) {
             next()
         } else {
-            res.status(403).send("Forbidden")
+            res.status(403).json({
+                message: "Forbidden",
+                minted: new Date(),
+                success: false,
+                statusCode: 401,
+                error: {
+                    forbidden: true
+                }
+            } satisfies z.infer<typeof adminProtectedError>)
         }
     }

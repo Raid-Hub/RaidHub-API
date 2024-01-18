@@ -1,14 +1,16 @@
-name: Deploy to VPS on Push
+name: Run Tests
 
 on:
-    push:
-        branches:
-            - main
+    pull_request:
+    workflow_dispatch:
 
 jobs:
-    deploy:
+    test:
         runs-on: ubuntu-latest
         steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+
             - name: Install cloudflared
               run: |
                   curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
@@ -25,6 +27,13 @@ jobs:
                   name: gapk
                   if_key_exists: ignore
 
-            - name: Deploy API
+            - name: Tunnel to VPS
               run: |
-                  ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app -H 'CF-Access-Client-Id: ${{ secrets.CF_GHA_CLIENT_ID }}' -H 'CF-Access-Client-Secret: ${{ secrets.CF_GHA_CLIENT_SECRET }}'" -i ~/.ssh/gapk root@ssh.raidhub.app "cd ../RaidHub/RaidHub-API && ./deploy.sh"
+                  ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h -H 'CF-Access-Client-Id: ${{ secrets.CF_GHA_CLIENT_ID }}' -H 'CF-Access-Client-Secret: ${{ secrets.CF_GHA_CLIENT_SECRET }}'" -i ~/.ssh/gapk root@ssh.raidhub.app &
+
+            - name: Run Tests
+              env:
+                  DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
+              run: |
+                  yarn && yarn prisma generate
+                  yarn test
