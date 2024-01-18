@@ -15,9 +15,7 @@ import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
 import { gzipSync } from "zlib"
 import { pgcrSchema } from "../src/util/pgcr"
 import { ZodError } from "zod"
-import { SeasonDates } from "../src/data/seasonDates"
 import { Difficulty, ListedRaids } from "../src/data/raids"
-import crypto from "crypto"
 
 const prisma = new PrismaClient()
 
@@ -79,7 +77,16 @@ async function seed() {
             await Promise.all(
                 types.map(async ([type, difficulty]) => {
                     const entries = await prisma.activity.findMany({
-                        select: { instanceId: true, dateStarted: true },
+                        select: {
+                            instanceId: true,
+                            dateStarted: true,
+                            raidDefinition: {
+                                select: {
+                                    raid: true,
+                                    version: true
+                                }
+                            }
+                        },
                         where: {
                             completed: true,
                             raidDefinition: {
@@ -107,7 +114,7 @@ async function seed() {
                     await prisma.activityLeaderboard
                         .create({
                             data: {
-                                id: crypto.randomUUID(),
+                                id: `${entries[0].raidDefinition.raid.name}-${entries[0].raidDefinition.version.name}`,
                                 date: date,
                                 raid: {
                                     connect: {

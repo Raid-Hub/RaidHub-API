@@ -59,7 +59,15 @@ export const playerActivitiesRoute = new RaidHubRoute({
                         dateCompleted: z.date(),
                         dayOne: z.boolean(),
                         contest: z.boolean(),
-                        didMemberComplete: z.boolean()
+                        player: z.object({
+                            didMemberComplete: z.boolean(),
+                            isFirstClear: z.boolean(),
+                            sherpas: z.number(),
+                            kills: z.number(),
+                            deaths: z.number(),
+                            assists: z.number(),
+                            timePlayedSeconds: z.number()
+                        })
                     })
                 ),
                 nextCursor: z.string().nullable()
@@ -101,9 +109,6 @@ const playerActivityQuery = (membershipId: bigint, count: number) =>
             membershipId: membershipId
         },
         take: count + 1,
-        select: {
-            finishedRaid: true
-        },
         orderBy: {
             activity: {
                 dateCompleted: "desc"
@@ -121,7 +126,7 @@ async function getPlayerActivities({
     count: number
 }) {
     const [player, [activities, playerActivities]] = await Promise.all([
-        prisma.player.findUnique({ where: { membershipId } }),
+        prisma.player.findUnique({ select: { membershipId: true }, where: { membershipId } }),
         // If a cursor is provided
         Promise.all(
             cursor
@@ -174,7 +179,15 @@ async function getPlayerActivities({
                 raidHash: a.raidHash,
                 dayOne: isDayOne(a.raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(a.raidDefinition.raidId, a.dateStarted),
-                didMemberComplete: playerActivities[i].finishedRaid
+                player: {
+                    didMemberComplete: playerActivities[i].finishedRaid,
+                    isFirstClear: playerActivities[i].isFirstClear,
+                    sherpas: playerActivities[i].sherpas,
+                    kills: playerActivities[i].kills,
+                    deaths: playerActivities[i].deaths,
+                    assists: playerActivities[i].assists,
+                    timePlayedSeconds: playerActivities[i].timePlayedSeconds
+                }
             }
         })
     }
