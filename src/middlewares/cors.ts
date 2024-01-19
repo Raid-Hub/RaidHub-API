@@ -26,7 +26,7 @@ export const cors =
             res.header("Access-Control-Allow-Origin", "*")
             next()
         } else {
-            res.header("Access-Control-Allow-Origin", "https://raidhub.app")
+            res.header("Access-Control-Allow-Origin", "https://raidhub.io")
             res.status(req.headers["x-api-key"] ? 403 : 401).send({
                 message: "Request originated from an invalid origin",
                 minted: new Date(),

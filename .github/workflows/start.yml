@@ -32,4 +32,4 @@ jobs:
                   if_key_exists: fail
 
             - name: Deploy API
-              run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.app" -i ~/.ssh/gapk root@ssh.raidhub.app "cd ../RaidHub/RaidHub-API && ./deploy.sh"
+              run: ssh -o ProxyCommand="cloudflared access ssh --hostname ssh.raidhub.io" -i ~/.ssh/gapk root@ssh.raidhub.io "cd ../RaidHub/RaidHub-API && ./deploy.sh"
