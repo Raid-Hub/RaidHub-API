@@ -3,7 +3,7 @@ import { corsError } from "../RaidHubRoute"
 import { includedIn } from "../util/helpers"
 import { z } from "zod"
 
-const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.app$/
+const urlOriginRegex = /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.io$/
 
 export const cors =
     (prod: boolean): RequestHandler =>
