@@ -45,9 +45,9 @@ model Player {
   playerActivities            PlayerActivity[] @relation("player_activities")
   stats                       PlayerStats[]    @relation("player_stats_membership_id")
 
-  @@index([clears], map: "total_clears_idx")
-  @@index([fullClears], map: "total_fresh_clears_idx")
-  @@index([sherpas], map: "total_sherpas_idx")
+  @@index([clears(sort: Desc)], map: "total_clears_idx")
+  @@index([fullClears(sort: Desc)], map: "total_fresh_clears_idx")
+  @@index([sherpas(sort: Desc)], map: "total_sherpas_idx")
   @@index([displayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_both_display_names", type: Gin)
   @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_display_name", type: Gin)
   @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayNameCode(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_name_and_code", type: Gin)
