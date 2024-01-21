@@ -78,7 +78,7 @@ CREATE TABLE "activity_leaderboard_entry" (
     "leaderboard_id" TEXT NOT NULL,
     "instance_id" BIGINT NOT NULL,
 
-    CONSTRAINT "activity_leaderboard_rank_pkey" PRIMARY KEY ("leaderboard_id","rank")
+    CONSTRAINT "activity_leaderboard_entry_pkey" PRIMARY KEY ("leaderboard_id", "instance_id")
 );
 
 -- CreateTable
@@ -149,6 +149,7 @@ CREATE INDEX "raid_solo_clears_idx" ON "player_stats"("raid_id", "solos" DESC);
 
 -- CreateIndex
 CREATE INDEX "activity_leaderboard_entry_instance_id_index" ON "activity_leaderboard_entry" USING HASH ("instance_id");
+CREATE INDEX "activity_leaderboard_rank" ON "activity_leaderboard_entry"("leaderboard_id", "rank" ASC);
 
 -- CreateIndex
 CREATE INDEX "idx_raid_definition_raid_id" ON "raid_definition"("raid_id");

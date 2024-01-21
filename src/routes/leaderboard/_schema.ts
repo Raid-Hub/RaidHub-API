@@ -7,22 +7,24 @@ export const zLeaderboardQueryPagination = z.object({
     page: zPage()
 })
 
+export const zRaidSchema = z
+    .enum([
+        "leviathan",
+        "eaterofworlds",
+        "spireofstars",
+        "lastwish",
+        "scourgeofthepast",
+        "crownofsorrow",
+        "gardenofsalvation",
+        "deepstonecrypt",
+        "vaultofglass",
+        "vowofthedisciple",
+        "kingsfall",
+        "rootofnightmares",
+        "crotasend"
+    ])
+    .transform(r => UrlPathsToRaid[r])
+
 export const RaidPathSchema = z.object({
-    raid: z
-        .enum([
-            "leviathan",
-            "eaterofworlds",
-            "spireofstars",
-            "lastwish",
-            "scourgeofthepast",
-            "crownofsorrow",
-            "gardenofsalvation",
-            "deepstonecrypt",
-            "vaultofglass",
-            "vowofthedisciple",
-            "kingsfall",
-            "rootofnightmares",
-            "crotasend"
-        ])
-        .transform(r => UrlPathsToRaid[r])
+    raid: zRaidSchema
 })

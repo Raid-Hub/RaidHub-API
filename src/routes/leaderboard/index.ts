@@ -3,8 +3,10 @@ import { leaderboardGlobalRoute } from "./global"
 import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
 import { leaderboardRaidIndividualRoute } from "./individual"
 import { leaderboardSpeedrunRoute } from "./speedrun"
+import { leaderboardSearchRoute } from "./search"
 
 export const leaderboardRouter = Router()
+leaderboardRouter.use("/search", leaderboardSearchRoute.express)
 leaderboardRouter.use("/global/:category", leaderboardGlobalRoute.express)
 
 const raidRouter = Router({ mergeParams: true })

@@ -123,7 +123,8 @@ model ActivityLeaderboardEntry {
   activity      Activity            @relation(fields: [instanceId], references: [instanceId], onDelete: NoAction, onUpdate: NoAction)
   leaderboard   ActivityLeaderboard @relation("activity_leaderboard_entry_fk", fields: [leaderboardId], references: [id], onDelete: Cascade)
 
-  @@id([leaderboardId, rank], map: "activity_leaderboard_rank_pkey")
+  @@id([leaderboardId, instanceId], map: "activity_leaderboard_entry_pkey")
+  @@index([leaderboardId, rank(sort: Asc)], map: "activity_leaderboard_rank")
   @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
   @@map("activity_leaderboard_entry")
 }
