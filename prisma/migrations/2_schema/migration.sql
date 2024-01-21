@@ -125,9 +125,9 @@ CREATE INDEX "date_index" ON "activity"("date_completed" DESC);
 CREATE INDEX "tag_index" ON "activity"("completed", "player_count", "fresh", "flawless");
 
 -- Global Player Leaderboard Indices
-CREATE INDEX "total_clears_idx" ON "player"("clears");
-CREATE INDEX "total_fresh_clears_idx" ON "player"("fresh_clears");
-CREATE INDEX "total_sherpas_idx" ON "player"("sherpas");
+CREATE INDEX "total_clears_idx" ON "player"("clears" DESC);
+CREATE INDEX "total_fresh_clears_idx" ON "player"("fresh_clears" DESC);
+CREATE INDEX "total_sherpas_idx" ON "player"("sherpas" DESC);
 
 -- Player Search Indices
 CREATE INDEX "trgm_idx_both_display_names" ON "player" USING GIN ("display_name" gin_trgm_ops, "bungie_global_display_name" gin_trgm_ops);
