@@ -36,9 +36,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                 if (!results) return fail({ notFound: true }, 404, "Player not found")
                 return ok({
                     params: req.query,
-                    page: Math.floor(results.position / req.query.count) + 1,
+                    page: Math.ceil(results.position / req.query.count),
+                    rank: results.rank,
                     position: results.position,
-                    entries: results.rows
+                    entries: results.entries
                 })
         }
         return ok({})
@@ -63,28 +64,41 @@ async function searchIndividualLeaderboard(query: {
     raid: number
     category: IndividualBoard
 }) {
-    const rows = await prisma.$queryRaw<Array<any>>`
-        WITH users AS (
-            SELECT
-                *,
-                RANK() OVER (ORDER BY ${rawSql[query.category]} DESC)::int AS rank,
-                ROW_NUMBER() OVER (ORDER BY ${rawSql[query.category]} DESC)::int AS row_number
-            FROM player_stats
-            WHERE raid_id = ${query.raid}
-            ORDER BY row_number ASC
-        )
-        SELECT *
-        FROM users
-        OFFSET (
-            SELECT MIN((row_number / ${query.count}) * ${query.count})
-            FROM users 
-            WHERE membership_id = ${query.membershipId}::bigint
-        )
-        WHERE membership_id = ${query.membershipId}::bigint
-        LIMIT 50;
-    `
+    const memberPlacement = await prisma.individualLeaderboardClears.findUnique({
+        where: {
+            uniqueRaidMembershipId: {
+                membershipId: query.membershipId,
+                raidId: query.raid
+            }
+        }
+    })
 
-    if (!rows.length) return null
+    if (!memberPlacement) return null
 
-    return { rows, position: rows.find(r => r.membership_id === query.membershipId).rank }
+    const entries = await prisma.individualLeaderboardClears.findMany({
+        where: {
+            raidId: query.raid,
+            position: {
+                gt: (Math.ceil(memberPlacement.position / query.count) - 1) * query.count,
+                lte: Math.ceil(memberPlacement.position / query.count) * query.count
+            }
+        },
+        select: {
+            position: true,
+            rank: true,
+            value: true,
+            player: {
+                select: {
+                    membershipId: true,
+                    membershipType: true,
+                    iconPath: true,
+                    displayName: true,
+                    bungieGlobalDisplayName: true,
+                    bungieGlobalDisplayNameCode: true
+                }
+            }
+        }
+    })
+
+    return { entries, rank: memberPlacement.rank, position: memberPlacement.position }
 }

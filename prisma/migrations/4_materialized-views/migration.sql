@@ -5,23 +5,31 @@ CREATE OR REPLACE FUNCTION create_individual_leaderboard_view(
 RETURNS VOID AS $$
 BEGIN
   EXECUTE FORMAT('
-    CREATE MATERIALIZED VIEW individual_leaderboard_%I AS
+    CREATE MATERIALIZED VIEW public.individual_leaderboard_%I AS
     SELECT
       membership_id,
       raid_id,
+      %I as value,
       ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY %I DESC, membership_id ASC) AS position,
       RANK() OVER (PARTITION BY raid_id ORDER BY %I DESC) AS rank
     FROM player_stats
     WHERE %I > 0;
+
+    CREATE UNIQUE INDEX idx_individual_leaderboard_%I_position ON public.individual_leaderboard_%I (raid_id, position ASC);
+    CREATE UNIQUE INDEX idx_individual_leaderboard_%I_membership_id ON public.individual_leaderboard_%I (raid_id, membership_id);
     
-    CREATE INDEX idx_individual_leaderboard_%I ON individual_leaderboard_%I (raid_id, position ASC);
-    CREATE INDEX idx_individual_leaderboard_%I_membership_id ON individual_leaderboard_%I (membership_id);
     
-    SELECT cron.schedule(%L, ''REFRESH MATERIALIZED VIEW CONCURRENTLY individual_leaderboard_%I WITH DATA'');',
+    ',
     stat_column, stat_column, stat_column, stat_column,
-    stat_column, stat_column, stat_column, cron, stat_column);
+    stat_column, stat_column, stat_column, stat_column,
+    stat_column);
+    
 END;
 $$ LANGUAGE plpgsql;
+
+-- SELECT cron.schedule(%L, ''REFRESH MATERIALIZED VIEW CONCURRENTLY individual_leaderboard_%I WITH DATA'');
+-- cron, stat_column);
+
 
 -- For clears
 SELECT create_individual_leaderboard_view('clears', '45 */2 * * *');

@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["relationJoins"]
+  previewFeatures = ["relationJoins", "views"]
 }
 
 datasource db {
@@ -17,7 +17,7 @@ model Activity {
   playerCount              Int                        @map("player_count")
   dateStarted              DateTime                   @map("date_started")
   dateCompleted            DateTime                   @map("date_completed")
-  duration                 Int                        
+  duration                 Int
   platformType             Int                        @map("platform_type")
   raidDefinition           RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
@@ -32,18 +32,19 @@ model Activity {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model Player {
-  membershipId                BigInt           @id @map("membership_id")
-  membershipType              Int?             @map("membership_type")
-  iconPath                    String?          @map("icon_path")
-  displayName                 String?          @map("display_name")
-  bungieGlobalDisplayName     String?          @map("bungie_global_display_name")
-  bungieGlobalDisplayNameCode String?          @map("bungie_global_display_name_code")
-  lastSeen                    DateTime         @map("last_seen")
-  clears                      Int              @default(0) @map("clears")
-  fullClears                  Int              @default(0) @map("fresh_clears")
-  sherpas                     Int              @default(0) @map("sherpas")
-  playerActivities            PlayerActivity[] @relation("player_activities")
-  stats                       PlayerStats[]    @relation("player_stats_membership_id")
+  membershipId                BigInt                        @id @map("membership_id")
+  membershipType              Int?                          @map("membership_type")
+  iconPath                    String?                       @map("icon_path")
+  displayName                 String?                       @map("display_name")
+  bungieGlobalDisplayName     String?                       @map("bungie_global_display_name")
+  bungieGlobalDisplayNameCode String?                       @map("bungie_global_display_name_code")
+  lastSeen                    DateTime                      @map("last_seen")
+  clears                      Int                           @default(0) @map("clears")
+  fullClears                  Int                           @default(0) @map("fresh_clears")
+  sherpas                     Int                           @default(0) @map("sherpas")
+  playerActivities            PlayerActivity[]              @relation("player_activities")
+  stats                       PlayerStats[]                 @relation("player_stats_membership_id")
+  clearsRank                  IndividualLeaderboardClears[] @relation("individual_leaderboard_clears")
 
   @@index([clears(sort: Desc)], map: "total_clears_idx")
   @@index([fullClears(sort: Desc)], map: "total_fresh_clears_idx")
@@ -171,4 +172,17 @@ model PGCR {
   data       Bytes
 
   @@map("pgcr")
+}
+
+view IndividualLeaderboardClears {
+  raidId       Int    @map("raid_id")
+  rank         Int
+  value        Int
+  position     Int
+  membershipId BigInt @map("membership_id")
+  player       Player @relation("individual_leaderboard_clears", fields: [membershipId], references: [membershipId])
+
+  @@unique([raidId, position], name: "uniqueRaidPosition", map: "individual_leaderboard_clears_pkey")
+  @@unique([raidId, membershipId], name: "uniqueRaidMembershipId", map: "idx_individual_leaderboard_clears_membership_id")
+  @@map("individual_leaderboard_clears")
 }
