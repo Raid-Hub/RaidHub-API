@@ -69,33 +69,40 @@ export const leaderboardSearchRoute = new RaidHubRoute({
 const IndividualBoardPositionKeys = {
     clears: {
         rank: "clearsRank",
-        position: "clearsPosition"
+        position: "clearsPosition",
+        value: "clears"
     },
     fresh: {
         rank: "fullClearsRank",
-        position: "fullClearsPosition"
+        position: "fullClearsPosition",
+        value: "fullClears"
     },
     sherpas: {
         rank: "sherpasRank",
-        position: "sherpasPosition"
+        position: "sherpasPosition",
+        value: "sherpas"
     },
     trios: {
         rank: "triosRank",
-        position: "triosPosition"
+        position: "triosPosition",
+        value: "trios"
     },
     duos: {
         rank: "duosRank",
-        position: "duosPosition"
+        position: "duosPosition",
+        value: "duos"
     },
     solos: {
         rank: "solosRank",
-        position: "solosPosition"
+        position: "solosPosition",
+        value: "solos"
     }
 } as const satisfies Record<
     IndividualBoard,
     {
         rank: keyof IndividualLeaderboard
         position: keyof IndividualLeaderboard
+        value: keyof IndividualLeaderboard
     }
 >
 
@@ -134,21 +141,7 @@ async function searchIndividualLeaderboard(query: {
                     iconPath: true,
                     displayName: true,
                     bungieGlobalDisplayName: true,
-                    bungieGlobalDisplayNameCode: true,
-                    stats: {
-                        select: {
-                            clears: true,
-                            fresh: true,
-                            sherpas: true,
-                            trios: true,
-                            duos: true,
-                            solos: true
-                        },
-                        where: {
-                            raidId: query.raid
-                        },
-                        take: 1
-                    }
+                    bungieGlobalDisplayNameCode: true
                 }
             }
         },
@@ -158,10 +151,10 @@ async function searchIndividualLeaderboard(query: {
     })
 
     return {
-        entries: entries.map(({ player: { stats, ...player }, ...entry }) => ({
+        entries: entries.map(({ player: { ...player }, ...entry }) => ({
             position: entry[key.position],
             rank: entry[key.rank],
-            value: stats[0][query.category],
+            value: entry[key.value],
             player
         })),
         rank: memberPlacement[key.rank],

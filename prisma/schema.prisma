@@ -180,16 +180,22 @@ view IndividualLeaderboard {
   membershipId BigInt @map("membership_id")
   player       Player @relation("individual_leaderboard_clears", fields: [membershipId], references: [membershipId])
 
+  clears        Int 
   clearsPosition    Int @map("clears_position")
   clearsRank        Int @map("clears_rank")
+  fullClears        Int  @map("fresh_clears")
   fullClearsPosition Int @map("fresh_clears_position")
   fullClearsRank    Int @map("fresh_clears_rank")
+  sherpas        Int 
   sherpasPosition   Int @map("sherpas_position")
   sherpasRank       Int @map("sherpas_rank")
+  trios        Int 
   triosPosition     Int @map("trios_position")
   triosRank         Int @map("trios_rank")
+  duos        Int 
   duosPosition      Int @map("duos_position")
   duosRank          Int @map("duos_rank")
+  solos        Int 
   solosPosition     Int @map("solos_position")
   solosRank         Int @map("solos_rank")
 

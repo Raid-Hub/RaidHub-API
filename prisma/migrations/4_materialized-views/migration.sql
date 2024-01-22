@@ -3,21 +3,27 @@ CREATE MATERIALIZED VIEW individual_leaderboard AS
     membership_id,
     raid_id,
 
+    clears,
     ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY clears DESC, membership_id ASC) AS clears_position,
     RANK() OVER (PARTITION BY raid_id ORDER BY clears DESC) AS clears_rank,
-    
+
+    fresh_clears,
     ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY fresh_clears DESC, membership_id ASC) AS fresh_clears_position,
     RANK() OVER (PARTITION BY raid_id ORDER BY fresh_clears DESC) AS fresh_clears_rank,
     
+    sherpas,
     ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY sherpas DESC, membership_id ASC) AS sherpas_position,
     RANK() OVER (PARTITION BY raid_id ORDER BY sherpas DESC) AS sherpas_rank,
     
+    trios,
     ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY trios DESC, membership_id ASC) AS trios_position,
     RANK() OVER (PARTITION BY raid_id ORDER BY trios DESC) AS trios_rank,
     
+    duos,
     ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY duos DESC, membership_id ASC) AS duos_position,
     RANK() OVER (PARTITION BY raid_id ORDER BY duos DESC) AS duos_rank,
     
+    solos,
     ROW_NUMBER() OVER (PARTITION BY raid_id ORDER BY solos DESC, membership_id ASC) AS solos_position,
     RANK() OVER (PARTITION BY raid_id ORDER BY solos DESC) AS solos_rank
   FROM player_stats
