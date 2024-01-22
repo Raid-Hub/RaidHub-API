@@ -76,7 +76,7 @@ async function getActivityLeaderboard(
             date: true,
             entries: {
                 orderBy: {
-                    rank: "asc"
+                    position: "asc"
                 },
                 where: {
                     rank: {
@@ -86,6 +86,7 @@ async function getActivityLeaderboard(
                 },
                 select: {
                     rank: true,
+                    position: true,
                     activity: {
                         select: {
                             instanceId: true,
@@ -125,6 +126,7 @@ async function getActivityLeaderboard(
         date: leaderboard.date,
         entries: leaderboard.entries.map(e => ({
             rank: e.rank,
+            position: e.position,
             instanceId: e.activity.instanceId,
             dateStarted: e.activity.dateStarted,
             dateCompleted: e.activity.dateCompleted,

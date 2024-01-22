@@ -1,2 +1,2 @@
 CREATE EXTENSION pg_trgm;
-CREATE EXTENSION pg_cron;
+-- CREATE EXTENSION pg_cron;
