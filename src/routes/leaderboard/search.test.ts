@@ -14,7 +14,7 @@ describe("leaderboard search 200", () => {
             membershipId: "4611686018488107374",
             type: "individual",
             category: "sherpas",
-            raid: "leviathan"
+            raid: 1
         }))
 
     test("worldfirst vog normal", () =>
@@ -23,7 +23,7 @@ describe("leaderboard search 200", () => {
             membershipId: "4611686018488107374",
             type: "worldfirst",
             category: "normal",
-            raid: "vaultofglass"
+            raid: 9
         }))
 
     test("global sherpas", () =>
@@ -57,7 +57,7 @@ describe("leaderboard search 404", () => {
             membershipId: "3611686018488107374",
             type: "individual",
             category: "sherpas",
-            raid: "leviathan"
+            raid: 1
         }))
 
     test("worldfirst vog normal", () =>
@@ -66,7 +66,7 @@ describe("leaderboard search 404", () => {
             membershipId: "3611686018488107374",
             type: "worldfirst",
             category: "normal",
-            raid: "vaultofglass"
+            raid: 9
         }))
 
     test("global sherpas", () =>
