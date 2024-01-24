@@ -55,12 +55,21 @@ export const playerActivitiesRoute = new RaidHubRoute({
                 activities: z.array(
                     z.object({
                         instanceId: zBigIntString(),
-                        raidHash: zBigIntString(),
+                        completed: z.boolean(),
+                        fresh: z.boolean().nullable(),
+                        flawless: z.boolean().nullable(),
+                        playerCount: z.number().int().positive(),
                         dateStarted: z.date(),
                         dateCompleted: z.date(),
                         dayOne: z.boolean(),
                         contest: z.boolean(),
-                        player: zActivityPlayerData
+                        platformType: z.number().int(),
+                        player: zActivityPlayerData,
+                        raid: z.object({
+                            raidHash: zBigIntString(),
+                            raidId: z.number().positive().int(),
+                            versionId: z.number().positive().int()
+                        })
                     })
                 ),
                 nextCursor: z.string().nullable()
@@ -85,10 +94,20 @@ const activityQuery = (membershipId: bigint, count: number) =>
         orderBy: {
             dateCompleted: "desc"
         },
-        include: {
+        select: {
+            instanceId: true,
+            dateStarted: true,
+            dateCompleted: true,
+            completed: true,
+            fresh: true,
+            flawless: true,
+            playerCount: true,
+            platformType: true,
             raidDefinition: {
                 select: {
-                    raidId: true
+                    raidHash: true,
+                    raidId: true,
+                    versionId: true
                 }
             }
         },
@@ -174,13 +193,14 @@ async function getPlayerActivities({
 
     return {
         nextCursor: nextCursor ? String(nextCursor) : null,
-        activities: activities.slice(0, count).map((a, i) => {
+        activities: activities.slice(0, count).map(({ raidDefinition, ...a }, i) => {
             return {
                 ...a,
-                instanceId: a.instanceId,
-                raidHash: a.raidHash,
-                dayOne: isDayOne(a.raidDefinition.raidId, a.dateCompleted),
-                contest: isContest(a.raidDefinition.raidId, a.dateStarted),
+                dayOne: isDayOne(raidDefinition.raidId, a.dateCompleted),
+                contest: isContest(raidDefinition.raidId, a.dateStarted),
+                raid: {
+                    ...raidDefinition
+                },
                 player: playerActivities[i]
             }
         })
@@ -205,13 +225,6 @@ async function getFirstPageOfActivities(membershipId: bigint, count: number) {
                         gte: cutoff
                     },
                     ...where1
-                },
-                include: {
-                    raidDefinition: {
-                        select: {
-                            raidId: true
-                        }
-                    }
                 }
             }),
             prisma.playerActivity.findMany({
