@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { RaidHubRoute, ok } from "../../RaidHubRoute"
-import { RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
+import { RaidPath, RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
 import { cacheControl } from "../../middlewares/cache-control"
 import { zBigIntString } from "../../util/zod-common"
-import { ListedRaid } from "../../data/raids"
 import { prisma } from "../../prisma"
+import { UrlPathsToRaid } from "../../data/leaderboards"
 
 export const leaderboardSpeedrunRoute = new RaidHubRoute({
     method: "get",
@@ -25,7 +25,7 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
                 params: z.object({
                     count: z.number(),
                     page: z.number(),
-                    raid: z.number()
+                    raid: z.string()
                 }),
                 entries: z.array(
                     z.object({
@@ -51,13 +51,13 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
     }
 })
 
-async function getSpeedrunLeaderboard(raid: ListedRaid, opts: { page: number; count: number }) {
+async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; count: number }) {
     const { page, count } = opts
 
     const entries = await prisma.activity.findMany({
         where: {
             raidDefinition: {
-                raidId: raid
+                raidId: UrlPathsToRaid[raid]
             },
             completed: true,
             fresh: true

@@ -44,7 +44,8 @@ model Player {
   sherpas                     Int                     @default(0) @map("sherpas")
   playerActivities            PlayerActivity[]        @relation("player_activities")
   stats                       PlayerStats[]           @relation("player_stats_membership_id")
-  individualRanks             IndividualLeaderboard[] @relation("individual_leaderboard_clears")
+  individualRanks             IndividualLeaderboard[] @relation("individual_leaderboard")
+  globalRanks                 GlobalLeaderboard[]     @relation("global_leaderboard")
 
   @@index([clears(sort: Desc)], map: "total_clears_idx")
   @@index([fullClears(sort: Desc)], map: "total_fresh_clears_idx")
@@ -132,12 +133,13 @@ model ActivityLeaderboardEntry {
 }
 
 model Raid {
-  id                     Int                   @id
+  id                     Int                     @id
   name                   String
-  playerStats            PlayerStats[]         @relation("player_stats_raid")
-  AssociatedRaidVersions RaidVersion[]         @relation("associated_raid_version")
-  RaidDefinition         RaidDefinition[]      @relation("raid_name_definition")
-  leaderboards           ActivityLeaderboard[] @relation("leaderboards")
+  playerStats            PlayerStats[]           @relation("player_stats_raid")
+  AssociatedRaidVersions RaidVersion[]           @relation("associated_raid_version")
+  RaidDefinition         RaidDefinition[]        @relation("raid_name_definition")
+  leaderboards           ActivityLeaderboard[]   @relation("leaderboards")
+  individualleaderboards IndividualLeaderboard[] @relation("individual_leaderboard")
 
   @@map("raid")
 }
@@ -178,33 +180,50 @@ model PGCR {
 view IndividualLeaderboard {
   raidId       Int    @map("raid_id")
   membershipId BigInt @map("membership_id")
-  player       Player @relation("individual_leaderboard_clears", fields: [membershipId], references: [membershipId])
+  raid         Raid   @relation("individual_leaderboard", fields: [raidId], references: [id])
+  player       Player @relation("individual_leaderboard", fields: [membershipId], references: [membershipId])
 
-  clears        Int 
-  clearsPosition    Int @map("clears_position")
-  clearsRank        Int @map("clears_rank")
-  fullClears        Int  @map("fresh_clears")
+  clears             Int
+  clearsPosition     Int @map("clears_position")
+  clearsRank         Int @map("clears_rank")
+  fullClears         Int @map("fresh_clears")
   fullClearsPosition Int @map("fresh_clears_position")
-  fullClearsRank    Int @map("fresh_clears_rank")
-  sherpas        Int 
-  sherpasPosition   Int @map("sherpas_position")
-  sherpasRank       Int @map("sherpas_rank")
-  trios        Int 
-  triosPosition     Int @map("trios_position")
-  triosRank         Int @map("trios_rank")
-  duos        Int 
-  duosPosition      Int @map("duos_position")
-  duosRank          Int @map("duos_rank")
-  solos        Int 
-  solosPosition     Int @map("solos_position")
-  solosRank         Int @map("solos_rank")
+  fullClearsRank     Int @map("fresh_clears_rank")
+  sherpas            Int
+  sherpasPosition    Int @map("sherpas_position")
+  sherpasRank        Int @map("sherpas_rank")
+  trios              Int
+  triosPosition      Int @map("trios_position")
+  triosRank          Int @map("trios_rank")
+  duos               Int
+  duosPosition       Int @map("duos_position")
+  duosRank           Int @map("duos_rank")
+  solos              Int
+  solosPosition      Int @map("solos_position")
+  solosRank          Int @map("solos_rank")
 
   @@unique([raidId(sort: Desc), membershipId(sort: Asc)], name: "uniqueRaidMembershipId", map: "idx_individual_leaderboard_clears_membership_id")
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], map: "idx_individual_leaderboard_clears")
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], map: "idx_individual_leaderboard_fresh_clears")
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], map: "idx_individual_leaderboard_sherpas")
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], map: "idx_individual_leaderboard_trios")
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], map: "idx_individual_leaderboard_duos")
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], map: "idx_individual_leaderboard_solos")
+  @@unique([raidId(sort: Desc), clearsPosition(sort: Asc)], map: "idx_individual_leaderboard_clears")
+  @@unique([raidId(sort: Desc), fullClearsPosition(sort: Asc)], map: "idx_individual_leaderboard_fresh_clears")
+  @@unique([raidId(sort: Desc), sherpasPosition(sort: Asc)], map: "idx_individual_leaderboard_sherpas")
+  @@unique([raidId(sort: Desc), triosPosition(sort: Asc)], map: "idx_individual_leaderboard_trios")
+  @@unique([raidId(sort: Desc), duos(Positionsort: Asc)], map: "idx_individual_leaderboard_duos")
+  @@unique([raidId(sort: Desc), solosPosition(sort: Asc)], map: "idx_individual_leaderboard_solos")
   @@map("individual_leaderboard")
+}
+
+view GlobalLeaderboard {
+  membershipId BigInt @map("membership_id") @unique
+  player       Player @relation("global_leaderboard", fields: [membershipId], references: [membershipId])
+
+  clears             Int
+  clearsPosition     Int @map("clears_position") @unique
+  clearsRank         Int @map("clears_rank")
+  fullClears         Int @map("fresh_clears")
+  fullClearsPosition Int @map("fresh_clears_position") @unique
+  fullClearsRank     Int @map("fresh_clears_rank")
+  sherpas            Int
+  sherpasPosition    Int @map("sherpas_position") @unique
+  sherpasRank        Int @map("sherpas_rank")
+  @@map("global_leaderboard")
 }

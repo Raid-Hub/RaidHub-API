@@ -1,45 +1,64 @@
-import { z } from "zod"
+import { string, z } from "zod"
 import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
 import { zBigIntString } from "../../util/zod-common"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zRaidSchema } from "./_schema"
+import {
+    RaidPath,
+    zIndividualLeaderboardEntry,
+    zRaidSchema,
+    zWorldFirstLeaderboardEntry
+} from "./_schema"
 import { prisma } from "../../prisma"
 import {
+    GlobalBoard,
+    GlobalBoards,
     IndividualBoard,
     IndividualBoards,
+    UrlPathsToRaid,
     WorldFirstBoards,
     WorldFirstBoardsMap
 } from "../../data/leaderboards"
 import { IndividualLeaderboard, WorldFirstLeaderboardType } from "@prisma/client"
+import {
+    IndividualBoardPositionKeys,
+    getGlobalLeaderboardEntries,
+    getIndividualLeaderboardEntries,
+    getWorldFirstLeaderboardEntries
+} from "./_common"
 
 const CommonQueryParams = z.object({
     membershipId: zBigIntString(),
     count: z.coerce.number()
 })
 
+const SearchQuery = z.discriminatedUnion("type", [
+    CommonQueryParams.extend({
+        type: z.literal("worldfirst"),
+        category: z.enum(WorldFirstBoards).transform(v => WorldFirstBoardsMap[v]),
+        raid: zRaidSchema
+    }),
+    CommonQueryParams.extend({
+        type: z.literal("individual"),
+        category: z.enum(IndividualBoards),
+        raid: zRaidSchema
+    }),
+    CommonQueryParams.extend({
+        type: z.literal("global"),
+        category: z.enum(GlobalBoards)
+    })
+])
+
 export const leaderboardSearchRoute = new RaidHubRoute({
     method: "get",
-    query: z.discriminatedUnion("type", [
-        CommonQueryParams.extend({
-            type: z.literal("worldfirst"),
-            category: z.enum(WorldFirstBoards).transform(v => WorldFirstBoardsMap[v]),
-            raid: zRaidSchema
-        }),
-        CommonQueryParams.extend({
-            type: z.literal("individual"),
-            category: z.enum(IndividualBoards),
-            raid: zRaidSchema
-        }),
-        CommonQueryParams.extend({
-            type: z.literal("global")
-        })
-    ]),
+    query: SearchQuery,
     middlewares: [cacheControl(30)],
     async handler(req) {
         switch (req.query.type) {
             case "individual":
                 const individualResults = await searchIndividualLeaderboard(req.query)
-                if (!individualResults) return fail({ notFound: true }, 404, "Player not found")
+                if (!individualResults)
+                    return fail({ notFound: true, params: req.query }, 404, "Player not found")
+
                 return ok({
                     params: req.query,
                     page: Math.ceil(individualResults.position / req.query.count),
@@ -49,7 +68,9 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                 })
             case "worldfirst":
                 const wfResults = await searchWorldFirstLeaderboard(req.query)
-                if (!wfResults) return fail({ notFound: true }, 404, "Player not found")
+                if (!wfResults)
+                    return fail({ notFound: true, params: req.query }, 404, "Player not found")
+
                 return ok({
                     params: req.query,
                     page: Math.ceil(wfResults.position / req.query.count),
@@ -58,65 +79,59 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                     entries: wfResults.entries
                 })
             case "global":
-                return ok({})
+                const globalResults = await searchGloballLeaderboard(req.query)
+                if (!globalResults)
+                    return fail({ notFound: true, params: req.query }, 404, "Player not found")
+
+                return ok({
+                    params: req.query,
+                    page: Math.ceil(globalResults.position / req.query.count),
+                    rank: globalResults.rank,
+                    position: globalResults.position,
+                    entries: globalResults.entries
+                })
         }
     },
     response: {
-        success: z.object({}).strict()
+        success: z
+            .object({
+                params: CommonQueryParams.extend({
+                    type: z.string(),
+                    category: string(),
+                    raid: zRaidSchema.optional()
+                }).strict(),
+                page: z.number().positive().int(),
+                rank: z.number().positive().int(),
+                position: z.number().positive().int(),
+                entries: z.array(
+                    z.union([zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry])
+                )
+            })
+            .strict(),
+        error: z
+            .object({
+                notFound: z.boolean(),
+                params: CommonQueryParams.extend({
+                    type: z.string(),
+                    category: string(),
+                    raid: zRaidSchema.optional()
+                }).strict()
+            })
+            .strict()
     }
 })
-
-const IndividualBoardPositionKeys = {
-    clears: {
-        rank: "clearsRank",
-        position: "clearsPosition",
-        value: "clears"
-    },
-    fresh: {
-        rank: "fullClearsRank",
-        position: "fullClearsPosition",
-        value: "fullClears"
-    },
-    sherpas: {
-        rank: "sherpasRank",
-        position: "sherpasPosition",
-        value: "sherpas"
-    },
-    trios: {
-        rank: "triosRank",
-        position: "triosPosition",
-        value: "trios"
-    },
-    duos: {
-        rank: "duosRank",
-        position: "duosPosition",
-        value: "duos"
-    },
-    solos: {
-        rank: "solosRank",
-        position: "solosPosition",
-        value: "solos"
-    }
-} as const satisfies Record<
-    IndividualBoard,
-    {
-        rank: keyof IndividualLeaderboard
-        position: keyof IndividualLeaderboard
-        value: keyof IndividualLeaderboard
-    }
->
 
 async function searchIndividualLeaderboard(query: {
     count: number
     membershipId: bigint
-    raid: number
+    raid: RaidPath
     category: IndividualBoard
 }) {
     const memberPlacement = await prisma.individualLeaderboard.findUnique({
         where: {
             uniqueRaidMembershipId: {
                 membershipId: query.membershipId,
-                raidId: query.raid
+                raidId: UrlPathsToRaid[query.raid]
             }
         }
     })
@@ -125,38 +140,15 @@ async function searchIndividualLeaderboard(query: {
 
     const key = IndividualBoardPositionKeys[query.category]
 
-    const entries = await prisma.individualLeaderboard.findMany({
-        where: {
-            raidId: query.raid,
-            [key.position]: {
-                gt: (Math.ceil(memberPlacement[key.position] / query.count) - 1) * query.count,
-                lte: Math.ceil(memberPlacement[key.position] / query.count) * query.count
-            }
-        },
-        include: {
-            player: {
-                select: {
-                    membershipId: true,
-                    membershipType: true,
-                    iconPath: true,
-                    displayName: true,
-                    bungieGlobalDisplayName: true,
-                    bungieGlobalDisplayNameCode: true
-                }
-            }
-        },
-        orderBy: {
-            [key.position]: "asc"
-        }
+    const entries = await getIndividualLeaderboardEntries({
+        category: query.category,
+        raid: query.raid,
+        page: Math.ceil(memberPlacement[key.position] / query.count),
+        count: query.count
     })
 
     return {
-        entries: entries.map(({ player: { ...player }, ...entry }) => ({
-            position: entry[key.position],
-            rank: entry[key.rank],
-            value: entry[key.value],
-            player
-        })),
+        entries,
         rank: memberPlacement[key.rank],
         position: memberPlacement[key.position]
     }
@@ -165,10 +157,11 @@ async function searchIndividualLeaderboard(query: {
 async function searchWorldFirstLeaderboard(query: {
     count: number
     membershipId: bigint
-    raid: number
+    raid: RaidPath
     category: WorldFirstLeaderboardType
 }) {
-    const memberPlacement = await prisma.playerActivity.findMany({
+    const raidId = UrlPathsToRaid[query.raid]
+    const memberPlacements = await prisma.playerActivity.findMany({
         where: {
             membershipId: query.membershipId,
             activity: {
@@ -176,7 +169,7 @@ async function searchWorldFirstLeaderboard(query: {
                     some: {
                         leaderboard: {
                             type: query.category,
-                            raidId: query.raid
+                            raidId: raidId
                         }
                     }
                 }
@@ -196,70 +189,51 @@ async function searchWorldFirstLeaderboard(query: {
         }
     })
 
-    if (!memberPlacement) return null
+    if (!memberPlacements.length) return null
 
-    const placement = memberPlacement
+    const placements = memberPlacements
         .map(({ activity }) => activity.activityLeaderboardEntry[0])
-        .sort((a, b) => a.rank - b.rank)[0]
+        .sort((a, b) => a.rank - b.rank)
 
-    const entries = await prisma.activityLeaderboard.findUnique({
+    const leaderboard = await getWorldFirstLeaderboardEntries({
+        raidId,
+        type: query.category,
+        page: Math.ceil(placements[0].rank / query.count),
+        count: query.count
+    })
+    if (!leaderboard) return null
+
+    return {
+        entries: leaderboard.entries,
+        rank: placements[0].rank,
+        position: placements[0].position
+    }
+}
+
+async function searchGloballLeaderboard(query: {
+    count: number
+    membershipId: bigint
+    category: GlobalBoard
+}) {
+    const memberPlacement = await prisma.globalLeaderboard.findUnique({
         where: {
-            raidId_type: {
-                raidId: query.raid,
-                type: query.category
-            }
-        },
-        select: {
-            date: true,
-            entries: {
-                where: {
-                    rank: {
-                        gt: (Math.ceil(placement.rank / query.count) - 1) * query.count,
-                        lte: Math.ceil(placement.rank / query.count) * query.count
-                    }
-                },
-                include: {
-                    activity: {
-                        select: {
-                            instanceId: true,
-                            raidHash: true,
-                            dateStarted: true,
-                            dateCompleted: true,
-                            playerActivity: {
-                                select: {
-                                    finishedRaid: true,
-                                    player: {
-                                        select: {
-                                            membershipId: true,
-                                            membershipType: true,
-                                            iconPath: true,
-                                            displayName: true,
-                                            bungieGlobalDisplayName: true,
-                                            bungieGlobalDisplayNameCode: true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            membershipId: query.membershipId
         }
     })
 
-    if (!entries) return null
+    if (!memberPlacement) return null
+
+    const key = IndividualBoardPositionKeys[query.category]
+
+    const entries = await getGlobalLeaderboardEntries({
+        category: query.category,
+        page: Math.ceil(memberPlacement[key.position] / query.count),
+        count: query.count
+    })
 
     return {
-        entries: entries.entries.map(e => ({
-            position: e.position,
-            rank: e.rank,
-            value: (e.activity.dateCompleted.getTime() - entries.date.getTime()) / 1000,
-            players: e.activity.playerActivity.map(({ player, finishedRaid }) => ({
-                ...player,
-                finishedRaid
-            }))
-        })),
-        rank: placement.rank,
-        position: placement.position
+        entries,
+        rank: memberPlacement[key.rank],
+        position: memberPlacement[key.position]
     }
 }

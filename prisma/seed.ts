@@ -143,6 +143,10 @@ async function seed() {
     await prisma.$executeRaw`REFRESH MATERIALIZED VIEW individual_leaderboard WITH DATA`.then(() =>
         console.log("Updated Individual Leaderboards")
     )
+
+    await prisma.$executeRaw`REFRESH MATERIALIZED VIEW global_leaderboard WITH DATA`.then(() =>
+        console.log("Updated Global Leaderboards")
+    )
 }
 
 async function seedPlayers(names: string[]) {

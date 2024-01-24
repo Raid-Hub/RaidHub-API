@@ -1,5 +1,5 @@
 import { ListedRaid, Raid } from "./raids"
-import { Player, PlayerStats, WorldFirstLeaderboardType } from "@prisma/client"
+import { PlayerStats, WorldFirstLeaderboardType } from "@prisma/client"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
 export type WorldFirstBoard = (typeof WorldFirstBoards)[number]
@@ -22,11 +22,6 @@ export type IndividualBoard = (typeof IndividualBoards)[number]
 
 export const GlobalBoards = ["clears", "sherpas", "fresh"] as const
 export type GlobalBoard = (typeof GlobalBoards)[number]
-export const GlobalBoardsMap = {
-    clears: "clears",
-    fresh: "fullClears",
-    sherpas: "sherpas"
-} satisfies Record<GlobalBoard, keyof Player>
 
 export const UrlPathsToRaid = {
     leviathan: Raid.LEVIATHAN,
