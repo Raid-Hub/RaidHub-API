@@ -173,6 +173,11 @@ export const GlobalBoardPositionKeys = {
         rank: "sherpasRank",
         position: "sherpasPosition",
         value: "sherpas"
+    },
+    speed: {
+        rank: "speedRank",
+        position: "speedPosition",
+        value: "speed"
     }
 } as const satisfies Record<
     GlobalBoard,
@@ -195,7 +200,14 @@ export async function getGlobalLeaderboardEntries(params: {
             [key.position]: {
                 gt: (params.page - 1) * params.count,
                 lte: params.page * params.count
-            }
+            },
+            ...(params.category === "speed"
+                ? {
+                      speed: {
+                          not: null
+                      }
+                  }
+                : {})
         },
         include: {
             player: {
@@ -217,7 +229,7 @@ export async function getGlobalLeaderboardEntries(params: {
     return entries.map(({ player, ...entry }) => ({
         position: entry[key.position],
         rank: entry[key.rank],
-        value: entry[key.value],
+        value: entry[key.value]!, // non null assertion for not null filter (speed)
         player
     }))
 }

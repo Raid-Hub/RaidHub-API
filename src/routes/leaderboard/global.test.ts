@@ -23,4 +23,10 @@ describe("leaderboard global 200", () => {
             page: 4,
             count: 45
         }))
+
+    test("speed", () =>
+        t("speed", {
+            page: 5,
+            count: 45
+        }))
 })

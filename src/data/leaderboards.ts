@@ -20,7 +20,7 @@ export const IndividualBoards = [
 ] as const satisfies (keyof PlayerStats)[]
 export type IndividualBoard = (typeof IndividualBoards)[number]
 
-export const GlobalBoards = ["clears", "sherpas", "fresh"] as const
+export const GlobalBoards = ["clears", "sherpas", "fresh", "speed"] as const
 export type GlobalBoard = (typeof GlobalBoards)[number]
 
 export const UrlPathsToRaid = {

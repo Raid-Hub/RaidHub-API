@@ -22,6 +22,7 @@ model Activity {
   raidDefinition           RaidDefinition             @relation("raid_defintion", fields: [raidHash], references: [raidHash], onDelete: NoAction, onUpdate: NoAction)
   activityLeaderboardEntry ActivityLeaderboardEntry[]
   playerActivity           PlayerActivity[]           @relation("player_activities")
+  fastestClears            PlayerStats[]              @relation("fastest_raid_clear")
 
   @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
   @@index([dateCompleted(sort: Desc)], map: "date_index")
@@ -42,14 +43,12 @@ model Player {
   clears                      Int                     @default(0) @map("clears")
   fullClears                  Int                     @default(0) @map("fresh_clears")
   sherpas                     Int                     @default(0) @map("sherpas")
+  sumOfBestTimes              Int?                    @map("sum_of_best")
   playerActivities            PlayerActivity[]        @relation("player_activities")
   stats                       PlayerStats[]           @relation("player_stats_membership_id")
   individualRanks             IndividualLeaderboard[] @relation("individual_leaderboard")
   globalRanks                 GlobalLeaderboard[]     @relation("global_leaderboard")
 
-  @@index([clears(sort: Desc)], map: "total_clears_idx")
-  @@index([fullClears(sort: Desc)], map: "total_fresh_clears_idx")
-  @@index([sherpas(sort: Desc)], map: "total_sherpas_idx")
   @@index([displayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_both_display_names", type: Gin)
   @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_display_name", type: Gin)
   @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayNameCode(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_name_and_code", type: Gin)
@@ -78,24 +77,20 @@ model PlayerActivity {
 }
 
 model PlayerStats {
-  membershipId BigInt @map("membership_id")
-  raidId       Int    @map("raid_id")
-  clears       Int    @default(0)
-  fresh        Int    @default(0) @map("fresh_clears")
-  sherpas      Int    @default(0)
-  trios        Int    @default(0)
-  duos         Int    @default(0)
-  solos        Int    @default(0)
-  raid         Raid   @relation("player_stats_raid", fields: [raidId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "raid_id_fkey")
-  player       Player @relation("player_stats_membership_id", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_membership_id_fkey")
+  membershipId               BigInt    @map("membership_id")
+  raidId                     Int       @map("raid_id")
+  clears                     Int       @default(0)
+  fresh                      Int       @default(0) @map("fresh_clears")
+  sherpas                    Int       @default(0)
+  trios                      Int       @default(0)
+  duos                       Int       @default(0)
+  solos                      Int       @default(0)
+  fastestFullClearInstanceId BigInt?   @map("fastest_instance_id")
+  raid                       Raid      @relation("player_stats_raid", fields: [raidId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "raid_id_fkey")
+  player                     Player    @relation("player_stats_membership_id", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_membership_id_fkey")
+  fastestClear               Activity? @relation("fastest_raid_clear", fields: [fastestFullClearInstanceId], references: [instanceId])
 
   @@id([membershipId, raidId], map: "player_stats_pkey")
-  @@index([raidId, clears(sort: Desc)], name: "raid_clears_idx")
-  @@index([raidId, fresh(sort: Desc)], name: "raid_fresh_clears_idx")
-  @@index([raidId, sherpas(sort: Desc)], name: "raid_sherpas_idx")
-  @@index([raidId, trios(sort: Desc)], name: "raid_trio_clears_idx")
-  @@index([raidId, duos(sort: Desc)], name: "raid_duo_clears_idx")
-  @@index([raidId, solos(sort: Desc)], name: "raid_solo_clears_idx")
   @@map("player_stats")
 }
 
@@ -213,17 +208,21 @@ view IndividualLeaderboard {
 }
 
 view GlobalLeaderboard {
-  membershipId BigInt @map("membership_id") @unique
+  membershipId BigInt @unique @map("membership_id")
   player       Player @relation("global_leaderboard", fields: [membershipId], references: [membershipId])
 
   clears             Int
-  clearsPosition     Int @map("clears_position") @unique
+  clearsPosition     Int @unique @map("clears_position")
   clearsRank         Int @map("clears_rank")
   fullClears         Int @map("fresh_clears")
-  fullClearsPosition Int @map("fresh_clears_position") @unique
+  fullClearsPosition Int @unique @map("fresh_clears_position")
   fullClearsRank     Int @map("fresh_clears_rank")
   sherpas            Int
-  sherpasPosition    Int @map("sherpas_position") @unique
+  sherpasPosition    Int @unique @map("sherpas_position")
   sherpasRank        Int @map("sherpas_rank")
+  speed              Int?
+  speedPosition      Int @unique @map("speed_position")
+  speedRank          Int @map("speed_rank")
+
   @@map("global_leaderboard")
 }

@@ -20,6 +20,7 @@ import {
 } from "../../data/leaderboards"
 import { IndividualLeaderboard, WorldFirstLeaderboardType } from "@prisma/client"
 import {
+    GlobalBoardPositionKeys,
     IndividualBoardPositionKeys,
     getGlobalLeaderboardEntries,
     getIndividualLeaderboardEntries,
@@ -223,7 +224,7 @@ async function searchGloballLeaderboard(query: {
 
     if (!memberPlacement) return null
 
-    const key = IndividualBoardPositionKeys[query.category]
+    const key = GlobalBoardPositionKeys[query.category]
 
     const entries = await getGlobalLeaderboardEntries({
         category: query.category,

@@ -33,6 +33,14 @@ describe("leaderboard search 200", () => {
             type: "global",
             category: "sherpas"
         }))
+
+    test("global speed", () =>
+        t({
+            count: 50,
+            membershipId: "4611686018488107374",
+            type: "global",
+            category: "speed"
+        }))
 })
 
 describe("leaderboard search 404", () => {
@@ -67,5 +75,13 @@ describe("leaderboard search 404", () => {
             membershipId: "3611686018488107374",
             type: "global",
             category: "sherpas"
+        }))
+
+    test("global speed", () =>
+        t({
+            count: 50,
+            membershipId: "3611686018488107374",
+            type: "global",
+            category: "speed"
         }))
 })
