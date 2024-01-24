@@ -14,7 +14,7 @@
         "db:seed": "ts-node ./prisma/seed.ts",
         "db:migrate": "prisma migrate dev --create-only",
         "test": "jest",
-        "build": "tsc -p tsconfig.build.json",
+        "build": "tsc --build tsconfig.build.json",
         "start": "pm2 start ./dist/index.js --name \"raidhub-api\"  --instances 8 --time",
         "stop": "pm2 stop raidhub-api",
         "restart": "yarn && prisma generate && yarn build && pm2 restart \"raidhub-api\" --update-env"
