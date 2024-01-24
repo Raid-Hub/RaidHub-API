@@ -34,7 +34,45 @@ export const playerProfileRoute = new RaidHubRoute({
                     bungieGlobalDisplayName: z.string().nullable(),
                     bungieGlobalDisplayNameCode: z.string().nullable()
                 }),
-                activityLeaderboardEntries: z.record(
+                stats: z.object({
+                    global: z
+                        .object({
+                            clears: z.object({
+                                value: z.number().int().nullable(),
+                                rank: z.number().int().nullable()
+                            }),
+                            fullClears: z.object({
+                                value: z.number().int().nullable(),
+                                rank: z.number().int().nullable()
+                            }),
+                            sherpas: z.object({
+                                value: z.number().int().nullable(),
+                                rank: z.number().int().nullable()
+                            }),
+                            speed: z.object({
+                                value: z.number().int().nullable(),
+                                rank: z.number().int().nullable()
+                            })
+                        })
+                        .nullable(),
+                    byRaid: z.record(
+                        z.object({
+                            fastestClear: z
+                                .object({
+                                    instanceId: z.bigint(),
+                                    duration: z.number().int()
+                                })
+                                .nullable(),
+                            clears: z.number().int(),
+                            fresh: z.number().int(),
+                            sherpas: z.number().int(),
+                            trios: z.number().int(),
+                            duos: z.number().int(),
+                            solos: z.number().int()
+                        })
+                    )
+                }),
+                worldFirstEntries: z.record(
                     z.array(
                         z.object({
                             rank: z.number(),
@@ -70,6 +108,30 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
         prisma.player.findUnique({
             where: {
                 membershipId: membershipId
+            },
+            include: {
+                globalRanks: {
+                    select: {
+                        clears: true,
+                        clearsRank: true,
+                        fullClears: true,
+                        fullClearsRank: true,
+                        sherpas: true,
+                        sherpasRank: true,
+                        speed: true,
+                        speedRank: true
+                    }
+                },
+                stats: {
+                    include: {
+                        fastestClear: {
+                            select: {
+                                instanceId: true,
+                                duration: true
+                            }
+                        }
+                    }
+                }
             }
         }),
         await prisma.$queryRaw<Array<PrismaRawLeaderboardEntry>>`
@@ -105,9 +167,48 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
         }
     })
 
+    const { stats, globalRanks, ...restOfPlayer } = player
+
     return {
-        player: player,
-        activityLeaderboardEntries: Object.fromEntries(
+        player: restOfPlayer,
+        stats: {
+            global: {
+                clears: {
+                    value: globalRanks?.clears ?? null,
+                    rank: globalRanks?.clearsRank ?? null
+                },
+                fullClears: {
+                    value: globalRanks?.fullClears ?? null,
+                    rank: globalRanks?.fullClearsRank ?? null
+                },
+                sherpas: {
+                    value: globalRanks?.sherpas ?? null,
+                    rank: globalRanks?.sherpasRank ?? null
+                },
+                speed: {
+                    value: globalRanks?.speed ?? null,
+                    rank: globalRanks?.speedRank ?? null
+                }
+            },
+            byRaid: Object.fromEntries(
+                stats.map(
+                    ({
+                        fastestClear,
+                        raidId,
+                        membershipId,
+                        fastestFullClearInstanceId,
+                        ...rest
+                    }) => [
+                        raidId,
+                        {
+                            ...rest,
+                            fastestClear
+                        }
+                    ]
+                )
+            )
+        },
+        worldFirstEntries: Object.fromEntries(
             Array.from(activityLeaderboardEntriesMap.entries()).map(([leaderboardId, entries]) => [
                 leaderboardId,
                 entries
