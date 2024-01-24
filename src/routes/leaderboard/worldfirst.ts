@@ -12,25 +12,27 @@ import { getWorldFirstLeaderboardEntries } from "./_common"
 export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
     method: "get",
     params: RaidPathSchema.extend({
-        category: z.enum(WorldFirstBoards).transform(v => WorldFirstBoardsMap[v])
+        category: z.enum(WorldFirstBoards)
     }),
     query: zLeaderboardQueryPagination,
     middlewares: [cacheControl(30)],
     async handler(req) {
-        const { raid, category } = req.params
-
         const leaderboard = await getWorldFirstLeaderboardEntries({
-            raidId: UrlPathsToRaid[raid],
+            raidId: UrlPathsToRaid[req.params.raid],
             page: req.query.page,
             count: req.query.count,
-            type: category
+            type: WorldFirstBoardsMap[req.params.category]
         })
 
         if (!leaderboard) {
-            return fail({ notFound: true }, 404, "Leaderboard not found")
+            return fail(
+                { notFound: true, params: { ...req.params, ...req.query } },
+                404,
+                "Leaderboard not found"
+            )
         } else {
             return ok({
-                params: { raid, category, count: req.query.count, page: req.query.page },
+                params: { ...req.params, ...req.query },
                 date: leaderboard.date,
                 entries: leaderboard.entries
             })
@@ -39,11 +41,24 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
     response: {
         success: z
             .object({
-                params: z.object({}).strict(),
+                params: RaidPathSchema.extend({
+                    category: z.enum(WorldFirstBoards)
+                })
+                    .merge(zLeaderboardQueryPagination)
+                    .strict(),
                 date: z.date(),
                 entries: z.array(zWorldFirstLeaderboardEntry)
             })
             .strict(),
-        error: z.object({}).strict()
+        error: z
+            .object({
+                notFound: z.boolean(),
+                params: RaidPathSchema.extend({
+                    category: z.enum(WorldFirstBoards)
+                })
+                    .merge(zLeaderboardQueryPagination)
+                    .strict()
+            })
+            .strict()
     }
 })

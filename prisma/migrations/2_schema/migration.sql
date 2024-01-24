@@ -162,7 +162,7 @@ CREATE INDEX "idx_raid_definition_version_id" ON "raid_definition"("version_id")
 CREATE UNIQUE INDEX "leaderboard_raid_hash_type_key" ON "leaderboard"("raid_id", "type");
 
 -- CreateIndex
-CREATE INDEX "speedrun_index" ON "activity"("raid_hash", "completed", "fresh", "duration" ASC);
+CREATE INDEX "speedrun_index" ON "activity"("completed", "fresh", "duration" ASC);
 
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;
