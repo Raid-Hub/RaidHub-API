@@ -64,7 +64,7 @@ export const playerProfileRoute = new RaidHubRoute({
                                 })
                                 .nullable(),
                             clears: z.number().int(),
-                            fresh: z.number().int(),
+                            fullClears: z.number().int(),
                             sherpas: z.number().int(),
                             trios: z.number().int(),
                             duos: z.number().int(),
@@ -197,11 +197,13 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                         raidId,
                         membershipId,
                         fastestFullClearInstanceId,
+                        fresh,
                         ...rest
                     }) => [
                         raidId,
                         {
                             ...rest,
+                            fullClears: fresh,
                             fastestClear
                         }
                     ]

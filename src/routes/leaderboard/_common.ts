@@ -2,6 +2,7 @@ import { GlobalLeaderboard, IndividualLeaderboard, WorldFirstLeaderboardType } f
 import { GlobalBoard, IndividualBoard, UrlPathsToRaid } from "../../data/leaderboards"
 import { prisma } from "../../prisma"
 import { RaidPath } from "./_schema"
+import { ListedRaid } from "../../data/raids"
 
 export const IndividualBoardPositionKeys = {
     clears: {
@@ -45,7 +46,7 @@ export const IndividualBoardPositionKeys = {
 
 export async function getIndividualLeaderboardEntries(params: {
     category: IndividualBoard
-    raid: RaidPath
+    raid: ListedRaid
     page: number
     count: number
 }) {
@@ -53,7 +54,7 @@ export async function getIndividualLeaderboardEntries(params: {
 
     const entries = await prisma.individualLeaderboard.findMany({
         where: {
-            raidId: UrlPathsToRaid[params.raid],
+            raidId: params.raid,
             [key.position]: {
                 gt: (params.page - 1) * params.count,
                 lte: params.page * params.count
@@ -147,7 +148,7 @@ export async function getWorldFirstLeaderboardEntries(params: {
             ({ activity: { playerActivity, ...activity }, ...data }) => ({
                 position: data.position,
                 rank: data.rank,
-                value: activity.duration,
+                value: (activity.dateCompleted.getTime() - leaderboard.date.getTime()) / 1000,
                 activity: activity,
                 players: playerActivity.map(({ player, ...pa }) => ({
                     ...player,

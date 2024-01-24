@@ -43,7 +43,7 @@ export const activityRootRoute = new RaidHubRoute({
                 players: z.record(
                     z.object({
                         finishedRaid: z.boolean(),
-                        sherpas: z.number(),
+                        creditedSherpas: z.number(),
                         isFirstClear: z.boolean()
                     })
                 ),
@@ -109,10 +109,10 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         weekOne,
         players: Object.fromEntries(
             playerActivity.map(pa => [
-                String(pa.membershipId),
+                pa.membershipId,
                 {
                     finishedRaid: pa.finishedRaid,
-                    sherpas: pa.sherpas,
+                    creditedSherpas: pa.sherpas,
                     isFirstClear: pa.isFirstClear
                 }
             ])

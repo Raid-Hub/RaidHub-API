@@ -1,6 +1,6 @@
 import { string, z } from "zod"
 import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { zBigIntString } from "../../util/zod-common"
+import { zBigIntString, zDigitString } from "../../util/zod-common"
 import { cacheControl } from "../../middlewares/cache-control"
 import {
     RaidPath,
@@ -26,6 +26,8 @@ import {
     getIndividualLeaderboardEntries,
     getWorldFirstLeaderboardEntries
 } from "./_common"
+import { ListedRaid, ListedRaids } from "../../data/raids"
+import { includedIn } from "../../util/helpers"
 
 const CommonQueryParams = z.object({
     membershipId: zBigIntString(),
@@ -36,12 +38,12 @@ const SearchQuery = z.discriminatedUnion("type", [
     CommonQueryParams.extend({
         type: z.literal("worldfirst"),
         category: z.enum(WorldFirstBoards).transform(v => WorldFirstBoardsMap[v]),
-        raid: zRaidSchema
+        raid: z.coerce.number().refine(r => includedIn(ListedRaids, r))
     }),
     CommonQueryParams.extend({
         type: z.literal("individual"),
         category: z.enum(IndividualBoards),
-        raid: zRaidSchema
+        raid: z.coerce.number().refine(r => includedIn(ListedRaids, r))
     }),
     CommonQueryParams.extend({
         type: z.literal("global"),
@@ -80,7 +82,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                     entries: wfResults.entries
                 })
             case "global":
-                const globalResults = await searchGloballLeaderboard(req.query)
+                const globalResults = await searchGlobalLeaderboard(req.query)
                 if (!globalResults)
                     return fail({ notFound: true, params: req.query }, 404, "Player not found")
 
@@ -98,8 +100,8 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             .object({
                 params: CommonQueryParams.extend({
                     type: z.string(),
-                    category: string(),
-                    raid: zRaidSchema.optional()
+                    category: z.string(),
+                    raid: z.number().optional()
                 }).strict(),
                 page: z.number().positive().int(),
                 rank: z.number().positive().int(),
@@ -114,8 +116,8 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                 notFound: z.boolean(),
                 params: CommonQueryParams.extend({
                     type: z.string(),
-                    category: string(),
-                    raid: zRaidSchema.optional()
+                    category: z.string(),
+                    raid: z.number().optional()
                 }).strict()
             })
             .strict()
@@ -125,14 +127,14 @@ export const leaderboardSearchRoute = new RaidHubRoute({
 async function searchIndividualLeaderboard(query: {
     count: number
     membershipId: bigint
-    raid: RaidPath
+    raid: ListedRaid
     category: IndividualBoard
 }) {
     const memberPlacement = await prisma.individualLeaderboard.findUnique({
         where: {
             uniqueRaidMembershipId: {
                 membershipId: query.membershipId,
-                raidId: UrlPathsToRaid[query.raid]
+                raidId: query.raid
             }
         }
     })
@@ -158,10 +160,9 @@ async function searchIndividualLeaderboard(query: {
 async function searchWorldFirstLeaderboard(query: {
     count: number
     membershipId: bigint
-    raid: RaidPath
+    raid: ListedRaid
     category: WorldFirstLeaderboardType
 }) {
-    const raidId = UrlPathsToRaid[query.raid]
     const memberPlacements = await prisma.playerActivity.findMany({
         where: {
             membershipId: query.membershipId,
@@ -170,7 +171,7 @@ async function searchWorldFirstLeaderboard(query: {
                     some: {
                         leaderboard: {
                             type: query.category,
-                            raidId: raidId
+                            raidId: query.raid
                         }
                     }
                 }
@@ -197,7 +198,7 @@ async function searchWorldFirstLeaderboard(query: {
         .sort((a, b) => a.rank - b.rank)
 
     const leaderboard = await getWorldFirstLeaderboardEntries({
-        raidId,
+        raidId: query.raid,
         type: query.category,
         page: Math.ceil(placements[0].rank / query.count),
         count: query.count
@@ -211,7 +212,7 @@ async function searchWorldFirstLeaderboard(query: {
     }
 }
 
-async function searchGloballLeaderboard(query: {
+async function searchGlobalLeaderboard(query: {
     count: number
     membershipId: bigint
     category: GlobalBoard

@@ -4,6 +4,7 @@ import { playerRouterParams } from "./_schema"
 import { zBigIntString, zCount } from "../../util/zod-common"
 import { prisma } from "../../prisma"
 import { isContest, isDayOne } from "../../data/raceDates"
+import { zActivityPlayerData } from "../../util/schema-common"
 
 export const playerActivitiesRoute = new RaidHubRoute({
     method: "get",
@@ -59,15 +60,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
                         dateCompleted: z.date(),
                         dayOne: z.boolean(),
                         contest: z.boolean(),
-                        player: z.object({
-                            didMemberComplete: z.boolean(),
-                            isFirstClear: z.boolean(),
-                            sherpas: z.number(),
-                            kills: z.number(),
-                            deaths: z.number(),
-                            assists: z.number(),
-                            timePlayedSeconds: z.number()
-                        })
+                        player: zActivityPlayerData
                     })
                 ),
                 nextCursor: z.string().nullable()
@@ -107,6 +100,16 @@ const playerActivityQuery = (membershipId: bigint, count: number) =>
     ({
         where: {
             membershipId: membershipId
+        },
+        select: {
+            finishedRaid: true,
+            kills: true,
+            assists: true,
+            deaths: true,
+            timePlayedSeconds: true,
+            classHash: true,
+            sherpas: true,
+            isFirstClear: true
         },
         take: count + 1,
         orderBy: {
@@ -175,19 +178,10 @@ async function getPlayerActivities({
             return {
                 ...a,
                 instanceId: a.instanceId,
-                activityId: a.instanceId,
                 raidHash: a.raidHash,
                 dayOne: isDayOne(a.raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(a.raidDefinition.raidId, a.dateStarted),
-                player: {
-                    didMemberComplete: playerActivities[i].finishedRaid,
-                    isFirstClear: playerActivities[i].isFirstClear,
-                    sherpas: playerActivities[i].sherpas,
-                    kills: playerActivities[i].kills,
-                    deaths: playerActivities[i].deaths,
-                    assists: playerActivities[i].assists,
-                    timePlayedSeconds: playerActivities[i].timePlayedSeconds
-                }
+                player: playerActivities[i]
             }
         })
     }

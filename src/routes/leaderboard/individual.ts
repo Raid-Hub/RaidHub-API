@@ -34,7 +34,7 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         const { page, count } = req.query
 
         const entries = await getIndividualLeaderboardEntries({
-            raid,
+            raid: UrlPathsToRaid[raid],
             category,
             page,
             count
