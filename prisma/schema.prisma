@@ -130,6 +130,7 @@ model ActivityLeaderboardEntry {
 model Raid {
   id                     Int                     @id
   name                   String
+  isSunset               Boolean                 @map("is_sunset") @default(false)
   playerStats            PlayerStats[]           @relation("player_stats_raid")
   AssociatedRaidVersions RaidVersion[]           @relation("associated_raid_version")
   RaidDefinition         RaidDefinition[]        @relation("raid_name_definition")

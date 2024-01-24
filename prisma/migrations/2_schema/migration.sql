@@ -88,6 +88,7 @@ CREATE TABLE "activity_leaderboard_entry" (
 CREATE TABLE "raid" (
     "id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
+    "is_sunset" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "raid_pkey" PRIMARY KEY ("id")
 );
