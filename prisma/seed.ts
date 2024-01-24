@@ -47,15 +47,12 @@ main()
 async function main() {
     dotenv.config()
     const names = process.argv.slice(2)
-    if (!names.length) {
-        console.log("Seeding database")
-        await seed()
-    } else {
+    if (names.length) {
         console.log("Seeding players " + names.join(", "))
         await seedPlayers(names)
-        console.log("Seeding database")
-        await seed()
     }
+    console.log("Seeding database")
+    await seed()
 }
 
 async function seed() {
@@ -125,6 +122,7 @@ async function seed() {
                                     createMany: {
                                         data: entries.map((e, i) => ({
                                             rank: i + 1,
+                                            position: i + 1,
                                             instanceId: e.instanceId
                                         })),
                                         skipDuplicates: true
@@ -140,6 +138,14 @@ async function seed() {
                 })
             )
         })
+    )
+
+    await prisma.$executeRaw`REFRESH MATERIALIZED VIEW individual_leaderboard WITH DATA`.then(() =>
+        console.log("Updated Individual Leaderboards")
+    )
+
+    await prisma.$executeRaw`REFRESH MATERIALIZED VIEW global_leaderboard WITH DATA`.then(() =>
+        console.log("Updated Global Leaderboards")
     )
 }
 

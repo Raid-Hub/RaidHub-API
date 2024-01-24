@@ -26,6 +26,7 @@ CREATE TABLE "player" (
     "clears" INTEGER NOT NULL DEFAULT 0,
     "fresh_clears" INTEGER NOT NULL DEFAULT 0,
     "sherpas" INTEGER NOT NULL DEFAULT 0,
+    "sum_of_best" INTEGER,
 
     CONSTRAINT "player_pkey" PRIMARY KEY ("membership_id")
 );
@@ -56,6 +57,7 @@ CREATE TABLE "player_stats" (
     "trios" INTEGER NOT NULL DEFAULT 0,
     "duos" INTEGER NOT NULL DEFAULT 0,
     "solos" INTEGER NOT NULL DEFAULT 0,
+    "fastest_instance_id" BIGINT,
 
     CONSTRAINT "player_stats_pkey" PRIMARY KEY ("membership_id","raid_id")
 );
@@ -75,16 +77,18 @@ CREATE TABLE "leaderboard" (
 -- CreateTable
 CREATE TABLE "activity_leaderboard_entry" (
     "rank" INTEGER NOT NULL,
+    "position" INTEGER NOT NULL,
     "leaderboard_id" TEXT NOT NULL,
     "instance_id" BIGINT NOT NULL,
 
-    CONSTRAINT "activity_leaderboard_rank_pkey" PRIMARY KEY ("leaderboard_id","rank")
+    CONSTRAINT "activity_leaderboard_entry_pkey" PRIMARY KEY ("leaderboard_id", "instance_id")
 );
 
 -- CreateTable
 CREATE TABLE "raid" (
     "id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
+    "is_sunset" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "raid_pkey" PRIMARY KEY ("id")
 );
@@ -124,11 +128,6 @@ CREATE INDEX "date_index" ON "activity"("date_completed" DESC);
 -- Tag Search Index
 CREATE INDEX "tag_index" ON "activity"("completed", "player_count", "fresh", "flawless");
 
--- Global Player Leaderboard Indices
-CREATE INDEX "total_clears_idx" ON "player"("clears");
-CREATE INDEX "total_fresh_clears_idx" ON "player"("fresh_clears");
-CREATE INDEX "total_sherpas_idx" ON "player"("sherpas");
-
 -- Player Search Indices
 CREATE INDEX "trgm_idx_both_display_names" ON "player" USING GIN ("display_name" gin_trgm_ops, "bungie_global_display_name" gin_trgm_ops);
 CREATE INDEX "trgm_idx_bungie_global_display_name" ON "player" USING GIN ("bungie_global_display_name" gin_trgm_ops);
@@ -139,16 +138,9 @@ CREATE INDEX "trgm_idx_display_name" ON "player" USING GIN ("display_name" gin_t
 CREATE INDEX "idx_instance_id" ON "player_activity"("instance_id");
 CREATE INDEX "idx_membership_id" ON "player_activity"("membership_id");
 
--- Individual Leaderboard Indices
-CREATE INDEX "raid_clears_idx" ON "player_stats"("raid_id", "clears" DESC);
-CREATE INDEX "raid_fresh_clears_idx" ON "player_stats"("raid_id", "fresh_clears" DESC);
-CREATE INDEX "raid_sherpas_idx" ON "player_stats"("raid_id", "sherpas" DESC);
-CREATE INDEX "raid_trio_clears_idx" ON "player_stats"("raid_id", "trios" DESC);
-CREATE INDEX "raid_duo_clears_idx" ON "player_stats"("raid_id", "duos" DESC);
-CREATE INDEX "raid_solo_clears_idx" ON "player_stats"("raid_id", "solos" DESC);
-
 -- CreateIndex
 CREATE INDEX "activity_leaderboard_entry_instance_id_index" ON "activity_leaderboard_entry" USING HASH ("instance_id");
+CREATE INDEX "activity_leaderboard_position" ON "activity_leaderboard_entry"("leaderboard_id", "position" ASC);
 
 -- CreateIndex
 CREATE INDEX "idx_raid_definition_raid_id" ON "raid_definition"("raid_id");
@@ -160,7 +152,7 @@ CREATE INDEX "idx_raid_definition_version_id" ON "raid_definition"("version_id")
 CREATE UNIQUE INDEX "leaderboard_raid_hash_type_key" ON "leaderboard"("raid_id", "type");
 
 -- CreateIndex
-CREATE INDEX "speedrun_index" ON "activity"("raid_hash", "completed", "fresh", "duration" ASC);
+CREATE INDEX "speedrun_index" ON "activity"("completed", "fresh", "duration" ASC);
 
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -176,6 +168,9 @@ ALTER TABLE "player_stats" ADD CONSTRAINT "raid_id_fkey" FOREIGN KEY ("raid_id")
 
 -- AddForeignKey
 ALTER TABLE "player_stats" ADD CONSTRAINT "player_membership_id_fkey" FOREIGN KEY ("membership_id") REFERENCES "player"("membership_id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "player_stats" ADD CONSTRAINT "player_fastest_clear_fkey" FOREIGN KEY ("fastest_instance_id") REFERENCES "activity"("instance_id") ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "activity_leaderboard_entry" ADD CONSTRAINT "activity_leaderboard_entry_instance_id_fkey" FOREIGN KEY ("instance_id") REFERENCES "activity"("instance_id") ON DELETE NO ACTION ON UPDATE NO ACTION;

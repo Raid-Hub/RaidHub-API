@@ -1,18 +1,18 @@
 -- Insert Raid data
-INSERT INTO "raid" ("id", "name") VALUES
-    (1, 'Leviathan'),
-    (2, 'Eater of Worlds'),
-    (3, 'Spire of Stars'),
-    (4, 'Last Wish'),
-    (5, 'Scourge of the Past'),
-    (6, 'Crown of Sorrow'),
-    (7, 'Garden of Salvation'),
-    (8, 'Deep Stone Crypt'),
-    (9, 'Vault of Glass'),
-    (10, 'Vow of the Disciple'),
-    (11, 'King''s Fall'),
-    (12, 'Root of Nightmares'),
-    (13, 'Crota''s End');
+INSERT INTO "raid" ("id", "name", "is_sunset") VALUES
+    (1, 'Leviathan', true),
+    (2, 'Eater of Worlds', true),
+    (3, 'Spire of Stars', true),
+    (4, 'Last Wish', false),
+    (5, 'Scourge of the Past', true),
+    (6, 'Crown of Sorrow', true),
+    (7, 'Garden of Salvation', false),
+    (8, 'Deep Stone Crypt', false),
+    (9, 'Vault of Glass', false),
+    (10, 'Vow of the Disciple', false),
+    (11, 'King''s Fall', false),
+    (12, 'Root of Nightmares', false),
+    (13, 'Crota''s End', false);
 
 -- Insert Version data
 INSERT INTO "raid_version" ("id", "name", "associated_raid_id") VALUES

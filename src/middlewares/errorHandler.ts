@@ -1,4 +1,7 @@
-import { PrismaClientValidationError } from "@prisma/client/runtime/library"
+import {
+    PrismaClientUnknownRequestError,
+    PrismaClientValidationError
+} from "@prisma/client/runtime/library"
 import { ErrorRequestHandler } from "express"
 import { serverError } from "../RaidHubRoute"
 import { z } from "zod"
@@ -10,6 +13,13 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
     if (err instanceof PrismaClientValidationError) {
         details = {
             ...err
+        }
+    }
+
+    if (err instanceof PrismaClientUnknownRequestError) {
+        details = {
+            ...err,
+            cause: err.message.split("`")[1]
         }
     }
 

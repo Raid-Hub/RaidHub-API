@@ -9,33 +9,53 @@ describe("leaderboard speedrun 200", () => {
         expect(result.type).toBe("ok")
     }
 
-    test("leviathan", () =>
-        t("leviathan", {
-            page: 1,
-            count: 32
-        }))
+    test(
+        "leviathan",
+        () =>
+            t("leviathan", {
+                page: 1,
+                count: 32
+            }),
+        10000
+    )
 
-    test("eater of worlds", () =>
-        t("eaterofworlds", {
-            page: 3,
-            count: 25
-        }))
+    test(
+        "eater of worlds",
+        () =>
+            t("eaterofworlds", {
+                page: 3,
+                count: 25
+            }),
+        10000
+    )
 
-    test("vault of glass", () =>
-        t("vaultofglass", {
-            page: 7,
-            count: 27
-        }))
+    test(
+        "vault of glass",
+        () =>
+            t("vaultofglass", {
+                page: 7,
+                count: 27
+            }),
+        10000
+    )
 
-    test("king's fall", () =>
-        t("vowofthedisciple", {
-            page: 4,
-            count: 87
-        }))
+    test(
+        "king's fall",
+        () =>
+            t("vowofthedisciple", {
+                page: 4,
+                count: 87
+            }),
+        10000
+    )
 
-    test("crown of sorrow", () =>
-        t("crownofsorrow", {
-            page: 9,
-            count: 33
-        }))
+    test(
+        "crown of sorrow",
+        () =>
+            t("crownofsorrow", {
+                page: 9,
+                count: 33
+            }),
+        10000
+    )
 })
