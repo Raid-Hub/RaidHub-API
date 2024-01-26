@@ -9,7 +9,7 @@ export const IndividualBoardPositionKeys = {
         position: "clearsPosition",
         value: "clears"
     },
-    fresh: {
+    fullClears: {
         rank: "fullClearsRank",
         position: "fullClearsPosition",
         value: "fullClears"

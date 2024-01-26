@@ -1,0 +1,17 @@
+name: Typescript check
+on:
+    push:
+        branches:
+            - "*"
+            - "!main"
+jobs:
+    types:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+
+            - name: Types
+              run: |
+                  yarn
+                  yarn types

@@ -10,28 +10,28 @@ export const router = new RaidHubRouter({
     middlewares: [],
     routes: [
         {
-            path: "/activity",
-            route: activityRouter
+            path: "/manifest",
+            route: manifestRoute
         },
         {
-            path: "/admin",
-            route: adminRouter
+            path: "/player",
+            route: playerRouter
+        },
+        {
+            path: "/activity",
+            route: activityRouter
         },
         {
             path: "/leaderboard",
             route: leaderboardRouter
         },
         {
-            path: "/manifest",
-            route: manifestRoute
-        },
-        {
             path: "/pgcr/:instanceId",
             route: pgcrRoute
         },
         {
-            path: "/player",
-            route: playerRouter
+            path: "/admin",
+            route: adminRouter
         }
     ]
 })
