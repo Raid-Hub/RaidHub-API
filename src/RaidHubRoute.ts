@@ -262,19 +262,20 @@ export const adminProtectedError = z.object({
     message: z.literal("Forbidden"),
     minted: z.date(),
     success: z.literal(false),
-    statusCode: z.literal(401),
+    statusCode: z.literal(403),
     error: z.object({
-        forbidden: z.literal(true)
+        type: z.literal("forbidden")
     })
 })
 
 export const corsError = z.object({
-    message: z.literal("Request originated from an invalid origin"),
+    message: z.union([z.literal("Invalid API Key"), z.literal("Missing API Key")]),
     minted: z.date(),
     success: z.literal(false),
-    statusCode: z.union([z.literal(401), z.literal(403)]),
+    statusCode: z.literal(401),
     error: z.object({
-        cors: z.literal(true),
-        apiKeyFound: z.boolean()
+        type: z.literal("cors"),
+        apiKey: z.string().nullable(),
+        origin: z.string().nullable()
     })
 })

@@ -6,5 +6,5 @@ export const adminRouter = Router({
     strict: true
 })
 
-adminRouter.use(adminProtected(Boolean(process.env.PROD)))
+adminRouter.use(adminProtected)
 adminRouter.use("/query", adminQueryRoute.express)

@@ -20,21 +20,16 @@ app.use("*", (_, res, next) => {
     next()
 })
 
-// handle OPTIONS before any other middleware
+// handle OPTIONS pre-flight requests before any other middleware
 app.options("*", (req, res, _) => {
-    const method = req.headers["access-control-request-method"]
-    const allowedHeaders = ["X-API-KEY"]
-    if (method == "POST") {
-        allowedHeaders.push("Content-Type")
-    }
-    res.header("Access-Control-Allow-Methods", method)
+    res.header("Access-Control-Allow-Methods", "GET,POST")
     res.header("Access-Control-Allow-Origin", req.headers.origin)
-    res.header("Access-Control-Allow-Headers", allowedHeaders.join(", "))
-    res.sendStatus(200)
+    res.header("Access-Control-Allow-Headers", "*")
+    res.sendStatus(204)
 })
 
-// Apply CORS if Prod
-app.use(cors(Boolean(process.env.PROD)))
+// Apply CORS
+app.use(cors)
 
 // parse incoming request body with json
 app.use(express.json())
