@@ -2,7 +2,7 @@ import { playerActivitiesRoute } from "./activities"
 
 describe("player activities 200", () => {
     const t = async (membershipId: string) => {
-        const result = await playerActivitiesRoute.mock({ params: { membershipId } })
+        const result = await playerActivitiesRoute.mock({ params: { membershipId }, query: {} })
         expect(result.type).toBe("ok")
     }
 
@@ -16,7 +16,8 @@ describe("player activities 404", () => {
         const result = await playerActivitiesRoute.mock({
             params: {
                 membershipId
-            }
+            },
+            query: {}
         })
 
         expect(result.type).toBe("err")

@@ -199,7 +199,7 @@ export class RaidHubRoute<
         const res = await this.handler({
             params: this.paramsSchema?.parse(req.params) ?? {},
             query: this.querySchema?.parse(req.query) ?? {},
-            body: this.bodySchema?.parse(req.body) ?? req.body
+            body: this.bodySchema?.parse(req.body) ?? {}
         })
 
         // We essentially can use this type to narrow down the type of res in our unit tests
