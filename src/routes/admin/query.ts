@@ -11,12 +11,12 @@ export const adminQueryRoute = new RaidHubRoute({
     }),
     middlewares: [cacheControl(5)],
     async handler(req) {
-        const data = await prisma.$queryRawUnsafe<Object[]>(req.body.query)
+        const data = await prisma.$queryRawUnsafe<unknown[]>(req.body.query)
 
         return ok(data)
     },
     response: {
-        success: z.array(z.object({})),
+        success: z.array(z.unknown()),
         error: z.object({})
     }
 })

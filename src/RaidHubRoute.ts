@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
 import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodUnknown } from "zod"
 import { validationError } from "./RaidHubErrors"
@@ -15,10 +16,10 @@ export class RaidHubRoute<
         any,
         { [x: string]: any },
         { [x: string]: any }
-    > = ZodObject<{}>,
+    > = ZodObject<any>,
     Query extends
         | ZodObject<any, any, any, { [x: string]: any }, { [x: string]: any }>
-        | ZodDiscriminatedUnion<any, any> = ZodObject<{}>,
+        | ZodDiscriminatedUnion<any, any> = ZodObject<any>,
     Body extends ZodType = ZodUnknown
 > implements IRaidHubRoute
 {

@@ -31,7 +31,6 @@ const bungieClient: BungieClientProtocol = {
             if (res.ok) {
                 return data as T
             } else {
-                // @ts-ignore
                 throw new Error(data.Message)
             }
         })
@@ -152,7 +151,7 @@ async function seed() {
 async function seedPlayers(names: string[]) {
     const COUNT = 250
     const THREADS = 60
-    const pgcrQueue = new Set<BigInt>()
+    const pgcrQueue = new Set<bigint>()
 
     const characters = await Promise.all(names.map(findCharacters)).then(c => c.flat())
 
@@ -174,7 +173,8 @@ async function seedPlayers(names: string[]) {
     await Promise.all(
         characters.map(async char => {
             let page = 0
-            while (true) {
+            let len = 0
+            while (len >= (THREADS / 20) * COUNT) {
                 const activities = await Promise.all(
                     new Array(THREADS / 20).fill(undefined).map((_, i) =>
                         getActivityHistory(bungieClient, {
@@ -200,10 +200,7 @@ async function seedPlayers(names: string[]) {
                 })
 
                 page += THREADS / 20
-
-                if (activities.length < (THREADS / 20) * COUNT) {
-                    break
-                }
+                len = activities.length
             }
             return
         })
@@ -374,7 +371,7 @@ async function seedPlayers(names: string[]) {
                                                 clears: {
                                                     increment: didFinish ? 1 : 0
                                                 },
-                                                fresh: {
+                                                fullClears: {
                                                     increment: didFinish && pgcr.fresh ? 1 : 0
                                                 },
                                                 trios: {

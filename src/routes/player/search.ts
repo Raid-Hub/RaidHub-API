@@ -57,7 +57,7 @@ async function searchForPlayer(query: string, count: number) {
         const aMatch = a.bungieGlobalDisplayName?.toLowerCase() === searchTerm
         const bMatch = b.bungieGlobalDisplayName?.toLowerCase() === searchTerm
 
-        // @ts-ignore
+        // @ts-expect-error ts does not like bitwise operators on booleans
         if (aMatch ^ bMatch) {
             return aMatch ? -1 : 1
         } else {

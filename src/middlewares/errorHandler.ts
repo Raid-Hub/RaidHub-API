@@ -9,8 +9,8 @@ import { serverError } from "../RaidHubErrors"
 import { z } from "../util/zod"
 
 // This is the final middleware run, so it cannot point to next
-export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
-    let details: z.infer<typeof serverError>["error"] & Record<string, any> = {
+export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
+    let details: z.infer<typeof serverError>["error"] & Record<string, unknown> = {
         type: "unknown",
         at: null
     }
