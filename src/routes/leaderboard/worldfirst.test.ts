@@ -6,6 +6,7 @@ describe("leaderboard worldfirst 200", () => {
             params: { raid, category },
             query
         })
+
         expect(result.type).toBe("ok")
     }
 
@@ -32,6 +33,20 @@ describe("leaderboard worldfirst 200", () => {
             page: 4,
             count: 87
         }))
+
+    test("leaderboards are in order", async () => {
+        const { parsed } = await leaderboardRaidWorldfirstRoute.mock({
+            params: { raid: "rootofnightmares", category: "normal" },
+            query: {
+                page: 1,
+                count: 100
+            }
+        })
+
+        parsed.entries.forEach((entry: any, idx: number) => {
+            expect(entry.position).toEqual(idx + 1)
+        })
+    })
 })
 
 describe("leaderboard worldfirst 404", () => {
