@@ -1,21 +1,21 @@
-import * as dotenv from "dotenv"
 import { PrismaClient, WorldFirstLeaderboardType } from "@prisma/client"
-import {
-    BungieNetResponse,
-    DestinyPostGameCarnageReportData,
-    DestinyPostGameCarnageReportEntry
-} from "bungie-net-core/models"
-import { DestinyActivityModeType } from "bungie-net-core/enums"
+import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
 import {
     getActivityHistory,
     getProfile,
     searchDestinyPlayerByBungieName
 } from "bungie-net-core/endpoints/Destiny2"
-import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
+import { DestinyActivityModeType } from "bungie-net-core/enums"
+import {
+    BungieNetResponse,
+    DestinyPostGameCarnageReportData,
+    DestinyPostGameCarnageReportEntry
+} from "bungie-net-core/models"
+import * as dotenv from "dotenv"
 import { gzipSync } from "zlib"
-import { pgcrSchema } from "../src/util/pgcr"
 import { ZodError } from "zod"
 import { Difficulty, ListedRaids } from "../src/data/raids"
+import { pgcrSchema } from "../src/util/pgcr"
 
 const prisma = new PrismaClient()
 

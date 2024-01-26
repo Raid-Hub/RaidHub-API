@@ -1,10 +1,10 @@
-import { z } from "zod"
-import { RaidHubRoute, ok } from "../../RaidHubRoute"
-import { RaidPath, RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
-import { cacheControl } from "../../middlewares/cache-control"
-import { zBigIntString } from "../../util/zod-common"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid } from "../../data/leaderboards"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../services/prisma"
+import { ok } from "../../util/response"
+import { z, zDigitString } from "../../util/zod"
+import { RaidPath, RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
 
 export const leaderboardSpeedrunRoute = new RaidHubRoute({
     method: "get",
@@ -30,12 +30,12 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
                 entries: z.array(
                     z.object({
                         rank: z.number(),
-                        instanceId: zBigIntString(),
+                        instanceId: zDigitString(),
                         dateStarted: z.date(),
                         dateCompleted: z.date(),
                         players: z.array(
                             z.object({
-                                membershipId: zBigIntString(),
+                                membershipId: zDigitString(),
                                 membershipType: z.number().nullable(),
                                 iconPath: z.string().nullable(),
                                 displayName: z.string().nullable(),

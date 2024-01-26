@@ -1,34 +1,31 @@
 import { RequestHandler, Router } from "express"
-import { ZodObject, ZodType, ZodUnknown, z } from "zod"
-
-export type RaidHubResponse<T, E> = {
-    minted: Date
-    message?: string
-} & ({ success: true; response: T } | { success: false; error: E; statusCode: number })
-
-export type RaidHubHandler<
-    Params extends ZodType,
-    Query extends ZodType,
-    Body extends ZodType,
-    T,
-    E
-> = (req: {
-    params: z.infer<Params>
-    query: z.infer<Query>
-    body: z.infer<Body>
-}) => Promise<RaidHubResponse<T, E>>
+import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodUnknown } from "zod"
+import { validationError } from "./RaidHubErrors"
+import { IRaidHubRoute, RaidHubHandler } from "./RaidHubRouterTypes"
+import { z } from "./util/zod"
 
 // This class is used to define type-safe a route in the RaidHub API
 export class RaidHubRoute<
     M extends "get" | "post",
     ResponseBody extends ZodType,
     ErrorResponseBody extends ZodObject<any> = ZodObject<any>,
-    Params extends ZodType = ZodUnknown,
-    Query extends ZodType = ZodUnknown,
+    Params extends ZodObject<
+        any,
+        any,
+        any,
+        { [x: string]: any },
+        { [x: string]: any }
+    > = ZodObject<{}>,
+    Query extends
+        | ZodObject<any, any, any, { [x: string]: any }, { [x: string]: any }>
+        | ZodDiscriminatedUnion<any, any> = ZodObject<{}>,
     Body extends ZodType = ZodUnknown
-> {
+> implements IRaidHubRoute
+{
     private readonly router: Router
     readonly method: M
+    readonly description?: string
+    readonly summary?: string
     readonly paramsSchema: Params | null
     readonly querySchema: Query | null
     readonly bodySchema: Body | null
@@ -42,8 +39,8 @@ export class RaidHubRoute<
         Params,
         Query,
         Body,
-        z.infer<ResponseBody>,
-        z.infer<ErrorResponseBody>
+        ResponseBody["_input"],
+        ErrorResponseBody["_input"]
     >
     readonly responseSchema: ResponseBody
     readonly errorSchema: ErrorResponseBody | null
@@ -51,6 +48,8 @@ export class RaidHubRoute<
     // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
         method: M
+        descritiption?: string
+        summary?: string
         params?: Params
         query?: Query
         body?: Body
@@ -59,8 +58,8 @@ export class RaidHubRoute<
             Params,
             Query,
             Body,
-            z.infer<ResponseBody>,
-            z.infer<ErrorResponseBody>
+            ResponseBody["_input"],
+            ErrorResponseBody["_input"]
         >
         response: {
             success: ResponseBody
@@ -86,8 +85,10 @@ export class RaidHubRoute<
         res,
         next
     ) => {
-        if (!this.paramsSchema) return next()
-
+        if (!this.paramsSchema) {
+            req.params = {}
+            return next()
+        }
         const parsed = this.paramsSchema.safeParse(req.params)
         if (parsed.success) {
             req.params = parsed.data
@@ -111,7 +112,10 @@ export class RaidHubRoute<
         res,
         next
     ) => {
-        if (!this.querySchema) return next()
+        if (!this.querySchema) {
+            req.query = {}
+            return next()
+        }
         const parsed = this.querySchema.safeParse(req.query)
         if (parsed.success) {
             req.query = parsed.data
@@ -162,7 +166,7 @@ export class RaidHubRoute<
                 if (result.success) {
                     res.status(this.method === "get" ? 200 : 201).json(result)
                 } else {
-                    res.status(result.statusCode).json(result)
+                    res.status(404).json(result)
                 }
             } catch (e) {
                 next(e)
@@ -192,8 +196,8 @@ export class RaidHubRoute<
     // Used for testing to mcok a request by passing the data directly to the handler
     async mock(req: { params?: unknown; query?: unknown; body?: unknown }) {
         const res = await this.handler({
-            params: this.paramsSchema?.parse(req.params) ?? req.params,
-            query: this.querySchema?.parse(req.query) ?? req.query,
+            params: this.paramsSchema?.parse(req.params) ?? {},
+            query: this.querySchema?.parse(req.query) ?? {},
             body: this.bodySchema?.parse(req.body) ?? req.body
         })
 
@@ -212,73 +216,54 @@ export class RaidHubRoute<
             } as const
         }
     }
+
+    openApiRoutes() {
+        return [
+            {
+                path: "",
+                method: this.method,
+                description: this.description,
+                summary: this.summary,
+                request: {
+                    params: this.paramsSchema ?? undefined,
+                    query: (this.querySchema as ZodObject<any>) ?? undefined,
+                    body: this.bodySchema
+                        ? {
+                              content: {
+                                  "application/json": {
+                                      schema: this.bodySchema
+                                  }
+                              }
+                          }
+                        : undefined
+                },
+                responses: {
+                    ...(this.responseSchema
+                        ? {
+                              [this.method === "get" ? 200 : 201]: {
+                                  description: "Success",
+                                  content: {
+                                      "application/json": {
+                                          schema: this.responseSchema
+                                      }
+                                  }
+                              }
+                          }
+                        : {}),
+                    ...(this.errorSchema
+                        ? {
+                              [404]: {
+                                  description: "Not found",
+                                  content: {
+                                      "application/json": {
+                                          schema: this.errorSchema
+                                      }
+                                  }
+                              }
+                          }
+                        : {})
+                }
+            }
+        ]
+    }
 }
-
-export function ok<T>(response: T, message?: string) {
-    return {
-        minted: new Date(),
-        message,
-        response,
-        success: true
-    } satisfies RaidHubResponse<T, any>
-}
-
-export function fail<E>(error: E, code: number, message?: string) {
-    return {
-        minted: new Date(),
-        message,
-        error,
-        statusCode: code,
-        success: false
-    } satisfies RaidHubResponse<any, E>
-}
-
-/**
- * The below errors are various errors that middleware can throw
- */
-//
-
-export const validationError = z.object({
-    minted: z.date(),
-    message: z.union([
-        z.literal("Invalid path params"),
-        z.literal("Invalid query params"),
-        z.literal("Invalid JSON body")
-    ]),
-    success: z.literal(false),
-    statusCode: z.union([z.literal(400), z.literal(404)]),
-    error: z.any()
-})
-
-export const serverError = z.object({
-    message: z.literal("Something went wrong."),
-    minted: z.date(),
-    success: z.literal(false),
-    statusCode: z.literal(500),
-    error: z.object({
-        type: z.string(),
-        at: z.string().nullable()
-    })
-})
-
-export const adminProtectedError = z.object({
-    message: z.literal("Forbidden"),
-    minted: z.date(),
-    success: z.literal(false),
-    statusCode: z.literal(403),
-    error: z.object({
-        type: z.literal("forbidden")
-    })
-})
-
-export const corsError = z.object({
-    message: z.union([z.literal("Invalid API Key"), z.literal("Missing API Key")]),
-    minted: z.date(),
-    success: z.literal(false),
-    statusCode: z.literal(401),
-    error: z.object({
-        type: z.literal("cors"),
-        apiKey: z.string().nullable(),
-        origin: z.string().nullable()
-    })
-})

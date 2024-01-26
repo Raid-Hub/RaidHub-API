@@ -5,8 +5,8 @@ import {
     PrismaClientValidationError
 } from "@prisma/client/runtime/library"
 import { ErrorRequestHandler } from "express"
-import { serverError } from "../RaidHubRoute"
-import { z } from "zod"
+import { serverError } from "../RaidHubErrors"
+import { z } from "../util/zod"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {

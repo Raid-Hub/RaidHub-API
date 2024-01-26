@@ -1,24 +1,22 @@
-import { z } from "zod"
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { playerRouterParams } from "./_schema"
-import { zBigIntString, zCount } from "../../util/zod-common"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne } from "../../data/raceDates"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
 import { zActivityPlayerData } from "../../util/schema-common"
+import { z, zBigIntString, zCount } from "../../util/zod"
+import { playerRouterParams } from "./_schema"
 
 export const playerActivitiesRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    query: z
-        .object({
-            count: zCount({
-                min: 50,
-                def: 2000,
-                max: 5000
-            }),
-            cursor: zBigIntString().optional()
-        })
-        .default({ count: 2000 }),
+    query: z.object({
+        count: zCount({
+            min: 50,
+            def: 2000,
+            max: 5000
+        }),
+        cursor: zBigIntString().optional()
+    }),
     middlewares: [
         (req, res, next) => {
             // save the previous send method
@@ -44,7 +42,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
             count
         })
         if (!data) {
-            return fail({ membershipId, notFound: true }, 404, "Player not found")
+            return fail({ membershipId, notFound: true }, "Player not found")
         } else {
             return ok(data)
         }

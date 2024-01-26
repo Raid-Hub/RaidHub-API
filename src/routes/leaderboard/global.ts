@@ -1,10 +1,10 @@
-import { z } from "zod"
-import { Player } from "@prisma/client"
-import { RaidHubRoute, ok } from "../../RaidHubRoute"
-import { zIndividualLeaderboardEntry, zLeaderboardQueryPagination } from "./_schema"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { GlobalBoards } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { ok } from "../../util/response"
+import { z } from "../../util/zod"
 import { getGlobalLeaderboardEntries } from "./_common"
+import { zIndividualLeaderboardEntry, zLeaderboardQueryPagination } from "./_schema"
 
 export const leaderboardGlobalRoute = new RaidHubRoute({
     method: "get",

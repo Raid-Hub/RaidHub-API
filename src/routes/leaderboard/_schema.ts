@@ -1,6 +1,5 @@
-import { z } from "zod"
-import { zCount, zPage } from "../../util/zod-common"
 import { CommonPlayerSchema, zActivity, zActivityPlayer } from "../../util/schema-common"
+import { z, zCount, zPage } from "../../util/zod"
 
 export const zLeaderboardQueryPagination = z.object({
     count: zCount({ min: 25, max: 100, def: 50 }),

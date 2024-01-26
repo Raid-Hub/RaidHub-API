@@ -1,5 +1,5 @@
-import { z } from "zod"
 import { BungieMembershipType, DestinyActivityModeType } from "bungie-net-core/enums"
+import { z } from "../util/zod"
 
 const DestinyHistoricalStatsValuePairSchema = z
     .object({

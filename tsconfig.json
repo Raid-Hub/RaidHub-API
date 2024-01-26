@@ -1,20 +1,20 @@
 {
-    "compilerOptions": {
-        "target": "ES2020",
-        "allowJs": true,
-        "module": "commonjs",
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "noImplicitAny": true,
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "types": ["node", "jest"],
-        "lib": ["es6", "esnext"],
-        "resolveJsonModule": true,
-        "moduleResolution": "node"
-    },
-    "include": ["src/**/*.ts"],
-    "exclude": ["scripts/*"]
+  "compilerOptions": {
+    "target": "ES2020",
+    "allowJs": true,
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node", "jest"],
+    "lib": ["es6", "esnext"],
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["scripts/*"]
 }

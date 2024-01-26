@@ -1,11 +1,11 @@
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { playerRouterParams } from "./_schema"
-import { z } from "zod"
-import { cacheControl } from "../../middlewares/cache-control"
-import { zBigIntString } from "../../util/zod-common"
-import { ListedRaid } from "../../data/raids"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
+import { ListedRaid } from "../../data/raids"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
+import { z, zBigIntString } from "../../util/zod"
+import { playerRouterParams } from "./_schema"
 
 export const playerProfileRoute = new RaidHubRoute({
     method: "get",
@@ -16,7 +16,6 @@ export const playerProfileRoute = new RaidHubRoute({
         if (!data) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                404,
                 "Player not found"
             )
         } else {

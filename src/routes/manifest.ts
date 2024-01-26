@@ -1,3 +1,9 @@
+import { RaidHubRoute } from "../RaidHubRoute"
+import {
+    ClearsLeaderboardsForRaid,
+    IndividualBoard,
+    IndividualBoardNames
+} from "../data/leaderboards"
 import {
     AllRaidHashes,
     ContestRaids,
@@ -10,16 +16,11 @@ import {
     ReprisedRaidDifficultyPairings,
     SunsetRaids
 } from "../data/raids"
-import { groupBy } from "../util/helpers"
 import { cacheControl } from "../middlewares/cache-control"
-import { RaidHubRoute, ok } from "../RaidHubRoute"
-import { prisma } from "../prisma"
-import { z } from "zod"
-import {
-    ClearsLeaderboardsForRaid,
-    IndividualBoard,
-    IndividualBoardNames
-} from "../data/leaderboards"
+import { prisma } from "../services/prisma"
+import { groupBy } from "../util/helpers"
+import { ok } from "../util/response"
+import { z, zNumberEnum } from "../util/zod"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -57,11 +58,11 @@ export const manifestRoute = new RaidHubRoute({
             raids,
             difficulties,
             hashes: AllRaidHashes,
-            listed: ListedRaids,
-            sunset: SunsetRaids,
-            contest: ContestRaids,
-            master: MasterRaids,
-            prestige: PrestigeRaids,
+            listed: [...ListedRaids],
+            sunset: [...SunsetRaids],
+            contest: [...ContestRaids],
+            master: [...MasterRaids],
+            prestige: [...PrestigeRaids],
             reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
                 raid,
                 difficulty
@@ -92,11 +93,11 @@ export const manifestRoute = new RaidHubRoute({
                         difficulty: z.number()
                     })
                 ),
-                listed: z.array(z.number()).readonly(),
-                sunset: z.array(z.number()).readonly(),
-                contest: z.array(z.number()).readonly(),
-                master: z.array(z.number()).readonly(),
-                prestige: z.array(z.number()).readonly(),
+                listed: z.array(zNumberEnum(ListedRaids)),
+                sunset: z.array(zNumberEnum(SunsetRaids)),
+                contest: z.array(zNumberEnum(ContestRaids)),
+                master: z.array(zNumberEnum(MasterRaids)),
+                prestige: z.array(zNumberEnum(PrestigeRaids)),
                 reprisedChallengePairings: z.array(
                     z.object({
                         raid: z.number(),

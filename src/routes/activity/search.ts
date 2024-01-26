@@ -1,13 +1,12 @@
-import { includedIn } from "../../util/helpers"
-import { z } from "zod"
 import { Prisma } from "@prisma/client"
-import { RaidHubRoute, ok } from "../../RaidHubRoute"
-import { zBigIntString, zBooleanString } from "../../util/zod-common"
-import { type ListedRaid, ListedRaids, RaidHashes } from "../../data/raids"
-import { cacheControl } from "../../middlewares/cache-control"
-import { SeasonDates } from "../../data/seasonDates"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne } from "../../data/raceDates"
+import { ListedRaids, RaidHashes, type ListedRaid } from "../../data/raids"
+import { SeasonDates } from "../../data/seasonDates"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../services/prisma"
+import { ok } from "../../util/response"
+import { z, zBigIntString, zBooleanString, zDigitString, zNumberEnum } from "../../util/zod"
 
 // Todo: add a query param for the difficulty
 export const activitySearchQuerySchema = z
@@ -24,24 +23,13 @@ export const activitySearchQuerySchema = z
         fresh: zBooleanString().optional(),
         completed: zBooleanString().optional(),
         flawless: zBooleanString().optional(),
-        raid: z.coerce
-            .number()
-            .int()
-            .refine(n => includedIn(ListedRaids, n), {
-                message: "invalid raid value"
-            })
-            .optional(),
+        raid: zNumberEnum(ListedRaids).optional(),
         platformType: z.coerce.number().int().positive().optional(),
         reversed: z.coerce.boolean().default(false),
         count: z.coerce.number().int().positive().default(25),
         page: z.coerce.number().int().positive().default(1)
     })
     .strip()
-    .transform(({ membershipId, raid, ...q }) => ({
-        membershipIds: membershipId,
-        raid: raid as ListedRaid | undefined,
-        ...q
-    }))
 
 export const activitySearchRoute = new RaidHubRoute({
     method: "get",
@@ -76,8 +64,8 @@ export const activitySearchRoute = new RaidHubRoute({
                 results: z.array(
                     z
                         .object({
-                            instanceId: z.string(),
-                            raidHash: z.string(),
+                            instanceId: zDigitString(),
+                            raidHash: zDigitString(),
                             fresh: z.boolean(),
                             completed: z.boolean(),
                             flawless: z.boolean(),
@@ -110,7 +98,7 @@ type ActivitySearchResult = {
 }
 
 async function searchActivities({
-    membershipIds,
+    membershipId: membershipIds,
     minPlayers,
     maxPlayers,
     minSeason,

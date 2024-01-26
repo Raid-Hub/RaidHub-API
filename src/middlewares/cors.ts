@@ -1,12 +1,12 @@
 import { RequestHandler } from "express"
-import { corsError } from "../RaidHubRoute"
+import { corsError } from "../RaidHubErrors"
 import { includedIn } from "../util/helpers"
-import { z } from "zod"
+import { z } from "../util/zod"
 
 const isValidOrigin = (origin: string) => /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.io$/.test(origin)
 
 export const options: RequestHandler = (req, res, _) => {
-    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    res.header("Access-Control-Allow-Methods", "get,POST,OPTIONS")
     res.header("Access-Control-Allow-Origin", (req.headers.origin || "*").toString())
     res.header("Access-Control-Allow-Headers", "*")
     res.sendStatus(204)

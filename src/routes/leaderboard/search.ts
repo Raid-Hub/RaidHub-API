@@ -1,24 +1,19 @@
-import { string, z } from "zod"
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { zBigIntString, zDigitString } from "../../util/zod-common"
-import { cacheControl } from "../../middlewares/cache-control"
-import {
-    RaidPath,
-    zIndividualLeaderboardEntry,
-    zRaidSchema,
-    zWorldFirstLeaderboardEntry
-} from "./_schema"
-import { prisma } from "../../prisma"
+import { WorldFirstLeaderboardType } from "@prisma/client"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import {
     GlobalBoard,
     GlobalBoards,
     IndividualBoard,
     IndividualBoards,
-    UrlPathsToRaid,
     WorldFirstBoards,
     WorldFirstBoardsMap
 } from "../../data/leaderboards"
-import { IndividualLeaderboard, WorldFirstLeaderboardType } from "@prisma/client"
+import { ListedRaid, ListedRaids } from "../../data/raids"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
+import { fail, ok } from "../../util/response"
+import { z, zBigIntString } from "../../util/zod"
 import {
     GlobalBoardPositionKeys,
     IndividualBoardPositionKeys,
@@ -26,8 +21,7 @@ import {
     getIndividualLeaderboardEntries,
     getWorldFirstLeaderboardEntries
 } from "./_common"
-import { ListedRaid, ListedRaids } from "../../data/raids"
-import { includedIn } from "../../util/helpers"
+import { zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry } from "./_schema"
 
 const CommonQueryParams = z.object({
     membershipId: zBigIntString(),
@@ -39,15 +33,27 @@ const SearchQuery = z.discriminatedUnion("type", [
         type: z.literal("worldfirst"),
         category: z.enum(WorldFirstBoards).transform(v => WorldFirstBoardsMap[v]),
         raid: z.coerce.number().refine(r => includedIn(ListedRaids, r))
+    }).openapi("t1", {
+        param: {
+            name: "t1"
+        }
     }),
     CommonQueryParams.extend({
         type: z.literal("individual"),
         category: z.enum(IndividualBoards),
         raid: z.coerce.number().refine(r => includedIn(ListedRaids, r))
+    }).openapi("t2", {
+        param: {
+            name: "t2"
+        }
     }),
     CommonQueryParams.extend({
         type: z.literal("global"),
         category: z.enum(GlobalBoards)
+    }).openapi("t3", {
+        param: {
+            name: "t3"
+        }
     })
 ])
 
@@ -60,7 +66,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "individual":
                 const individualResults = await searchIndividualLeaderboard(req.query)
                 if (!individualResults)
-                    return fail({ notFound: true, params: req.query }, 404, "Player not found")
+                    return fail({ notFound: true, params: req.query }, "Player not found")
 
                 return ok({
                     params: req.query,
@@ -72,7 +78,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "worldfirst":
                 const wfResults = await searchWorldFirstLeaderboard(req.query)
                 if (!wfResults)
-                    return fail({ notFound: true, params: req.query }, 404, "Player not found")
+                    return fail({ notFound: true, params: req.query }, "Player not found")
 
                 return ok({
                     params: req.query,
@@ -84,7 +90,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "global":
                 const globalResults = await searchGlobalLeaderboard(req.query)
                 if (!globalResults)
-                    return fail({ notFound: true, params: req.query }, 404, "Player not found")
+                    return fail({ notFound: true, params: req.query }, "Player not found")
 
                 return ok({
                     params: req.query,

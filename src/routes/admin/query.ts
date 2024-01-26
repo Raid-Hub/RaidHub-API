@@ -1,7 +1,8 @@
-import { RaidHubRoute, ok } from "../../RaidHubRoute"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
-import { prisma } from "../../prisma"
-import { z } from "zod"
+import { prisma } from "../../services/prisma"
+import { ok } from "../../util/response"
+import { z } from "../../util/zod"
 
 export const adminQueryRoute = new RaidHubRoute({
     method: "post",

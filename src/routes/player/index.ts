@@ -1,17 +1,30 @@
-import { Router } from "express"
-import { playerBasicRoute } from "./basic"
+import { RaidHubRouter } from "../../RaidHubRouter"
 import { playerActivitiesRoute } from "./activities"
+import { playerBasicRoute } from "./basic"
 import { playerProfileRoute } from "./profile"
 import { playerSearchRoute } from "./search"
 
-export const playerRouter = Router({
-    strict: true
+export const playerRouter = new RaidHubRouter({
+    routes: [
+        { path: "/search", route: playerSearchRoute },
+        {
+            path: "/:membershipId",
+            route: new RaidHubRouter({
+                routes: [
+                    {
+                        path: "/activities",
+                        route: playerActivitiesRoute
+                    },
+                    {
+                        path: "/basic",
+                        route: playerBasicRoute
+                    },
+                    {
+                        path: "/profile",
+                        route: playerProfileRoute
+                    }
+                ]
+            })
+        }
+    ]
 })
-
-const membershipIdRouter = Router({ mergeParams: true, strict: true })
-playerRouter.use("/:membershipId", membershipIdRouter)
-membershipIdRouter.use("/activities", playerActivitiesRoute.express)
-membershipIdRouter.use("/basic", playerBasicRoute.express)
-membershipIdRouter.use("/profile", playerProfileRoute.express)
-
-playerRouter.use("/search", playerSearchRoute.express)

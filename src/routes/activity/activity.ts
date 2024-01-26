@@ -1,9 +1,9 @@
-import { z } from "zod"
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { zBigIntString } from "../../util/zod-common"
-import { cacheControl } from "../../middlewares/cache-control"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
+import { cacheControl } from "../../middlewares/cache-control"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
+import { z, zBigIntString, zDigitString } from "../../util/zod"
 
 export const activityRootRoute = new RaidHubRoute({
     method: "get",
@@ -17,11 +17,7 @@ export const activityRootRoute = new RaidHubRoute({
         const data = await getActivity({ instanceId })
 
         if (!data) {
-            return fail(
-                { notFound: true, instanceId: req.params.instanceId },
-                404,
-                "Activity not found"
-            )
+            return fail({ notFound: true, instanceId: req.params.instanceId }, "Activity not found")
         } else {
             return ok(data)
         }
@@ -29,8 +25,8 @@ export const activityRootRoute = new RaidHubRoute({
     response: {
         success: z
             .object({
-                instanceId: zBigIntString(),
-                raidHash: zBigIntString(),
+                instanceId: zDigitString(),
+                raidHash: zDigitString(),
                 dateStarted: z.date(),
                 dateCompleted: z.date(),
                 duration: z.number(),
@@ -54,7 +50,7 @@ export const activityRootRoute = new RaidHubRoute({
             .strict(),
         error: z.object({
             notFound: z.boolean(),
-            instanceId: zBigIntString()
+            instanceId: zDigitString()
         })
     }
 })

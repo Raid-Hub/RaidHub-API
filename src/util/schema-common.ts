@@ -1,5 +1,5 @@
-import { z } from "zod"
-import { zBigIntString } from "./zod-common"
+import { z } from "../util/zod"
+import { zBigIntString } from "./zod"
 
 export const CommonPlayerSchema = z
     .object({

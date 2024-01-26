@@ -34,7 +34,8 @@ app.use(cors)
 // parse incoming request body with json
 app.use(express.json())
 
-app.use(router)
+// apply the router
+app.use(router.express)
 
 // handle any uncaught errors
 app.use(errorHandler)

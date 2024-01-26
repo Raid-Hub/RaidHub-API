@@ -1,5 +1,4 @@
-import { z } from "zod"
-import { zBigIntString } from "../../util/zod-common"
+import { z, zBigIntString } from "../../util/zod"
 
 export const playerRouterParams = z.object({
     membershipId: zBigIntString()

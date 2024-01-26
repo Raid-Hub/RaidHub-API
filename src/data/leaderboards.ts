@@ -1,5 +1,5 @@
-import { ListedRaid, Raid } from "./raids"
 import { PlayerStats, WorldFirstLeaderboardType } from "@prisma/client"
+import { ListedRaid, Raid } from "./raids"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
 export type WorldFirstBoard = (typeof WorldFirstBoards)[number]

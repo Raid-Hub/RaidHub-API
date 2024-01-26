@@ -1,9 +1,9 @@
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { playerRouterParams } from "./_schema"
-import { z } from "zod"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
-import { prisma } from "../../prisma"
-import { zBigIntString } from "../../util/zod-common"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
+import { z, zBigIntString } from "../../util/zod"
+import { playerRouterParams } from "./_schema"
 
 export const playerBasicRoute = new RaidHubRoute({
     method: "get",
@@ -28,7 +28,7 @@ export const playerBasicRoute = new RaidHubRoute({
         if (!member) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                404,
+
                 "Player not found"
             )
         } else {

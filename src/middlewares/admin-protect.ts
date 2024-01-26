@@ -1,6 +1,6 @@
 import { RequestHandler } from "express"
-import { adminProtectedError } from "../RaidHubRoute"
-import { z } from "zod"
+import { adminProtectedError } from "../RaidHubErrors"
+import { z } from "../util/zod"
 
 function isAdminAuthorized(key: string | undefined) {
     return key != undefined && key === process.env.ADMIN_KEY

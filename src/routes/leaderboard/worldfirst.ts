@@ -1,13 +1,10 @@
-import { z } from "zod"
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { RaidPathSchema, zLeaderboardQueryPagination, zWorldFirstLeaderboardEntry } from "./_schema"
-import { WorldFirstLeaderboardType } from "@prisma/client"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid, WorldFirstBoards, WorldFirstBoardsMap } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zBigIntString } from "../../util/zod-common"
-import { ListedRaid } from "../../data/raids"
-import { prisma } from "../../prisma"
+import { fail, ok } from "../../util/response"
+import { z } from "../../util/zod"
 import { getWorldFirstLeaderboardEntries } from "./_common"
+import { RaidPathSchema, zLeaderboardQueryPagination, zWorldFirstLeaderboardEntry } from "./_schema"
 
 export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
     method: "get",
@@ -27,7 +24,6 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
         if (!leaderboard) {
             return fail(
                 { notFound: true, params: { ...req.params, ...req.query } },
-                404,
                 "Leaderboard not found"
             )
         } else {

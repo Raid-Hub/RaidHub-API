@@ -1,10 +1,13 @@
-import { Router } from "express"
-import { adminQueryRoute } from "./query"
+import { RaidHubRouter } from "../../RaidHubRouter"
 import { adminProtected } from "../../middlewares/admin-protect"
+import { adminQueryRoute } from "./query"
 
-export const adminRouter = Router({
-    strict: true
+export const adminRouter = new RaidHubRouter({
+    middlewares: [adminProtected],
+    routes: [
+        {
+            path: "/query",
+            route: adminQueryRoute
+        }
+    ]
 })
-
-adminRouter.use(adminProtected)
-adminRouter.use("/query", adminQueryRoute.express)
