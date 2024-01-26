@@ -28,8 +28,11 @@ jobs:
                   if_key_exists: ignore
 
             - name: Tunnel to VPS
+              env:
+                  TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
+                  TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
               run: |
-                  ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h -H 'CF-Access-Client-Id: ${{ secrets.CF_GHA_CLIENT_ID }}' -H 'CF-Access-Client-Secret: ${{ secrets.CF_GHA_CLIENT_SECRET }}'" -i ~/.ssh/gapk root@ssh.raidhub.io &
+                  ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h" -i ~/.ssh/gapk root@ssh.raidhub.io &
 
             - name: Run Tests
               env:

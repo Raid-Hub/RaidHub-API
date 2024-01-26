@@ -108,6 +108,9 @@ export async function getWorldFirstLeaderboardEntries(params: {
                         lte: params.page * params.count
                     }
                 },
+                orderBy: {
+                    position: "asc"
+                },
                 include: {
                     activity: {
                         include: {
