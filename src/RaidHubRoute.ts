@@ -255,7 +255,10 @@ export const serverError = z.object({
     minted: z.date(),
     success: z.literal(false),
     statusCode: z.literal(500),
-    error: z.any()
+    error: z.object({
+        type: z.string(),
+        at: z.string().nullable()
+    })
 })
 
 export const adminProtectedError = z.object({

@@ -1,4 +1,6 @@
 import {
+    PrismaClientInitializationError,
+    PrismaClientKnownRequestError,
     PrismaClientUnknownRequestError,
     PrismaClientValidationError
 } from "@prisma/client/runtime/library"
@@ -8,18 +10,20 @@ import { z } from "zod"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
-    let details: any = "Unknown"
-
-    if (err instanceof PrismaClientValidationError) {
-        details = {
-            ...err
-        }
+    let details: z.infer<typeof serverError>["error"] & Record<string, any> = {
+        type: "unknown",
+        at: null
     }
 
-    if (err instanceof PrismaClientUnknownRequestError) {
+    if (
+        err instanceof PrismaClientInitializationError ||
+        err instanceof PrismaClientValidationError ||
+        err instanceof PrismaClientUnknownRequestError ||
+        err instanceof PrismaClientKnownRequestError
+    ) {
         details = {
-            ...err,
-            cause: err.message.split("`")[1]
+            type: err.name,
+            at: err.message.split("`")[1]
         }
     }
 

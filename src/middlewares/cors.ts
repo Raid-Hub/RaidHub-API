@@ -5,7 +5,15 @@ import { z } from "zod"
 
 const isValidOrigin = (origin: string) => /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.io$/.test(origin)
 
+export const options: RequestHandler = (req, res, _) => {
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    res.header("Access-Control-Allow-Origin", (req.headers.origin || "*").toString())
+    res.header("Access-Control-Allow-Headers", "*")
+    res.sendStatus(204)
+}
+
 export const cors: RequestHandler = (req, res, next) => {
+    res.set("Access-Control-Allow-Origin", (req.headers.origin || "*").toString())
     if (!process.env.PROD) {
         next()
     } else if (
