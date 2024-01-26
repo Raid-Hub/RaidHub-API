@@ -21,7 +21,7 @@ function genOpenAPIDoc() {
         info: {
             title: "RaidHub API",
             description: "Semi-public API for RaidHub",
-            version: "0.0.1"
+            version: "0.0.0"
         },
         servers: [{ url: "https://api.raidhub.io" }]
     })
