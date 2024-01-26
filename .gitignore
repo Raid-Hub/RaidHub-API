@@ -16,5 +16,9 @@ test.js
 *.deb
 *.dbml
 
-prisma/scripts/*
-prisma/migration.sql
+*.sql
+!prisma/1_extensions/migration.sql
+!prisma/2_schema/migration.sql
+!prisma/3_data/migration.sql
+!prisma/4_materialized-views/migration.sql
+!prisma/5_functions/migration.sql
