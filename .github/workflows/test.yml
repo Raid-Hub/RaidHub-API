@@ -1,7 +1,13 @@
 name: Run Tests
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+    cancel-in-progress: true
+
 on:
     pull_request:
+        branches:
+            - main
     workflow_dispatch:
 
 jobs:
@@ -39,4 +45,70 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test
+                  yarn test --coverage --coverageReporters="lcov"
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
+              with:
+                  name: test-coverage.info
+                  path: ./coverage/lcov.info
+                  if-no-files-found: error
+    compare-coverage:
+        runs-on: ubuntu-latest
+        needs: test
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.base_ref }}
+
+            - name: Download code coverage report from this branch
+              uses: actions/download-artifact@v4
+              with:
+                  name: test-coverage.info
+
+            - name: Install cloudflared
+              run: |
+                  curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
+                  echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee  /etc/apt/sources.list.d/cloudflared.list
+                  sudo apt update
+                  sudo apt-get install cloudflared
+                  cloudflared --version
+
+            - name: Load SSH Key
+              uses: shimataro/ssh-key-action@v2
+              with:
+                  key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+                  known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+                  name: gapk
+                  if_key_exists: ignore
+
+            - name: Install dependencies
+              run: yarn && yarn prisma generate
+
+            - name: Tunnel to VPS
+              env:
+                  TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
+                  TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
+              run: |
+                  ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h" -i ~/.ssh/gapk root@ssh.raidhub.io &
+
+            - name: Run Tests
+              env:
+                  DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
+              run: |
+                  yarn && yarn prisma generate
+                  yarn test --coverage --coverageReporters="lcov"
+
+            #  Compares two code coverage files and generates report as a comment
+            - name: Generate Code Coverage report
+              id: code-coverage
+              uses: barecheck/code-coverage-action@v1
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
+                  lcov-file: "./lcov.info"
+                  base-lcov-file: "./coverage/lcov.info"
+                  minimum-ratio: 0 # Fails Github action once code coverage is decreasing
+                  send-summary-comment: true
+                  show-annotations: "warning" # Possible options warning|error

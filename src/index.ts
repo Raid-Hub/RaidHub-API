@@ -1,7 +1,5 @@
 import dotenv from "dotenv"
 import express from "express"
-import path from "path"
-import { cacheControl } from "./middlewares/cache-control"
 import { cors, options } from "./middlewares/cors"
 import { errorHandler } from "./middlewares/errorHandler"
 import { router } from "./routes"
@@ -21,9 +19,6 @@ if (process.env.PROD && !process.env.PRIVATE_KEY_PROD) {
 }
 
 const app = express()
-
-// serve the open-api docs at /docs
-app.use("/docs", cacheControl(15), express.static(path.join(__dirname, "../open-api/docs.html")))
 
 app.use("*", (_, res, next) => {
     res.header("X-Processed-By", String(process.pid))

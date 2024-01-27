@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "RaidHub API",
-    "description": "Semi-public API for RaidHub",
+    "description": "The Semi-public API for RaidHub",
     "version": "0.0.0"
   },
   "servers": [
@@ -44,9 +44,7 @@
           },
           "iconPath": {
             "type": "string",
-            "nullable": true,
-            "pattern": "\\/common\\/destiny2_content\\/icons\\/\\w+\\.(jpg|gif)",
-            "example": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg"
+            "nullable": true
           },
           "displayName": {
             "type": "string",
@@ -59,6 +57,10 @@
           "bungieGlobalDisplayNameCode": {
             "type": "string",
             "nullable": true
+          },
+          "lastSeen": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -67,7 +69,8 @@
           "iconPath",
           "displayName",
           "bungieGlobalDisplayName",
-          "bungieGlobalDisplayNameCode"
+          "bungieGlobalDisplayNameCode",
+          "lastSeen"
         ],
         "additionalProperties": false,
         "example": {
@@ -76,7 +79,8 @@
           "membershipId": "4611686018488107374",
           "displayName": "xx_newo_xx",
           "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
-          "membershipType": 3
+          "membershipType": 3,
+          "lastSeen": "2021-05-01T00:00:00.000Z"
         }
       },
       "Activity": {
@@ -220,11 +224,11 @@
           {
             "type": "object",
             "properties": {
-              "player": {
+              "data": {
                 "$ref": "#/components/schemas/ActivityPlayerData"
               }
             },
-            "required": ["player"],
+            "required": ["data"],
             "additionalProperties": false
           }
         ],
@@ -234,7 +238,8 @@
           "membershipId": "4611686018488107374",
           "displayName": "xx_newo_xx",
           "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
-          "membershipType": 3
+          "membershipType": 3,
+          "lastSeen": "2021-05-01T00:00:00.000Z"
         }
       },
       "ActivityWithPlayerData": {
@@ -1050,7 +1055,31 @@
                     "results": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/PlayerInfo"
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/PlayerInfo"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "clears": {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            },
+                            "required": ["clears"],
+                            "additionalProperties": false
+                          }
+                        ],
+                        "example": {
+                          "bungieGlobalDisplayName": "Newo",
+                          "bungieGlobalDisplayNameCode": "9010",
+                          "membershipId": "4611686018488107374",
+                          "displayName": "xx_newo_xx",
+                          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
+                          "membershipType": 3,
+                          "lastSeen": "2021-05-01T00:00:00.000Z"
+                        }
                       }
                     }
                   },
@@ -1125,14 +1154,20 @@
                           {
                             "type": "object",
                             "properties": {
-                              "raidId": {
-                                "$ref": "#/components/schemas/RaidEnum"
-                              },
-                              "versionId": {
-                                "$ref": "#/components/schemas/RaidVersionEnum"
+                              "raid": {
+                                "type": "object",
+                                "properties": {
+                                  "raidId": {
+                                    "$ref": "#/components/schemas/RaidEnum"
+                                  },
+                                  "versionId": {
+                                    "$ref": "#/components/schemas/RaidVersionEnum"
+                                  }
+                                },
+                                "required": ["raidId", "versionId"]
                               }
                             },
-                            "required": ["raidId", "versionId"],
+                            "required": ["raid"],
                             "additionalProperties": false
                           }
                         ]
@@ -2088,14 +2123,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "fullClears",
-                "clears",
-                "sherpas",
-                "trios",
-                "duos",
-                "solos"
-              ]
+              "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
             },
             "required": true,
             "name": "category",
@@ -2142,7 +2170,7 @@
                         "category": {
                           "type": "string",
                           "enum": [
-                            "fullClears",
+                            "fresh",
                             "clears",
                             "sherpas",
                             "trios",
@@ -2291,7 +2319,7 @@
                           "players": {
                             "type": "array",
                             "items": {
-                              "$ref": "#/components/schemas/PlayerInfo"
+                              "$ref": "#/components/schemas/PlayerWithActivityData"
                             }
                           }
                         },

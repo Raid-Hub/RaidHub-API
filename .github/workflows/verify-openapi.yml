@@ -1,0 +1,29 @@
+name: Generate and Verify OpenAPI doc
+
+on:
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    generate-and-verify:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+
+            - name: Install dependencies
+              run: yarn
+
+            - name: Generate File
+              run: |
+                  cp ./open-api/openapi.json .
+                  yarn docs
+
+            - name: Verify File
+              run: |
+                  if ! diff -q ./open-api/openapi.json ./openapi.json; then
+                    echo "The openapi.json file is not up to date. Please run 'yarn docs' and commit the changes."
+                    exit 1
+                  fi
