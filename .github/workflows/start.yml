@@ -16,23 +16,16 @@ jobs:
                   fi
 
             - name: Install cloudflared
-              run: |
-                  curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
-                  echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee  /etc/apt/sources.list.d/cloudflared.list
-                  sudo apt update
-                  sudo apt-get install cloudflared
-                  cloudflared --version
+              run: ./.github/scripts/install-cloudflared.sh
 
             - name: Load SSH Key
               uses: shimataro/ssh-key-action@v2
               with:
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
-                  name: gapk
-                  if_key_exists: fail
 
             - name: Deploy API
               env:
                   TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
-              run: ssh -o ProxyCommand="cloudflared access ssh --hostname %h" -i ~/.ssh/gapk root@ssh.raidhub.io "cd ../RaidHub/RaidHub-API && ./deploy.sh"
+              run: ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io "cd ../RaidHub/RaidHub-API && ./deploy.sh"
