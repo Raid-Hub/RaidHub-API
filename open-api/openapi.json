@@ -245,9 +245,6 @@
       "ActivityWithPlayerData": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ActivityExtended"
-          },
-          {
             "type": "object",
             "properties": {
               "player": {
