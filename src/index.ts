@@ -22,8 +22,13 @@ if (process.env.PROD && !process.env.PRIVATE_KEY_PROD) {
 
 const app = express()
 
-// serve the open-api docs at /docs
-app.use("/docs", cacheControl(15), express.static(path.join(__dirname, "../open-api/docs.html")))
+app.get("/docs", cacheControl(15), express.static(path.join(__dirname, "../open-api/docs.html")))
+
+app.get(
+    "/coverage",
+    cacheControl(15),
+    express.static(path.join(__dirname, "../coverage/index.html"))
+)
 
 app.use("*", (_, res, next) => {
     res.header("X-Processed-By", String(process.pid))
