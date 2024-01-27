@@ -22,8 +22,6 @@ jobs:
               with:
                   github_token: ${{secrets.GITHUB_TOKEN}}
                   workflow: Generate Coverage Report
-                  name: test-coverage.info
-                  if_no_artifact_found: fail
 
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
