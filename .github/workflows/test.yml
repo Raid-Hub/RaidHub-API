@@ -21,8 +21,7 @@ jobs:
               uses: dawidd6/action-download-artifact@v3
               with:
                   github_token: ${{secrets.GITHUB_TOKEN}}
-                  workflow: Generate Coverage
-                  workflow_conclusion: success
+                  workflow: Generate Coverage Report
                   name: test-coverage.info
                   if_no_artifact_found: fail
 

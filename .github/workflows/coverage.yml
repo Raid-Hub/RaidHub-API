@@ -1,4 +1,4 @@
-name: Generate Coverage
+name: Generate Coverage Report
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
@@ -9,6 +9,9 @@ on:
         branches:
             - main
     workflow_dispatch:
+    pull_request:
+        branches:
+            - main
 
 jobs:
     coverage:
