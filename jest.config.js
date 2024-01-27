@@ -2,6 +2,7 @@
 module.exports = {
     coverageReporters: ["lcov"],
     preset: "ts-jest",
+    testTimeout: 15000,
     testEnvironment: "node",
     modulePathIgnorePatterns: ["dist/*"],
     transform: {

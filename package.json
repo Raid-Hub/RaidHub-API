@@ -14,7 +14,7 @@
     "db:reset": "prisma migrate reset --force",
     "db:seed": "ts-node ./prisma/seed.ts",
     "db:migrate": "prisma migrate dev --create-only",
-    "test": "jest --testTimeout=15000",
+    "test": "jest",
     "lint": "eslint . --ext .ts,.json",
     "types": "tsc --noEmit",
     "format": "prettier --write '**/*.{ts,json}'",
