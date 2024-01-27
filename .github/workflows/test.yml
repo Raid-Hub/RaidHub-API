@@ -63,7 +63,7 @@ jobs:
                   ref: ${{ github.base_ref }}
 
             - name: Download code coverage report from this branch
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                   name: test-coverage.info
 
