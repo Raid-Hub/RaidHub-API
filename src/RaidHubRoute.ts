@@ -181,14 +181,9 @@ export class RaidHubRoute<
             this.controller
         ] as const
 
-        switch (this.method) {
-            case "get":
-                return this.router.get("/", ...args)
-            case "post":
-                return this.router.post("/", ...args)
-            default:
-                throw new Error("Invalid method")
-        }
+        return this.method === "get"
+            ? this.router.get("/", ...args)
+            : this.router.post("/", ...args)
     }
 
     // Used for testing to mcok a request by passing the data directly to the handler
@@ -236,18 +231,14 @@ export class RaidHubRoute<
                         : undefined
                 },
                 responses: {
-                    ...(this.responseSchema
-                        ? {
-                              [200]: {
-                                  description: "Success",
-                                  content: {
-                                      "application/json": {
-                                          schema: this.responseSchema
-                                      }
-                                  }
-                              }
-                          }
-                        : {}),
+                    [200]: {
+                        description: "Success",
+                        content: {
+                            "application/json": {
+                                schema: this.responseSchema
+                            }
+                        }
+                    },
                     ...(this.errorSchema || this.paramsSchema
                         ? {
                               [404]: {
@@ -260,7 +251,7 @@ export class RaidHubRoute<
                                                         this.errorSchema,
                                                         zPathValidationError
                                                     ])
-                                                  : this.errorSchema ?? zBodyValidationError
+                                                  : this.errorSchema ?? zPathValidationError
                                       }
                                   }
                               }

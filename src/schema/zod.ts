@@ -1,5 +1,5 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi"
-import { ZodStringDef, ZodType, z } from "zod"
+import { EnumLike, ZodNativeEnumDef, ZodStringDef, ZodType, z } from "zod"
 
 extendZodWithOpenApi(z)
 export { z }
@@ -22,11 +22,25 @@ export const zBooleanString = () =>
 export const zBigIntString = () => zDigitString().pipe(z.coerce.bigint())
 
 export const zISODateString = () =>
-    z.coerce
+    z
         .date()
         .transform(d => d.toISOString())
-        .pipe(z.string().datetime())
+        .openapi({
+            param: {
+                schema: {
+                    type: "string",
+                    format: "date-time"
+                }
+            }
+        })
+
+type MapToStrings<N extends number> = Record<`${N}`, N> & EnumLike
 
 export function zNumberEnum<T extends readonly number[]>(arr: T) {
-    return z.number().refine(n => arr.includes(n)) as ZodType<T[number]>
+    const enumber = Object.fromEntries(arr.map(n => ["_" + n, n])) as MapToStrings<T[number]>
+    return z.nativeEnum(enumber) as ZodType<
+        T[number],
+        ZodNativeEnumDef<MapToStrings<T[number]>>,
+        number
+    >
 }

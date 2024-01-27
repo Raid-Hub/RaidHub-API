@@ -29,9 +29,19 @@ export const zPlayerInfo = registry.register(
     z
         .object({
             membershipId: zBigIntString(),
-            membershipType: zBungieMembershipType.nullable(),
+            membershipType: zBungieMembershipType.nullable().openapi({
+                param: {
+                    schema: {
+                        nullable: true
+                    }
+                },
+                description: "The platform on which the player created their account."
+            }),
             iconPath: z.string().nullable(),
-            displayName: z.string().nullable(),
+            displayName: z.string().nullable().openapi({
+                description:
+                    "The platform-specific display name of the player. No longer shown in-game."
+            }),
             bungieGlobalDisplayName: z.string().nullable(),
             bungieGlobalDisplayNameCode: z.string().nullable(),
             lastSeen: zISODateString().nullable()

@@ -20,10 +20,12 @@
         }
       },
       "RaidEnum": {
-        "type": "number"
+        "type": "integer",
+        "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1]
       },
       "RaidVersionEnum": {
-        "type": "number"
+        "type": "integer",
+        "enum": [1, 2, 3, 4, 64, 65, 66]
       },
       "PlayerInfo": {
         "type": "object",
@@ -38,7 +40,8 @@
                 "$ref": "#/components/schemas/BungieMembershipType"
               },
               {
-                "nullable": true
+                "nullable": true,
+                "description": "The platform on which the player created their account."
               }
             ]
           },
@@ -48,7 +51,8 @@
           },
           "displayName": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "The platform-specific display name of the player. No longer shown in-game."
           },
           "bungieGlobalDisplayName": {
             "type": "string",
@@ -111,12 +115,10 @@
             "exclusiveMinimum": true
           },
           "dateStarted": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "dateCompleted": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "duration": {
             "type": "integer",
@@ -263,8 +265,7 @@
         "type": "object",
         "properties": {
           "minted": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
             "type": "string"
@@ -827,6 +828,1020 @@
           }
         },
         "required": ["value", "rank"]
+      },
+      "ManifestResponse": {
+        "type": "object",
+        "properties": {
+          "raids": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "difficulties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "hashes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "raid": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                },
+                "difficulty": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                }
+              },
+              "required": ["raid", "difficulty"]
+            }
+          },
+          "listed": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          },
+          "sunset": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          },
+          "contest": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          },
+          "master": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          },
+          "prestige": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          },
+          "reprisedChallengePairings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "raid": {
+                  "type": "number"
+                },
+                "difficulty": {
+                  "type": "number"
+                }
+              },
+              "required": ["raid", "difficulty"]
+            }
+          },
+          "leaderboards": {
+            "type": "object",
+            "properties": {
+              "worldFirst": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "date": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "type", "date"]
+                  }
+                }
+              },
+              "individual": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "category"]
+                  }
+                }
+              }
+            },
+            "required": ["worldFirst", "individual"]
+          }
+        },
+        "required": [
+          "raids",
+          "difficulties",
+          "hashes",
+          "listed",
+          "sunset",
+          "contest",
+          "master",
+          "prestige",
+          "reprisedChallengePairings",
+          "leaderboards"
+        ],
+        "additionalProperties": false
+      },
+      "PlayerSearchResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "term": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "nameWithCode": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": ["name", "nameWithCode"]
+              }
+            },
+            "required": ["count", "term"]
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/PlayerInfo"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "clears": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": ["clears"],
+                  "additionalProperties": false
+                }
+              ],
+              "example": {
+                "bungieGlobalDisplayName": "Newo",
+                "bungieGlobalDisplayNameCode": "9010",
+                "membershipId": "4611686018488107374",
+                "displayName": "xx_newo_xx",
+                "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
+                "membershipType": 3,
+                "lastSeen": "2021-05-01T00:00:00.000Z"
+              }
+            }
+          }
+        },
+        "required": ["params", "results"],
+        "additionalProperties": false
+      },
+      "PlayerActivitiesResponse": {
+        "type": "object",
+        "properties": {
+          "activities": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ActivityWithPlayerData"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "raid": {
+                      "type": "object",
+                      "properties": {
+                        "raidId": {
+                          "$ref": "#/components/schemas/RaidEnum"
+                        },
+                        "versionId": {
+                          "$ref": "#/components/schemas/RaidVersionEnum"
+                        }
+                      },
+                      "required": ["raidId", "versionId"]
+                    }
+                  },
+                  "required": ["raid"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["activities", "nextCursor"],
+        "additionalProperties": false
+      },
+      "PlayerBasicResponse": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "membershipType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BungieMembershipType"
+              },
+              {
+                "nullable": true,
+                "description": "The platform on which the player created their account."
+              }
+            ]
+          },
+          "iconPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "The platform-specific display name of the player. No longer shown in-game."
+          },
+          "bungieGlobalDisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bungieGlobalDisplayNameCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSeen": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "membershipId",
+          "membershipType",
+          "iconPath",
+          "displayName",
+          "bungieGlobalDisplayName",
+          "bungieGlobalDisplayNameCode",
+          "lastSeen"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "bungieGlobalDisplayName": "Newo",
+          "bungieGlobalDisplayNameCode": "9010",
+          "membershipId": "4611686018488107374",
+          "displayName": "xx_newo_xx",
+          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
+          "membershipType": 3,
+          "lastSeen": "2021-05-01T00:00:00.000Z"
+        }
+      },
+      "PlayerProfileResponse": {
+        "type": "object",
+        "properties": {
+          "player": {
+            "$ref": "#/components/schemas/PlayerInfo"
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "global": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "clears": {
+                    "$ref": "#/components/schemas/PlayerStatRanking"
+                  },
+                  "fullClears": {
+                    "$ref": "#/components/schemas/PlayerStatRanking"
+                  },
+                  "sherpas": {
+                    "$ref": "#/components/schemas/PlayerStatRanking"
+                  },
+                  "speed": {
+                    "$ref": "#/components/schemas/PlayerStatRanking"
+                  }
+                },
+                "required": ["clears", "fullClears", "sherpas", "speed"]
+              },
+              "byRaid": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "fastestClear": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "instanceId": {
+                          "type": "integer",
+                          "format": "int64"
+                        },
+                        "duration": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["instanceId", "duration"]
+                    },
+                    "clears": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "fullClears": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "sherpas": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "trios": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "duos": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "solos": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "fastestClear",
+                    "clears",
+                    "fullClears",
+                    "sherpas",
+                    "trios",
+                    "duos",
+                    "solos"
+                  ]
+                }
+              }
+            },
+            "required": ["global", "byRaid"]
+          },
+          "worldFirstEntries": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rank": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "instanceId": {
+                    "type": "string",
+                    "pattern": "^\\d+n?$"
+                  },
+                  "raidHash": {
+                    "type": "string",
+                    "pattern": "^\\d+n?$"
+                  },
+                  "dayOne": {
+                    "type": "boolean"
+                  },
+                  "contest": {
+                    "type": "boolean"
+                  },
+                  "weekOne": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "rank",
+                  "instanceId",
+                  "raidHash",
+                  "dayOne",
+                  "contest",
+                  "weekOne"
+                ]
+              }
+            }
+          }
+        },
+        "required": ["player", "stats", "worldFirstEntries"],
+        "additionalProperties": false
+      },
+      "ActivitySearchResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "membershipId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d+n?$"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  }
+                ]
+              },
+              "minPlayers": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0
+              },
+              "maxPlayers": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0
+              },
+              "minDate": {
+                "type": "string",
+                "nullable": true
+              },
+              "maxDate": {
+                "type": "string",
+                "nullable": true
+              },
+              "minSeason": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0
+              },
+              "maxSeason": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0
+              },
+              "fresh": {
+                "type": "string",
+                "nullable": true
+              },
+              "completed": {
+                "type": "string",
+                "nullable": true
+              },
+              "flawless": {
+                "type": "string",
+                "nullable": true
+              },
+              "raid": {
+                "$ref": "#/components/schemas/RaidEnum"
+              },
+              "platformType": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "reversed": {
+                "type": "boolean",
+                "nullable": true,
+                "default": false
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 25
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "required": ["membershipId"]
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityExtended"
+            }
+          }
+        },
+        "required": ["query", "results"],
+        "additionalProperties": false
+      },
+      "ActivityResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActivityExtended"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "leaderboardEntries": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "players": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "finishedRaid": {
+                      "type": "boolean"
+                    },
+                    "creditedSherpas": {
+                      "type": "number"
+                    },
+                    "isFirstClear": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "finishedRaid",
+                    "creditedSherpas",
+                    "isFirstClear"
+                  ]
+                }
+              }
+            },
+            "required": ["leaderboardEntries", "players"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "LeaderboardGlobalResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string",
+                "enum": ["clears", "sherpas", "fresh", "speed"]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "required": ["category", "count"]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+            }
+          }
+        },
+        "required": ["params", "entries"],
+        "additionalProperties": false
+      },
+      "LeaderboardWorldfirstResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "raid": {
+                "$ref": "#/components/schemas/RaidPath"
+              },
+              "category": {
+                "type": "string",
+                "enum": ["normal", "prestige", "challenge", "master"]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 25,
+                "exclusiveMinimum": true,
+                "maximum": 100,
+                "default": 50
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "required": ["raid", "category"],
+            "additionalProperties": false
+          },
+          "date": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
+            }
+          }
+        },
+        "required": ["params", "date", "entries"],
+        "additionalProperties": false
+      },
+      "LeaderboardIndividualResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "raid": {
+                "$ref": "#/components/schemas/RaidPath"
+              },
+              "category": {
+                "type": "string",
+                "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "required": ["raid", "category", "count"]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+            }
+          }
+        },
+        "required": ["params", "entries"],
+        "additionalProperties": false
+      },
+      "LeaderboardSpeedrunResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              },
+              "raid": {
+                "$ref": "#/components/schemas/RaidPath"
+              }
+            },
+            "required": ["count", "raid"]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rank": {
+                  "type": "number"
+                },
+                "instanceId": {
+                  "type": "string",
+                  "pattern": "^\\d+n?$"
+                },
+                "dateStarted": {
+                  "type": "string"
+                },
+                "dateCompleted": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                },
+                "players": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlayerWithActivityData"
+                  }
+                }
+              },
+              "required": [
+                "rank",
+                "instanceId",
+                "dateStarted",
+                "dateCompleted",
+                "duration",
+                "players"
+              ]
+            }
+          }
+        },
+        "required": ["params", "entries"],
+        "additionalProperties": false
+      },
+      "PgcrResponse": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "startingPhaseIndex": {
+            "type": "number"
+          },
+          "activityWasStartedFromBeginning": {
+            "type": "boolean"
+          },
+          "activityDetails": {
+            "type": "object",
+            "properties": {
+              "directorActivityHash": {
+                "type": "string",
+                "pattern": "^\\d+n?$"
+              },
+              "instanceId": {
+                "type": "string",
+                "pattern": "^\\d+n?$"
+              },
+              "mode": {
+                "type": "integer",
+                "enum": [
+                  0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19,
+                  20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 37, 38, 39,
+                  40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+                  55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+                  70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+                  85, 86, 87, 88, 89, 90, 91
+                ]
+              },
+              "modes": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "enum": [
+                    0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19,
+                    20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 37, 38, 39,
+                    40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+                    55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+                    70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+                    85, 86, 87, 88, 89, 90, 91
+                  ]
+                }
+              },
+              "membershipType": {
+                "$ref": "#/components/schemas/BungieMembershipType"
+              }
+            },
+            "required": [
+              "directorActivityHash",
+              "instanceId",
+              "mode",
+              "modes",
+              "membershipType"
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "player": {
+                  "type": "object",
+                  "properties": {
+                    "destinyUserInfo": {
+                      "type": "object",
+                      "properties": {
+                        "iconPath": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "crossSaveOverride": {
+                          "$ref": "#/components/schemas/BungieMembershipType"
+                        },
+                        "applicableMembershipTypes": {
+                          "type": "array",
+                          "nullable": true,
+                          "items": {
+                            "$ref": "#/components/schemas/BungieMembershipType"
+                          }
+                        },
+                        "membershipType": {
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/BungieMembershipType"
+                            },
+                            {
+                              "nullable": true
+                            }
+                          ]
+                        },
+                        "membershipId": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "bungieGlobalDisplayName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "bungieGlobalDisplayNameCode": {
+                          "type": "number",
+                          "nullable": true
+                        }
+                      },
+                      "required": ["crossSaveOverride", "membershipId"]
+                    },
+                    "characterClass": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "classHash": {
+                      "type": "number"
+                    },
+                    "raceHash": {
+                      "type": "number"
+                    },
+                    "genderHash": {
+                      "type": "number"
+                    },
+                    "characterLevel": {
+                      "type": "number"
+                    },
+                    "lightLevel": {
+                      "type": "number"
+                    },
+                    "emblemHash": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "destinyUserInfo",
+                    "classHash",
+                    "raceHash",
+                    "genderHash",
+                    "characterLevel",
+                    "lightLevel",
+                    "emblemHash"
+                  ]
+                },
+                "characterId": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "basic": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "displayValue": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["value", "displayValue"]
+                      }
+                    },
+                    "required": ["basic"]
+                  }
+                },
+                "extended": {
+                  "type": "object",
+                  "properties": {
+                    "weapons": {
+                      "type": "array",
+                      "nullable": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "referenceId": {
+                            "type": "number"
+                          },
+                          "values": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "object",
+                              "properties": {
+                                "basic": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {
+                                      "type": "number"
+                                    },
+                                    "displayValue": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["value", "displayValue"]
+                                }
+                              },
+                              "required": ["basic"]
+                            }
+                          }
+                        },
+                        "required": ["referenceId", "values"]
+                      }
+                    },
+                    "values": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "basic": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "number"
+                              },
+                              "displayValue": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["value", "displayValue"]
+                          }
+                        },
+                        "required": ["basic"]
+                      }
+                    }
+                  },
+                  "required": ["values"]
+                }
+              },
+              "required": ["player", "characterId", "values"]
+            }
+          }
+        },
+        "required": ["period", "activityDetails", "entries"],
+        "additionalProperties": false,
+        "description": "A raw PGCR with a few redundant fields removed",
+        "externalDocs": {
+          "description": "Bungie.net API documentation",
+          "url": "https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData"
+        }
+      },
+      "AdminQueryResponse": {
+        "type": "array",
+        "items": {
+          "nullable": true
+        }
       }
     },
     "parameters": {}
@@ -840,154 +1855,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "raids": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    },
-                    "difficulties": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    },
-                    "hashes": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "raid": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "exclusiveMinimum": true
-                          },
-                          "difficulty": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "exclusiveMinimum": true
-                          }
-                        },
-                        "required": ["raid", "difficulty"]
-                      }
-                    },
-                    "listed": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "exclusiveMinimum": true
-                      }
-                    },
-                    "sunset": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "exclusiveMinimum": true
-                      }
-                    },
-                    "contest": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "exclusiveMinimum": true
-                      }
-                    },
-                    "master": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "exclusiveMinimum": true
-                      }
-                    },
-                    "prestige": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "exclusiveMinimum": true
-                      }
-                    },
-                    "reprisedChallengePairings": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "raid": {
-                            "type": "number"
-                          },
-                          "difficulty": {
-                            "type": "number"
-                          }
-                        },
-                        "required": ["raid", "difficulty"]
-                      }
-                    },
-                    "leaderboards": {
-                      "type": "object",
-                      "properties": {
-                        "worldFirst": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
-                                },
-                                "type": {
-                                  "type": "string"
-                                },
-                                "date": {
-                                  "type": "string",
-                                  "nullable": true
-                                }
-                              },
-                              "required": ["id", "type", "date"]
-                            }
-                          }
-                        },
-                        "individual": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "name": {
-                                  "type": "string"
-                                },
-                                "category": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": ["name", "category"]
-                            }
-                          }
-                        }
-                      },
-                      "required": ["worldFirst", "individual"]
-                    }
-                  },
-                  "required": [
-                    "raids",
-                    "difficulties",
-                    "hashes",
-                    "listed",
-                    "sunset",
-                    "contest",
-                    "master",
-                    "prestige",
-                    "reprisedChallengePairings",
-                    "leaderboards"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/ManifestResponse"
                 }
               }
             }
@@ -1026,65 +1894,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "params": {
-                      "type": "object",
-                      "properties": {
-                        "count": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true
-                        },
-                        "term": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string"
-                            },
-                            "nameWithCode": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          },
-                          "required": ["name", "nameWithCode"]
-                        }
-                      },
-                      "required": ["count", "term"]
-                    },
-                    "results": {
-                      "type": "array",
-                      "items": {
-                        "allOf": [
-                          {
-                            "$ref": "#/components/schemas/PlayerInfo"
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "clears": {
-                                "type": "integer",
-                                "minimum": 0
-                              }
-                            },
-                            "required": ["clears"],
-                            "additionalProperties": false
-                          }
-                        ],
-                        "example": {
-                          "bungieGlobalDisplayName": "Newo",
-                          "bungieGlobalDisplayNameCode": "9010",
-                          "membershipId": "4611686018488107374",
-                          "displayName": "xx_newo_xx",
-                          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
-                          "membershipType": 3,
-                          "lastSeen": "2021-05-01T00:00:00.000Z"
-                        }
-                      }
-                    }
-                  },
-                  "required": ["params", "results"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/PlayerSearchResponse"
                 }
               }
             }
@@ -1142,45 +1952,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "activities": {
-                      "type": "array",
-                      "items": {
-                        "allOf": [
-                          {
-                            "$ref": "#/components/schemas/ActivityWithPlayerData"
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "raid": {
-                                "type": "object",
-                                "properties": {
-                                  "raidId": {
-                                    "$ref": "#/components/schemas/RaidEnum"
-                                  },
-                                  "versionId": {
-                                    "$ref": "#/components/schemas/RaidVersionEnum"
-                                  }
-                                },
-                                "required": ["raidId", "versionId"]
-                              }
-                            },
-                            "required": ["raid"],
-                            "additionalProperties": false
-                          }
-                        ]
-                      }
-                    },
-                    "nextCursor": {
-                      "type": "string",
-                      "nullable": true,
-                      "pattern": "^\\d+n?$"
-                    }
-                  },
-                  "required": ["activities", "nextCursor"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/PlayerActivitiesResponse"
                 }
               }
             }
@@ -1245,7 +2017,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlayerInfo"
+                  "$ref": "#/components/schemas/PlayerBasicResponse"
                 }
               }
             }
@@ -1300,140 +2072,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "player": {
-                      "$ref": "#/components/schemas/PlayerInfo"
-                    },
-                    "stats": {
-                      "type": "object",
-                      "properties": {
-                        "global": {
-                          "type": "object",
-                          "nullable": true,
-                          "properties": {
-                            "clears": {
-                              "$ref": "#/components/schemas/PlayerStatRanking"
-                            },
-                            "fullClears": {
-                              "$ref": "#/components/schemas/PlayerStatRanking"
-                            },
-                            "sherpas": {
-                              "$ref": "#/components/schemas/PlayerStatRanking"
-                            },
-                            "speed": {
-                              "$ref": "#/components/schemas/PlayerStatRanking"
-                            }
-                          },
-                          "required": [
-                            "clears",
-                            "fullClears",
-                            "sherpas",
-                            "speed"
-                          ]
-                        },
-                        "byRaid": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "fastestClear": {
-                                "type": "object",
-                                "nullable": true,
-                                "properties": {
-                                  "instanceId": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "duration": {
-                                    "type": "integer"
-                                  }
-                                },
-                                "required": ["instanceId", "duration"]
-                              },
-                              "clears": {
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "fullClears": {
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "sherpas": {
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "trios": {
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "duos": {
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "solos": {
-                                "type": "integer",
-                                "minimum": 0
-                              }
-                            },
-                            "required": [
-                              "fastestClear",
-                              "clears",
-                              "fullClears",
-                              "sherpas",
-                              "trios",
-                              "duos",
-                              "solos"
-                            ]
-                          }
-                        }
-                      },
-                      "required": ["global", "byRaid"]
-                    },
-                    "worldFirstEntries": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "rank": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "exclusiveMinimum": true
-                            },
-                            "instanceId": {
-                              "type": "string",
-                              "pattern": "^\\d+n?$"
-                            },
-                            "raidHash": {
-                              "type": "string",
-                              "pattern": "^\\d+n?$"
-                            },
-                            "dayOne": {
-                              "type": "boolean"
-                            },
-                            "contest": {
-                              "type": "boolean"
-                            },
-                            "weekOne": {
-                              "type": "boolean"
-                            }
-                          },
-                          "required": [
-                            "rank",
-                            "instanceId",
-                            "raidHash",
-                            "dayOne",
-                            "contest",
-                            "weekOne"
-                          ]
-                        }
-                      }
-                    }
-                  },
-                  "required": ["player", "stats", "worldFirstEntries"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/PlayerProfileResponse"
                 }
               }
             }
@@ -1634,103 +2273,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "query": {
-                      "type": "object",
-                      "properties": {
-                        "membershipId": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "pattern": "^\\d+n?$"
-                            },
-                            {
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "pattern": "^\\d+n?$"
-                              }
-                            }
-                          ]
-                        },
-                        "minPlayers": {
-                          "type": "integer",
-                          "nullable": true,
-                          "minimum": 0
-                        },
-                        "maxPlayers": {
-                          "type": "integer",
-                          "nullable": true,
-                          "minimum": 0
-                        },
-                        "minDate": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "maxDate": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "minSeason": {
-                          "type": "integer",
-                          "nullable": true,
-                          "minimum": 0
-                        },
-                        "maxSeason": {
-                          "type": "integer",
-                          "nullable": true,
-                          "minimum": 0
-                        },
-                        "fresh": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "completed": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "flawless": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "raid": {
-                          "$ref": "#/components/schemas/RaidEnum"
-                        },
-                        "platformType": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true
-                        },
-                        "reversed": {
-                          "type": "boolean",
-                          "nullable": true,
-                          "default": false
-                        },
-                        "count": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 25
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 1
-                        }
-                      },
-                      "required": ["membershipId"]
-                    },
-                    "results": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/ActivityExtended"
-                      }
-                    }
-                  },
-                  "required": ["query", "results"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/ActivitySearchResponse"
                 }
               }
             }
@@ -1767,46 +2310,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ActivityExtended"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "leaderboardEntries": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "number"
-                          }
-                        },
-                        "players": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "finishedRaid": {
-                                "type": "boolean"
-                              },
-                              "creditedSherpas": {
-                                "type": "number"
-                              },
-                              "isFirstClear": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "finishedRaid",
-                              "creditedSherpas",
-                              "isFirstClear"
-                            ]
-                          }
-                        }
-                      },
-                      "required": ["leaderboardEntries", "players"],
-                      "additionalProperties": false
-                    }
-                  ]
+                  "$ref": "#/components/schemas/ActivityResponse"
                 }
               }
             }
@@ -1884,38 +2388,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "params": {
-                      "type": "object",
-                      "properties": {
-                        "category": {
-                          "type": "string",
-                          "enum": ["clears", "sherpas", "fresh", "speed"]
-                        },
-                        "count": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 1
-                        }
-                      },
-                      "required": ["category", "count"]
-                    },
-                    "entries": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IndividualLeaderboardEntry"
-                      }
-                    }
-                  },
-                  "required": ["params", "entries"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/LeaderboardGlobalResponse"
                 }
               }
             }
@@ -1935,7 +2408,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "$ref": "#/components/schemas/PathValidationError"
                 }
               }
             }
@@ -1993,48 +2466,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "params": {
-                      "type": "object",
-                      "properties": {
-                        "raid": {
-                          "$ref": "#/components/schemas/RaidPath"
-                        },
-                        "category": {
-                          "type": "string",
-                          "enum": ["normal", "prestige", "challenge", "master"]
-                        },
-                        "count": {
-                          "type": "integer",
-                          "minimum": 25,
-                          "exclusiveMinimum": true,
-                          "maximum": 100,
-                          "default": 50
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 1
-                        }
-                      },
-                      "required": ["raid", "category"],
-                      "additionalProperties": false
-                    },
-                    "date": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "entries": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
-                      }
-                    }
-                  },
-                  "required": ["params", "date", "entries"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/LeaderboardWorldfirstResponse"
                 }
               }
             }
@@ -2159,48 +2591,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "params": {
-                      "type": "object",
-                      "properties": {
-                        "raid": {
-                          "$ref": "#/components/schemas/RaidPath"
-                        },
-                        "category": {
-                          "type": "string",
-                          "enum": [
-                            "fresh",
-                            "clears",
-                            "sherpas",
-                            "trios",
-                            "duos",
-                            "solos"
-                          ]
-                        },
-                        "count": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 1
-                        }
-                      },
-                      "required": ["raid", "category", "count"]
-                    },
-                    "entries": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IndividualLeaderboardEntry"
-                      }
-                    }
-                  },
-                  "required": ["params", "entries"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/LeaderboardIndividualResponse"
                 }
               }
             }
@@ -2220,7 +2611,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "$ref": "#/components/schemas/PathValidationError"
                 }
               }
             }
@@ -2269,73 +2660,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "params": {
-                      "type": "object",
-                      "properties": {
-                        "count": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 1
-                        },
-                        "raid": {
-                          "$ref": "#/components/schemas/RaidPath"
-                        }
-                      },
-                      "required": ["count", "raid"]
-                    },
-                    "entries": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "rank": {
-                            "type": "number"
-                          },
-                          "instanceId": {
-                            "type": "string",
-                            "pattern": "^\\d+n?$"
-                          },
-                          "dateStarted": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "dateCompleted": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "duration": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "exclusiveMinimum": true
-                          },
-                          "players": {
-                            "type": "array",
-                            "items": {
-                              "$ref": "#/components/schemas/PlayerWithActivityData"
-                            }
-                          }
-                        },
-                        "required": [
-                          "rank",
-                          "instanceId",
-                          "dateStarted",
-                          "dateCompleted",
-                          "duration",
-                          "players"
-                        ]
-                      }
-                    }
-                  },
-                  "required": ["params", "entries"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/LeaderboardSpeedrunResponse"
                 }
               }
             }
@@ -2355,7 +2680,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "$ref": "#/components/schemas/PathValidationError"
                 }
               }
             }
@@ -2382,14 +2707,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/DestinyPostGameCarnageReport"
-                    },
-                    {
-                      "additionalProperties": false
-                    }
-                  ]
+                  "$ref": "#/components/schemas/PgcrResponse"
                 }
               }
             }
@@ -2448,10 +2766,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "nullable": true
-                  }
+                  "$ref": "#/components/schemas/AdminQueryResponse"
                 }
               }
             }
