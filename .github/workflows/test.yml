@@ -43,7 +43,7 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test
+                  yarn test --coverage
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -61,6 +61,14 @@ jobs:
               with:
                   name: ref-lcov.info
 
+            - name: Load SSH Key
+              uses: shimataro/ssh-key-action@v2
+              with:
+                  key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+                  known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+                  name: gapk
+                  if_key_exists: ignore
+
             - name: Install dependencies
               run: yarn && yarn prisma generate
 
@@ -76,7 +84,7 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test
+                  yarn test --coverage
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report
