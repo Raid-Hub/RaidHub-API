@@ -1,4 +1,9 @@
 name: Typescript check
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+    cancel-in-progress: true
+
 on:
     push:
         branches:
@@ -9,7 +14,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Types
               run: |

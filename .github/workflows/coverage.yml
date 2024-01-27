@@ -1,29 +1,21 @@
-name: Run Tests
+name: Generate Coverage Report
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
     cancel-in-progress: true
 
 on:
-    pull_request:
+    push:
         branches:
             - main
     workflow_dispatch:
 
 jobs:
-    test:
+    coverage:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v4
-
-            - name: Download code coverage report
-              uses: dawidd6/action-download-artifact@v3
-              with:
-                  github_token: ${{secrets.GITHUB_TOKEN}}
-                  workflow: coverage.yml
-                  workflow_conclusion: success
-                  name: test-coverage.info
 
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
@@ -33,9 +25,6 @@ jobs:
               with:
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
-
-            - name: Install dependencies
-              run: yarn && yarn prisma generate
 
             - name: Tunnel to VPS
               env:
@@ -49,17 +38,12 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test --coverage --coverageReporters="lcov" --reporters="github-actions"
+                  yarn test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false
+              continue-on-error: true
 
-            #  Compares two code coverage files and generates report as a comment
-            - name: Generate Code Coverage report
-              id: code-coverage
-              uses: barecheck/code-coverage-action@v1
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
               with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
-                  base-lcov-file: "./lcov.info"
-                  lcov-file: "./coverage/lcov.info"
-                  minimum-ratio: 0 # Fails Github action once code coverage is decreasing
-                  send-summary-comment: true
-                  show-annotations: "warning" # Possible options warning|error
+                  name: test-coverage.info
+                  path: ./coverage/lcov.info
+                  if-no-files-found: error
