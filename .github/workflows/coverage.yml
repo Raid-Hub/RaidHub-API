@@ -1,4 +1,4 @@
-name: Run Tests
+name: Generate Coverage
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
@@ -14,7 +14,7 @@ on:
             - main
 
 jobs:
-    test:
+    coverage:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -41,7 +41,7 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test --coverage --coverageReporters=["lcov", "html"] --bail=false
+                  yarn test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false
               continue-on-error: true
 
             - name: Upload coverage reports
