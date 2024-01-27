@@ -19,7 +19,7 @@ jobs:
             - name: Generate File
               run: |
                   cp ./open-api/openapi.json .
-                  yarn openapi
+                  yarn docs
 
             - name: Verify File
               run: |

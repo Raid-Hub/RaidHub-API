@@ -15,7 +15,6 @@
     "db:seed": "ts-node ./prisma/seed.ts",
     "db:migrate": "prisma migrate dev --create-only",
     "test": "jest",
-    "test:coverage": "jest --coverage",
     "lint": "eslint . --ext .ts,.json",
     "types": "tsc --noEmit",
     "format": "prettier --write '**/*.{ts,json}'",
