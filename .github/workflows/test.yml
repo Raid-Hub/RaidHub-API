@@ -57,11 +57,6 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
-            - name: Download code coverage report from base branch
-              uses: actions/download-artifact@v3
-              with:
-                  name: ref-lcov.info
-
             - name: Load SSH Key
               uses: shimataro/ssh-key-action@v2
               with:
@@ -79,6 +74,11 @@ jobs:
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
               run: |
                   ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h" -i ~/.ssh/gapk root@ssh.raidhub.io &
+
+            - name: Download code coverage report from base branch
+              uses: actions/download-artifact@v3
+              with:
+                  name: ref-lcov.info
 
             - name: Run Tests
               env:
