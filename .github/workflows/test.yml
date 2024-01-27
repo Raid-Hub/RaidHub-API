@@ -48,7 +48,7 @@ jobs:
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
               with:
-                  name: coverage
+                  name: test-coverage
                   path: ./coverage/lcov.info
                   if-no-files-found: error
     checks:
@@ -56,6 +56,19 @@ jobs:
         needs: test
         steps:
             - uses: actions/checkout@v3
+
+            - name: Download code coverage report from base branch
+              uses: actions/download-artifact@v3
+              with:
+                  name: test-coverage
+
+            - name: Install cloudflared
+              run: |
+                  curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
+                  echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee  /etc/apt/sources.list.d/cloudflared.list
+                  sudo apt update
+                  sudo apt-get install cloudflared
+                  cloudflared --version
 
             - name: Load SSH Key
               uses: shimataro/ssh-key-action@v2
@@ -74,11 +87,6 @@ jobs:
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
               run: |
                   ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h" -i ~/.ssh/gapk root@ssh.raidhub.io &
-
-            - name: Download code coverage report from base branch
-              uses: actions/download-artifact@v3
-              with:
-                  name: ref-lcov.info
 
             - name: Run Tests
               env:
