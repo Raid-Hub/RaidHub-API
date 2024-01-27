@@ -21,7 +21,7 @@ jobs:
               uses: dawidd6/action-download-artifact@v3
               with:
                   github_token: ${{secrets.GITHUB_TOKEN}}
-                  workflow: Generate Coverage Report
+                  workflow: coverage.yml
 
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
