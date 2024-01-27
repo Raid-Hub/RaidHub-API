@@ -4,7 +4,7 @@ https://api.raidhub.io/docs
 
 # Tests
 
-[![Coverage Status](https://img.shields.io/badge/coverage-85%25-brightgreen)](URL_TO_YOUR_COVERAGE_REPORT)
+[![Coverage Status](https://img.shields.io/badge/coverage-85%25-brightgreen)](docs.api.raidhub.app)
 
 # Contributing
 
