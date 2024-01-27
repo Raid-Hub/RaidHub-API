@@ -1,6 +1,6 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-    coverageReporters: ["html"],
+    coverageReporters: ["lcov"],
     preset: "ts-jest",
     testEnvironment: "node",
     modulePathIgnorePatterns: ["dist/*"],

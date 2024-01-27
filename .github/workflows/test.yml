@@ -12,6 +12,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.base_ref }}
 
             - name: Install cloudflared
               run: |
@@ -41,4 +43,50 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test
+                  yarn test:coverage
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage
+                  path: ./coverage/lcov.info
+    checks:
+        runs-on: ubuntu-latest
+        needs: test
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Download code coverage report from base branch
+              uses: actions/download-artifact@v3
+              with:
+                  name: ref-lcov.info
+
+            - name: Install dependencies
+              run: yarn && yarn prisma generate
+
+            - name: Tunnel to VPS
+              env:
+                  TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
+                  TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
+              run: |
+                  ssh -N -L 5432:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h" -i ~/.ssh/gapk root@ssh.raidhub.io &
+
+            - name: Run Tests
+              env:
+                  DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
+              run: |
+                  yarn && yarn prisma generate
+                  yarn test:coverage
+
+            #  Compares two code coverage files and generates report as a comment
+            - name: Generate Code Coverage report
+              id: code-coverage
+              uses: barecheck/code-coverage-action@v1
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
+                  lcov-file: "./coverage/lcov.info"
+                  base-lcov-file: "./lcov.info"
+                  minimum-ratio: 0 # Fails Github action once code coverage is decreasing
+                  send-summary-comment: true
+                  show-annotations: "warning" # Possible options warning|error
