@@ -2,6 +2,10 @@
 
 https://api.raidhub.io/docs
 
+# Tests
+
+[![Coverage Status](https://img.shields.io/badge/coverage-85%25-brightgreen)](URL_TO_YOUR_COVERAGE_REPORT)
+
 # Contributing
 
 If you notice a bug or want to fix something in the API, please fork the repo and create a PR
