@@ -10,6 +10,18 @@ const fileName = dir + "/openapi.json"
 console.log("Generating OpenAPI spec...")
 
 router.openApiRoutes().forEach(route => {
+    const jsonRes = route.responses[200].content?.["application/json"]
+    if (jsonRes && "openapi" in jsonRes.schema) {
+        // update the schema to use the registered schema
+        const refId =
+            route.path
+                .replace(/\/{[^/]+}/g, "")
+                .split("/")
+                .filter(Boolean)
+                .map(str => str.charAt(0).toUpperCase() + str.slice(1))
+                .join("") + "Response"
+        jsonRes.schema = registry.register(refId, jsonRes.schema)
+    }
     registry.registerPath(route)
 })
 

@@ -236,18 +236,14 @@ export class RaidHubRoute<
                         : undefined
                 },
                 responses: {
-                    ...(this.responseSchema
-                        ? {
-                              [200]: {
-                                  description: "Success",
-                                  content: {
-                                      "application/json": {
-                                          schema: this.responseSchema
-                                      }
-                                  }
-                              }
-                          }
-                        : {}),
+                    [200]: {
+                        description: "Success",
+                        content: {
+                            "application/json": {
+                                schema: this.responseSchema
+                            }
+                        }
+                    },
                     ...(this.errorSchema || this.paramsSchema
                         ? {
                               [404]: {
@@ -260,7 +256,7 @@ export class RaidHubRoute<
                                                         this.errorSchema,
                                                         zPathValidationError
                                                     ])
-                                                  : this.errorSchema ?? zBodyValidationError
+                                                  : this.errorSchema ?? zPathValidationError
                                       }
                                   }
                               }
