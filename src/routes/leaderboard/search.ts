@@ -95,7 +95,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                 params: CommonQueryParams.extend({
                     type: z.string(),
                     category: z.string(),
-                    raid: z.number().optional()
+                    raid: zRaidEnum.optional()
                 }).strict(),
                 page: z.number().positive().int(),
                 rank: z.number().positive().int(),
@@ -111,7 +111,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                 params: CommonQueryParams.extend({
                     type: z.string(),
                     category: z.string(),
-                    raid: zRaidEnum
+                    raid: zRaidEnum.optional()
                 }).strict()
             })
             .strict()

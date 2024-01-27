@@ -1,5 +1,5 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
-import { isContest, isDayOne } from "../../data/raceDates"
+import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { zActivityWithPlayerData, zRaidEnum, zRaidVersionEnum } from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
@@ -52,9 +52,10 @@ export const playerActivitiesRoute = new RaidHubRoute({
             .object({
                 activities: z.array(
                     zActivityWithPlayerData.extend({
-                        raidHash: zBigIntString(),
-                        raidId: zRaidEnum,
-                        versionId: zRaidVersionEnum
+                        raid: z.object({
+                            raidId: zRaidEnum,
+                            versionId: zRaidVersionEnum
+                        })
                     })
                 ),
                 nextCursor: zBigIntString().nullable()
@@ -79,18 +80,9 @@ const activityQuery = (membershipId: bigint, count: number) =>
         orderBy: {
             dateCompleted: "desc"
         },
-        select: {
-            instanceId: true,
-            dateStarted: true,
-            dateCompleted: true,
-            completed: true,
-            fresh: true,
-            flawless: true,
-            playerCount: true,
-            platformType: true,
+        include: {
             raidDefinition: {
                 select: {
-                    raidHash: true,
                     raidId: true,
                     versionId: true
                 }
@@ -183,6 +175,7 @@ async function getPlayerActivities({
                 ...a,
                 dayOne: isDayOne(raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(raidDefinition.raidId, a.dateStarted),
+                weekOne: isWeekOne(raidDefinition.raidId, a.dateCompleted),
                 raid: {
                     ...raidDefinition
                 },

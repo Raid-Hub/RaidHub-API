@@ -1,7 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zPlayerInfo } from "../../schema/common"
+import { zPlayerWithActivityData } from "../../schema/common"
 import { z, zDigitString, zISODateString, zPage, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
@@ -37,7 +37,7 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
                         dateStarted: zISODateString(),
                         dateCompleted: zISODateString(),
                         duration: zPositiveInt(),
-                        players: z.array(zPlayerInfo)
+                        players: z.array(zPlayerWithActivityData)
                     })
                 )
             })
@@ -69,6 +69,13 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
             playerActivity: {
                 select: {
                     finishedRaid: true,
+                    kills: true,
+                    assists: true,
+                    deaths: true,
+                    timePlayedSeconds: true,
+                    classHash: true,
+                    sherpas: true,
+                    isFirstClear: true,
                     player: {
                         select: {
                             membershipId: true,
@@ -76,7 +83,8 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
                             iconPath: true,
                             displayName: true,
                             bungieGlobalDisplayName: true,
-                            bungieGlobalDisplayNameCode: true
+                            bungieGlobalDisplayNameCode: true,
+                            lastSeen: true
                         }
                     }
                 }
@@ -90,9 +98,9 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
         dateStarted: e.dateStarted,
         dateCompleted: e.dateCompleted,
         duration: e.duration,
-        players: e.playerActivity.map(pa => ({
-            ...pa.player,
-            didPlayerFinish: pa.finishedRaid
+        players: e.playerActivity.map(({ player, ...activity }) => ({
+            ...player,
+            data: activity
         }))
     }))
 }

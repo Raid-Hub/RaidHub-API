@@ -1,4 +1,4 @@
-import { PlayerStats, WorldFirstLeaderboardType } from "@prisma/client"
+import { WorldFirstLeaderboardType } from "@prisma/client"
 import { ListedRaid, Raid } from "./raids"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
@@ -10,14 +10,7 @@ export const WorldFirstBoardsMap = {
     master: WorldFirstLeaderboardType.Master
 } satisfies Record<WorldFirstBoard, WorldFirstLeaderboardType>
 
-export const IndividualBoards = [
-    "fullClears",
-    "clears",
-    "sherpas",
-    "trios",
-    "duos",
-    "solos"
-] as const satisfies (keyof PlayerStats)[]
+export const IndividualBoards = ["fresh", "clears", "sherpas", "trios", "duos", "solos"] as const
 export type IndividualBoard = (typeof IndividualBoards)[number]
 
 export const GlobalBoards = ["clears", "sherpas", "fresh", "speed"] as const
@@ -57,7 +50,7 @@ export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, WorldFirstLeaderb
 
 export const ClearsLeaderboardsForRaid = {
     [Raid.LEVIATHAN]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -65,7 +58,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: false
     },
     [Raid.EATER_OF_WORLDS]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -73,7 +66,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: true
     },
     [Raid.SPIRE_OF_STARS]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: false,
@@ -81,7 +74,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: false
     },
     [Raid.LAST_WISH]: {
-        fullClears: false,
+        fresh: false,
         clears: true,
         sherpas: true,
         trios: true,
@@ -89,7 +82,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: true
     },
     [Raid.SCOURGE_OF_THE_PAST]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -98,14 +91,14 @@ export const ClearsLeaderboardsForRaid = {
     },
     [Raid.CROWN_OF_SORROW]: {
         sherpas: true,
-        fullClears: true,
+        fresh: true,
         clears: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.GARDEN_OF_SALVATION]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -113,7 +106,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: true
     },
     [Raid.DEEP_STONE_CRYPT]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -121,7 +114,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: false
     },
     [Raid.VAULT_OF_GLASS]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -129,7 +122,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: true
     },
     [Raid.VOW_OF_THE_DISCIPLE]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -137,7 +130,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: false
     },
     [Raid.KINGS_FALL]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -145,7 +138,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: false
     },
     [Raid.ROOT_OF_NIGHTMARES]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -153,7 +146,7 @@ export const ClearsLeaderboardsForRaid = {
         solos: true
     },
     [Raid.CROTAS_END]: {
-        fullClears: true,
+        fresh: true,
         sherpas: true,
         clears: true,
         trios: true,
@@ -163,7 +156,7 @@ export const ClearsLeaderboardsForRaid = {
 } satisfies Record<ListedRaid, Record<IndividualBoard, boolean>>
 
 export const IndividualBoardNames: Record<IndividualBoard, string> = {
-    fullClears: "Full Clears",
+    fresh: "Full Clears",
     clears: "Clears",
     sherpas: "Sherpas",
     trios: "Trios",

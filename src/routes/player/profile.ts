@@ -98,7 +98,14 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
             where: {
                 membershipId: membershipId
             },
-            include: {
+            select: {
+                bungieGlobalDisplayName: true,
+                bungieGlobalDisplayNameCode: true,
+                lastSeen: true,
+                displayName: true,
+                membershipId: true,
+                iconPath: true,
+                membershipType: true,
                 globalRanks: {
                     select: {
                         clears: true,

@@ -9,7 +9,7 @@ export const IndividualBoardPositionKeys = {
         position: "clearsPosition",
         value: "clears"
     },
-    fullClears: {
+    fresh: {
         rank: "fullClearsRank",
         position: "fullClearsPosition",
         value: "fullClears"
@@ -67,7 +67,8 @@ export async function getIndividualLeaderboardEntries(params: {
                     iconPath: true,
                     displayName: true,
                     bungieGlobalDisplayName: true,
-                    bungieGlobalDisplayNameCode: true
+                    bungieGlobalDisplayNameCode: true,
+                    lastSeen: true
                 }
             }
         },
@@ -130,7 +131,8 @@ export async function getWorldFirstLeaderboardEntries(params: {
                                             iconPath: true,
                                             displayName: true,
                                             bungieGlobalDisplayName: true,
-                                            bungieGlobalDisplayNameCode: true
+                                            bungieGlobalDisplayNameCode: true,
+                                            lastSeen: true
                                         }
                                     }
                                 }
@@ -220,7 +222,8 @@ export async function getGlobalLeaderboardEntries(params: {
                     iconPath: true,
                     displayName: true,
                     bungieGlobalDisplayName: true,
-                    bungieGlobalDisplayNameCode: true
+                    bungieGlobalDisplayNameCode: true,
+                    lastSeen: true
                 }
             }
         },

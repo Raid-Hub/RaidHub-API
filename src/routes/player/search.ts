@@ -28,7 +28,7 @@ export const playerSearchRoute = new RaidHubRoute({
                         nameWithCode: z.string().nullable()
                     })
                 }),
-                results: z.array(zPlayerInfo)
+                results: z.array(zPlayerInfo.extend({ clears: z.number().int().nonnegative() }))
             })
             .strict()
     }
@@ -37,9 +37,23 @@ export const playerSearchRoute = new RaidHubRoute({
 async function searchForPlayer(query: string, count: number) {
     const searchTerm = query.trim().toLowerCase()
 
+    const select = {
+        bungieGlobalDisplayName: true,
+        bungieGlobalDisplayNameCode: true,
+        lastSeen: true,
+        displayName: true,
+        membershipId: true,
+        iconPath: true,
+        membershipType: true,
+        clears: true
+    } as const
+
     // normalize last played by adding a month minimum
     const adjustedNow = Date.now() + 1000 * 60 * 60 * 24 * 30
-    const sortResults = (a: Player, b: Player) => {
+    const sortResults = (
+        a: Pick<Player, keyof typeof select>,
+        b: Pick<Player, keyof typeof select>
+    ) => {
         const aMatch = a.bungieGlobalDisplayName?.toLowerCase() === searchTerm
         const bMatch = b.bungieGlobalDisplayName?.toLowerCase() === searchTerm
 
@@ -52,11 +66,11 @@ async function searchForPlayer(query: string, count: number) {
             return timeDifferenceA / (a.clears || 1) - timeDifferenceB / (b.clears || 1)
         }
     }
-
     async function searchGlobal() {
         const [globalDisplayName, globalDisplayNameCode] = searchTerm.split("#")
         const results = await prisma.player
             .findMany({
+                select: select,
                 where: {
                     bungieGlobalDisplayName: {
                         equals: globalDisplayName,
@@ -89,6 +103,7 @@ async function searchForPlayer(query: string, count: number) {
         const take = count * 2
         const results = await prisma.player
             .findMany({
+                select: select,
                 where: {
                     bungieGlobalDisplayName: {
                         startsWith: searchTerm,
