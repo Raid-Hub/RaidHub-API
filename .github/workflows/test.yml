@@ -23,7 +23,6 @@ jobs:
                   github_token: ${{secrets.GITHUB_TOKEN}}
                   workflow: Generate Coverage
                   workflow_conclusion: success
-                  branch: main
                   name: test-coverage.info
                   if_no_artifact_found: fail
 
