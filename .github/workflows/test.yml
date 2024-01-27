@@ -65,7 +65,7 @@ jobs:
             - name: Download code coverage report from this branch
               uses: actions/download-artifact@v3
               with:
-                  name: test-coverage
+                  name: test-coverage.info
 
             - name: Install cloudflared
               run: |
