@@ -1,5 +1,5 @@
+import { WorldFirstLeaderboardType } from "@prisma/client"
 import { ListedRaid, Raid } from "./raids"
-import { PlayerStats, WorldFirstLeaderboardType } from "@prisma/client"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
 export type WorldFirstBoard = (typeof WorldFirstBoards)[number]
@@ -10,14 +10,7 @@ export const WorldFirstBoardsMap = {
     master: WorldFirstLeaderboardType.Master
 } satisfies Record<WorldFirstBoard, WorldFirstLeaderboardType>
 
-export const IndividualBoards = [
-    "fresh",
-    "clears",
-    "sherpas",
-    "trios",
-    "duos",
-    "solos"
-] as const satisfies (keyof PlayerStats)[]
+export const IndividualBoards = ["fresh", "clears", "sherpas", "trios", "duos", "solos"] as const
 export type IndividualBoard = (typeof IndividualBoards)[number]
 
 export const GlobalBoards = ["clears", "sherpas", "fresh", "speed"] as const

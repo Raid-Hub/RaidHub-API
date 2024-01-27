@@ -1,8 +1,7 @@
 import { GlobalLeaderboard, IndividualLeaderboard, WorldFirstLeaderboardType } from "@prisma/client"
-import { GlobalBoard, IndividualBoard, UrlPathsToRaid } from "../../data/leaderboards"
-import { prisma } from "../../prisma"
-import { RaidPath } from "./_schema"
+import { GlobalBoard, IndividualBoard } from "../../data/leaderboards"
 import { ListedRaid } from "../../data/raids"
+import { prisma } from "../../services/prisma"
 
 export const IndividualBoardPositionKeys = {
     clears: {
@@ -68,7 +67,8 @@ export async function getIndividualLeaderboardEntries(params: {
                     iconPath: true,
                     displayName: true,
                     bungieGlobalDisplayName: true,
-                    bungieGlobalDisplayNameCode: true
+                    bungieGlobalDisplayNameCode: true,
+                    lastSeen: true
                 }
             }
         },
@@ -131,7 +131,8 @@ export async function getWorldFirstLeaderboardEntries(params: {
                                             iconPath: true,
                                             displayName: true,
                                             bungieGlobalDisplayName: true,
-                                            bungieGlobalDisplayNameCode: true
+                                            bungieGlobalDisplayNameCode: true,
+                                            lastSeen: true
                                         }
                                     }
                                 }
@@ -221,7 +222,8 @@ export async function getGlobalLeaderboardEntries(params: {
                     iconPath: true,
                     displayName: true,
                     bungieGlobalDisplayName: true,
-                    bungieGlobalDisplayNameCode: true
+                    bungieGlobalDisplayNameCode: true,
+                    lastSeen: true
                 }
             }
         },

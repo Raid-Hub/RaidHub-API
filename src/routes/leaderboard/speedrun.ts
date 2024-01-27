@@ -1,14 +1,17 @@
-import { z } from "zod"
-import { RaidHubRoute, ok } from "../../RaidHubRoute"
-import { RaidPath, RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
-import { cacheControl } from "../../middlewares/cache-control"
-import { zBigIntString } from "../../util/zod-common"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid } from "../../data/leaderboards"
+import { cacheControl } from "../../middlewares/cache-control"
+import { zPlayerWithActivityData } from "../../schema/common"
+import { z, zDigitString, zISODateString, zPage, zPositiveInt } from "../../schema/zod"
+import { prisma } from "../../services/prisma"
+import { ok } from "../../util/response"
+import { RaidPath, zLeaderboardQueryPagination, zRaidPath } from "./_schema"
 
 export const leaderboardSpeedrunRoute = new RaidHubRoute({
     method: "get",
-    params: RaidPathSchema,
+    params: z.object({
+        raid: zRaidPath
+    }),
     query: zLeaderboardQueryPagination,
     middlewares: [cacheControl(30)],
     async handler(req) {
@@ -23,27 +26,18 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
         success: z
             .object({
                 params: z.object({
-                    count: z.number(),
-                    page: z.number(),
-                    raid: z.string()
+                    count: zPositiveInt(),
+                    page: zPage(),
+                    raid: zRaidPath
                 }),
                 entries: z.array(
                     z.object({
                         rank: z.number(),
-                        instanceId: zBigIntString(),
-                        dateStarted: z.date(),
-                        dateCompleted: z.date(),
-                        players: z.array(
-                            z.object({
-                                membershipId: zBigIntString(),
-                                membershipType: z.number().nullable(),
-                                iconPath: z.string().nullable(),
-                                displayName: z.string().nullable(),
-                                bungieGlobalDisplayName: z.string().nullable(),
-                                bungieGlobalDisplayNameCode: z.string().nullable(),
-                                didPlayerFinish: z.boolean()
-                            })
-                        )
+                        instanceId: zDigitString(),
+                        dateStarted: zISODateString(),
+                        dateCompleted: zISODateString(),
+                        duration: zPositiveInt(),
+                        players: z.array(zPlayerWithActivityData)
                     })
                 )
             })
@@ -71,9 +65,17 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
             instanceId: true,
             dateStarted: true,
             dateCompleted: true,
+            duration: true,
             playerActivity: {
                 select: {
                     finishedRaid: true,
+                    kills: true,
+                    assists: true,
+                    deaths: true,
+                    timePlayedSeconds: true,
+                    classHash: true,
+                    sherpas: true,
+                    isFirstClear: true,
                     player: {
                         select: {
                             membershipId: true,
@@ -81,7 +83,8 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
                             iconPath: true,
                             displayName: true,
                             bungieGlobalDisplayName: true,
-                            bungieGlobalDisplayNameCode: true
+                            bungieGlobalDisplayNameCode: true,
+                            lastSeen: true
                         }
                     }
                 }
@@ -94,9 +97,10 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
         instanceId: e.instanceId,
         dateStarted: e.dateStarted,
         dateCompleted: e.dateCompleted,
-        players: e.playerActivity.map(pa => ({
-            ...pa.player,
-            didPlayerFinish: pa.finishedRaid
+        duration: e.duration,
+        players: e.playerActivity.map(({ player, ...activity }) => ({
+            ...player,
+            data: activity
         }))
     }))
 }

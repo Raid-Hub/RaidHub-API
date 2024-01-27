@@ -1,9 +1,7 @@
 import { RequestHandler } from "express"
 
-export function cacheControl<P, S, B, Q, L extends Record<string, any>>(
-    seconds: number
-): RequestHandler<P, S, B, Q, L> {
-    return (req, res, next) => {
+export function cacheControl<P, S, B, Q>(seconds: number): RequestHandler<P, S, B, Q> {
+    return (_, res, next) => {
         // save the previous send method
         const _send = res.send.bind(res)
 

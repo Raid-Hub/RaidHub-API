@@ -1,9 +1,10 @@
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { playerRouterParams } from "./_schema"
-import { z } from "zod"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
-import { prisma } from "../../prisma"
-import { zBigIntString } from "../../util/zod-common"
+import { zPlayerInfo } from "../../schema/common"
+import { z, zBigIntString } from "../../schema/zod"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
+import { playerRouterParams } from "./_schema"
 
 export const playerBasicRoute = new RaidHubRoute({
     method: "get",
@@ -28,7 +29,6 @@ export const playerBasicRoute = new RaidHubRoute({
         if (!member) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                404,
                 "Player not found"
             )
         } else {
@@ -36,19 +36,9 @@ export const playerBasicRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                membershipId: zBigIntString(),
-                membershipType: z.number().nullable(),
-                iconPath: z.string().nullable(),
-                displayName: z.string().nullable(),
-                bungieGlobalDisplayName: z.string().nullable(),
-                bungieGlobalDisplayNameCode: z.string().nullable(),
-                lastSeen: z.date().nullable()
-            })
-            .strict(),
+        success: zPlayerInfo,
         error: z.object({
-            notFound: z.boolean(),
+            notFound: z.literal(true),
             membershipId: zBigIntString()
         })
     }

@@ -1,7 +1,8 @@
-import { RaidHubRoute, ok } from "../../RaidHubRoute"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
-import { prisma } from "../../prisma"
-import { z } from "zod"
+import { z } from "../../schema/zod"
+import { prisma } from "../../services/prisma"
+import { ok } from "../../util/response"
 
 export const adminQueryRoute = new RaidHubRoute({
     method: "post",
@@ -10,12 +11,11 @@ export const adminQueryRoute = new RaidHubRoute({
     }),
     middlewares: [cacheControl(5)],
     async handler(req) {
-        const data = await prisma.$queryRawUnsafe<Object[]>(req.body.query)
+        const rows = await prisma.$queryRawUnsafe<unknown[]>(req.body.query)
 
-        return ok(data)
+        return ok(rows)
     },
     response: {
-        success: z.array(z.object({})),
-        error: z.object({})
+        success: z.array(z.any())
     }
 })

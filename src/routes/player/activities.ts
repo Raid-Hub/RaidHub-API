@@ -1,24 +1,22 @@
-import { z } from "zod"
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
+import { RaidHubRoute } from "../../RaidHubRoute"
+import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
+import { zActivityWithPlayerData, zRaidEnum, zRaidVersionEnum } from "../../schema/common"
+import { z, zBigIntString, zCount } from "../../schema/zod"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
 import { playerRouterParams } from "./_schema"
-import { zBigIntString, zCount } from "../../util/zod-common"
-import { prisma } from "../../prisma"
-import { isContest, isDayOne } from "../../data/raceDates"
-import { zActivityPlayerData } from "../../util/schema-common"
 
 export const playerActivitiesRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    query: z
-        .object({
-            count: zCount({
-                min: 50,
-                def: 2000,
-                max: 5000
-            }),
-            cursor: zBigIntString().optional()
-        })
-        .default({ count: 2000 }),
+    query: z.object({
+        count: zCount({
+            min: 50,
+            def: 2000,
+            max: 5000
+        }),
+        cursor: zBigIntString().optional()
+    }),
     middlewares: [
         (req, res, next) => {
             // save the previous send method
@@ -44,7 +42,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
             count
         })
         if (!data) {
-            return fail({ membershipId, notFound: true }, 404, "Player not found")
+            return fail({ membershipId, notFound: true }, "Player not found")
         } else {
             return ok(data)
         }
@@ -53,30 +51,18 @@ export const playerActivitiesRoute = new RaidHubRoute({
         success: z
             .object({
                 activities: z.array(
-                    z.object({
-                        instanceId: zBigIntString(),
-                        completed: z.boolean(),
-                        fresh: z.boolean().nullable(),
-                        flawless: z.boolean().nullable(),
-                        playerCount: z.number().int().positive(),
-                        dateStarted: z.date(),
-                        dateCompleted: z.date(),
-                        dayOne: z.boolean(),
-                        contest: z.boolean(),
-                        platformType: z.number().int(),
-                        player: zActivityPlayerData,
+                    zActivityWithPlayerData.extend({
                         raid: z.object({
-                            raidHash: zBigIntString(),
-                            raidId: z.number().positive().int(),
-                            versionId: z.number().positive().int()
+                            raidId: zRaidEnum,
+                            versionId: zRaidVersionEnum
                         })
                     })
                 ),
-                nextCursor: z.string().nullable()
+                nextCursor: zBigIntString().nullable()
             })
             .strict(),
         error: z.object({
-            notFound: z.boolean(),
+            notFound: z.literal(true),
             membershipId: zBigIntString()
         })
     }
@@ -94,18 +80,9 @@ const activityQuery = (membershipId: bigint, count: number) =>
         orderBy: {
             dateCompleted: "desc"
         },
-        select: {
-            instanceId: true,
-            dateStarted: true,
-            dateCompleted: true,
-            completed: true,
-            fresh: true,
-            flawless: true,
-            playerCount: true,
-            platformType: true,
+        include: {
             raidDefinition: {
                 select: {
-                    raidHash: true,
                     raidId: true,
                     versionId: true
                 }
@@ -198,6 +175,7 @@ async function getPlayerActivities({
                 ...a,
                 dayOne: isDayOne(raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(raidDefinition.raidId, a.dateStarted),
+                weekOne: isWeekOne(raidDefinition.raidId, a.dateCompleted),
                 raid: {
                     ...raidDefinition
                 },

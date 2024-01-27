@@ -1,16 +1,34 @@
-import { Router } from "express"
+import { RaidHubRouter } from "../../RaidHubRouter"
 import { leaderboardGlobalRoute } from "./global"
-import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
 import { leaderboardRaidIndividualRoute } from "./individual"
 import { leaderboardSpeedrunRoute } from "./speedrun"
-import { leaderboardSearchRoute } from "./search"
+import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
 
-export const leaderboardRouter = Router()
-leaderboardRouter.use("/search", leaderboardSearchRoute.express)
-leaderboardRouter.use("/global/:category", leaderboardGlobalRoute.express)
-
-const raidRouter = Router({ mergeParams: true })
-leaderboardRouter.use("/:raid", raidRouter)
-raidRouter.use("/worldfirst/:category", leaderboardRaidWorldfirstRoute.express)
-raidRouter.use("/individual/:category", leaderboardRaidIndividualRoute.express)
-raidRouter.use("/speedrun", leaderboardSpeedrunRoute.express)
+export const leaderboardRouter = new RaidHubRouter({
+    routes: [
+        // { path: "/search", route: leaderboardSearchRoute },
+        {
+            path: "/global/:category",
+            route: leaderboardGlobalRoute
+        },
+        {
+            path: "/:raid",
+            route: new RaidHubRouter({
+                routes: [
+                    {
+                        path: "/worldfirst/:category",
+                        route: leaderboardRaidWorldfirstRoute
+                    },
+                    {
+                        path: "/individual/:category",
+                        route: leaderboardRaidIndividualRoute
+                    },
+                    {
+                        path: "/speedrun",
+                        route: leaderboardSpeedrunRoute
+                    }
+                ]
+            })
+        }
+    ]
+})

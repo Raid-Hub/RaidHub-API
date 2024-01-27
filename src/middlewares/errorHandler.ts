@@ -1,25 +1,29 @@
 import {
+    PrismaClientInitializationError,
+    PrismaClientKnownRequestError,
     PrismaClientUnknownRequestError,
     PrismaClientValidationError
 } from "@prisma/client/runtime/library"
 import { ErrorRequestHandler } from "express"
-import { serverError } from "../RaidHubRoute"
-import { z } from "zod"
+import { zServerError } from "../RaidHubErrors"
+import { z } from "../schema/zod"
 
 // This is the final middleware run, so it cannot point to next
-export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
-    let details: any = "Unknown"
-
-    if (err instanceof PrismaClientValidationError) {
-        details = {
-            ...err
-        }
+export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
+    let details: z.infer<typeof zServerError>["error"] & Record<string, unknown> = {
+        type: "unknown",
+        at: null
     }
 
-    if (err instanceof PrismaClientUnknownRequestError) {
+    if (
+        err instanceof PrismaClientInitializationError ||
+        err instanceof PrismaClientValidationError ||
+        err instanceof PrismaClientUnknownRequestError ||
+        err instanceof PrismaClientKnownRequestError
+    ) {
         details = {
-            ...err,
-            cause: err.message.split("`")[1]
+            type: err.name,
+            at: err.message.split("`")[1]
         }
     }
 
@@ -29,7 +33,6 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, next) => {
         message: "Something went wrong.",
         minted: new Date(),
         success: false,
-        statusCode: 500,
         error: details
-    } satisfies z.infer<typeof serverError>)
+    } satisfies (typeof zServerError)["_input"])
 }

@@ -1,3 +1,9 @@
+import { RaidHubRoute } from "../RaidHubRoute"
+import {
+    ClearsLeaderboardsForRaid,
+    IndividualBoard,
+    IndividualBoardNames
+} from "../data/leaderboards"
 import {
     AllRaidHashes,
     ContestRaids,
@@ -10,16 +16,11 @@ import {
     ReprisedRaidDifficultyPairings,
     SunsetRaids
 } from "../data/raids"
-import { groupBy } from "../util/helpers"
 import { cacheControl } from "../middlewares/cache-control"
-import { RaidHubRoute, ok } from "../RaidHubRoute"
-import { prisma } from "../prisma"
-import { z } from "zod"
-import {
-    ClearsLeaderboardsForRaid,
-    IndividualBoard,
-    IndividualBoardNames
-} from "../data/leaderboards"
+import { z, zISODateString, zPositiveInt } from "../schema/zod"
+import { prisma } from "../services/prisma"
+import { groupBy } from "../util/helpers"
+import { ok } from "../util/response"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -57,11 +58,11 @@ export const manifestRoute = new RaidHubRoute({
             raids,
             difficulties,
             hashes: AllRaidHashes,
-            listed: ListedRaids,
-            sunset: SunsetRaids,
-            contest: ContestRaids,
-            master: MasterRaids,
-            prestige: PrestigeRaids,
+            listed: [...ListedRaids],
+            sunset: [...SunsetRaids],
+            contest: [...ContestRaids],
+            master: [...MasterRaids],
+            prestige: [...PrestigeRaids],
             reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
                 raid,
                 difficulty
@@ -88,15 +89,15 @@ export const manifestRoute = new RaidHubRoute({
                 difficulties: z.record(z.string()),
                 hashes: z.record(
                     z.object({
-                        raid: z.number(),
-                        difficulty: z.number()
+                        raid: zPositiveInt(),
+                        difficulty: zPositiveInt()
                     })
                 ),
-                listed: z.array(z.number()).readonly(),
-                sunset: z.array(z.number()).readonly(),
-                contest: z.array(z.number()).readonly(),
-                master: z.array(z.number()).readonly(),
-                prestige: z.array(z.number()).readonly(),
+                listed: z.array(zPositiveInt()),
+                sunset: z.array(zPositiveInt()),
+                contest: z.array(zPositiveInt()),
+                master: z.array(zPositiveInt()),
+                prestige: z.array(zPositiveInt()),
                 reprisedChallengePairings: z.array(
                     z.object({
                         raid: z.number(),
@@ -109,7 +110,7 @@ export const manifestRoute = new RaidHubRoute({
                             z.object({
                                 id: z.string(),
                                 type: z.string(),
-                                date: z.date()
+                                date: zISODateString()
                             })
                         )
                     ),

@@ -1,21 +1,21 @@
-import * as dotenv from "dotenv"
 import { PrismaClient, WorldFirstLeaderboardType } from "@prisma/client"
-import {
-    BungieNetResponse,
-    DestinyPostGameCarnageReportData,
-    DestinyPostGameCarnageReportEntry
-} from "bungie-net-core/models"
-import { DestinyActivityModeType } from "bungie-net-core/enums"
+import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
 import {
     getActivityHistory,
     getProfile,
     searchDestinyPlayerByBungieName
 } from "bungie-net-core/endpoints/Destiny2"
-import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
+import { DestinyActivityModeType } from "bungie-net-core/enums"
+import {
+    BungieNetResponse,
+    DestinyPostGameCarnageReportData,
+    DestinyPostGameCarnageReportEntry
+} from "bungie-net-core/models"
+import * as dotenv from "dotenv"
 import { gzipSync } from "zlib"
-import { pgcrSchema } from "../src/util/pgcr"
 import { ZodError } from "zod"
 import { Difficulty, ListedRaids } from "../src/data/raids"
+import { pgcrSchema } from "../src/util/pgcr"
 
 const prisma = new PrismaClient()
 
@@ -31,7 +31,6 @@ const bungieClient: BungieClientProtocol = {
             if (res.ok) {
                 return data as T
             } else {
-                // @ts-ignore
                 throw new Error(data.Message)
             }
         })
@@ -152,7 +151,7 @@ async function seed() {
 async function seedPlayers(names: string[]) {
     const COUNT = 250
     const THREADS = 60
-    const pgcrQueue = new Set<BigInt>()
+    const pgcrQueue = new Set<bigint>()
 
     const characters = await Promise.all(names.map(findCharacters)).then(c => c.flat())
 
@@ -174,7 +173,8 @@ async function seedPlayers(names: string[]) {
     await Promise.all(
         characters.map(async char => {
             let page = 0
-            while (true) {
+            let len = 0
+            while (len >= (THREADS / 20) * COUNT) {
                 const activities = await Promise.all(
                     new Array(THREADS / 20).fill(undefined).map((_, i) =>
                         getActivityHistory(bungieClient, {
@@ -200,10 +200,7 @@ async function seedPlayers(names: string[]) {
                 })
 
                 page += THREADS / 20
-
-                if (activities.length < (THREADS / 20) * COUNT) {
-                    break
-                }
+                len = activities.length
             }
             return
         })
@@ -374,7 +371,7 @@ async function seedPlayers(names: string[]) {
                                                 clears: {
                                                     increment: didFinish ? 1 : 0
                                                 },
-                                                fresh: {
+                                                fullClears: {
                                                     increment: didFinish && pgcr.fresh ? 1 : 0
                                                 },
                                                 trios: {

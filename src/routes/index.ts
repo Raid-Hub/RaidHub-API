@@ -1,16 +1,37 @@
-import { Router } from "express"
-import { adminRouter } from "./admin"
-import { manifestRoute } from "./manifest"
-import { playerRouter } from "./player"
-import { pgcrRoute } from "./pgcr"
+import { RaidHubRouter } from "../RaidHubRouter"
 import { activityRouter } from "./activity"
+import { adminRouter } from "./admin"
 import { leaderboardRouter } from "./leaderboard"
+import { manifestRoute } from "./manifest"
+import { pgcrRoute } from "./pgcr"
+import { playerRouter } from "./player"
 
-export const router = Router({ strict: true, mergeParams: true })
-
-router.use("/activity", activityRouter)
-router.use("/admin", adminRouter)
-router.use("/leaderboard", leaderboardRouter)
-router.use("/player", playerRouter)
-router.use("/manifest", manifestRoute.express)
-router.use("/pgcr/:instanceId", pgcrRoute.express)
+export const router = new RaidHubRouter({
+    middlewares: [],
+    routes: [
+        {
+            path: "/manifest",
+            route: manifestRoute
+        },
+        {
+            path: "/player",
+            route: playerRouter
+        },
+        {
+            path: "/activity",
+            route: activityRouter
+        },
+        {
+            path: "/leaderboard",
+            route: leaderboardRouter
+        },
+        {
+            path: "/pgcr/:instanceId",
+            route: pgcrRoute
+        },
+        {
+            path: "/admin",
+            route: adminRouter
+        }
+    ]
+})

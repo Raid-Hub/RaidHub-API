@@ -1,11 +1,20 @@
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { playerRouterParams } from "./_schema"
-import { z } from "zod"
-import { cacheControl } from "../../middlewares/cache-control"
-import { zBigIntString } from "../../util/zod-common"
-import { ListedRaid } from "../../data/raids"
-import { prisma } from "../../prisma"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
+import { ListedRaid } from "../../data/raids"
+import { cacheControl } from "../../middlewares/cache-control"
+import { registry, zPlayerInfo } from "../../schema/common"
+import { z, zBigIntString, zPositiveInt } from "../../schema/zod"
+import { prisma } from "../../services/prisma"
+import { fail, ok } from "../../util/response"
+import { playerRouterParams } from "./_schema"
+
+const zPlayerStatRanking = registry.register(
+    "PlayerStatRanking",
+    z.object({
+        value: z.number().int().nullable(),
+        rank: z.number().int().nullable()
+    })
+)
 
 export const playerProfileRoute = new RaidHubRoute({
     method: "get",
@@ -16,7 +25,6 @@ export const playerProfileRoute = new RaidHubRoute({
         if (!data) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                404,
                 "Player not found"
             )
         } else {
@@ -26,33 +34,14 @@ export const playerProfileRoute = new RaidHubRoute({
     response: {
         success: z
             .object({
-                player: z.object({
-                    membershipId: zBigIntString(),
-                    membershipType: z.number().nullable(),
-                    iconPath: z.string().nullable(),
-                    displayName: z.string().nullable(),
-                    bungieGlobalDisplayName: z.string().nullable(),
-                    bungieGlobalDisplayNameCode: z.string().nullable()
-                }),
+                player: zPlayerInfo,
                 stats: z.object({
                     global: z
                         .object({
-                            clears: z.object({
-                                value: z.number().int().nullable(),
-                                rank: z.number().int().nullable()
-                            }),
-                            fullClears: z.object({
-                                value: z.number().int().nullable(),
-                                rank: z.number().int().nullable()
-                            }),
-                            sherpas: z.object({
-                                value: z.number().int().nullable(),
-                                rank: z.number().int().nullable()
-                            }),
-                            speed: z.object({
-                                value: z.number().int().nullable(),
-                                rank: z.number().int().nullable()
-                            })
+                            clears: zPlayerStatRanking,
+                            fullClears: zPlayerStatRanking,
+                            sherpas: zPlayerStatRanking,
+                            speed: zPlayerStatRanking
                         })
                         .nullable(),
                     byRaid: z.record(
@@ -63,19 +52,19 @@ export const playerProfileRoute = new RaidHubRoute({
                                     duration: z.number().int()
                                 })
                                 .nullable(),
-                            clears: z.number().int(),
-                            fullClears: z.number().int(),
-                            sherpas: z.number().int(),
-                            trios: z.number().int(),
-                            duos: z.number().int(),
-                            solos: z.number().int()
+                            clears: z.number().int().nonnegative(),
+                            fullClears: z.number().int().nonnegative(),
+                            sherpas: z.number().int().nonnegative(),
+                            trios: z.number().int().nonnegative(),
+                            duos: z.number().int().nonnegative(),
+                            solos: z.number().int().nonnegative()
                         })
                     )
                 }),
                 worldFirstEntries: z.record(
                     z.array(
                         z.object({
-                            rank: z.number(),
+                            rank: zPositiveInt(),
                             instanceId: zBigIntString(),
                             raidHash: zBigIntString(),
                             dayOne: z.boolean(),
@@ -87,7 +76,7 @@ export const playerProfileRoute = new RaidHubRoute({
             })
             .strict(),
         error: z.object({
-            notFound: z.boolean(),
+            notFound: z.literal(true),
             membershipId: zBigIntString()
         })
     }
@@ -109,7 +98,14 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
             where: {
                 membershipId: membershipId
             },
-            include: {
+            select: {
+                bungieGlobalDisplayName: true,
+                bungieGlobalDisplayNameCode: true,
+                lastSeen: true,
+                displayName: true,
+                membershipId: true,
+                iconPath: true,
+                membershipType: true,
                 globalRanks: {
                     select: {
                         clears: true,
@@ -123,7 +119,14 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                     }
                 },
                 stats: {
-                    include: {
+                    select: {
+                        fullClears: true,
+                        clears: true,
+                        sherpas: true,
+                        trios: true,
+                        duos: true,
+                        solos: true,
+                        raidId: true,
                         fastestClear: {
                             select: {
                                 instanceId: true,
@@ -191,23 +194,13 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 }
             },
             byRaid: Object.fromEntries(
-                stats.map(
-                    ({
-                        fastestClear,
-                        raidId,
-                        membershipId,
-                        fastestFullClearInstanceId,
-                        fresh,
-                        ...rest
-                    }) => [
-                        raidId,
-                        {
-                            ...rest,
-                            fullClears: fresh,
-                            fastestClear
-                        }
-                    ]
-                )
+                stats.map(({ fastestClear, raidId, ...rest }) => [
+                    raidId,
+                    {
+                        ...rest,
+                        fastestClear
+                    }
+                ])
             )
         },
         worldFirstEntries: Object.fromEntries(

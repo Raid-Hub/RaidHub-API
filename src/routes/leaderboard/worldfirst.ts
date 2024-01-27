@@ -1,17 +1,15 @@
-import { z } from "zod"
-import { RaidHubRoute, fail, ok } from "../../RaidHubRoute"
-import { RaidPathSchema, zLeaderboardQueryPagination, zWorldFirstLeaderboardEntry } from "./_schema"
-import { WorldFirstLeaderboardType } from "@prisma/client"
+import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid, WorldFirstBoards, WorldFirstBoardsMap } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zBigIntString } from "../../util/zod-common"
-import { ListedRaid } from "../../data/raids"
-import { prisma } from "../../prisma"
+import { z, zISODateString } from "../../schema/zod"
+import { fail, ok } from "../../util/response"
 import { getWorldFirstLeaderboardEntries } from "./_common"
+import { zLeaderboardQueryPagination, zRaidPath, zWorldFirstLeaderboardEntry } from "./_schema"
 
 export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
     method: "get",
-    params: RaidPathSchema.extend({
+    params: z.object({
+        raid: zRaidPath,
         category: z.enum(WorldFirstBoards)
     }),
     query: zLeaderboardQueryPagination,
@@ -27,12 +25,11 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
         if (!leaderboard) {
             return fail(
                 { notFound: true, params: { ...req.params, ...req.query } },
-                404,
                 "Leaderboard not found"
             )
         } else {
             return ok({
-                params: { ...req.params, ...req.query },
+                params: req.params,
                 date: leaderboard.date,
                 entries: leaderboard.entries
             })
@@ -41,21 +38,25 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
     response: {
         success: z
             .object({
-                params: RaidPathSchema.extend({
-                    category: z.enum(WorldFirstBoards)
-                })
+                params: z
+                    .object({
+                        raid: zRaidPath,
+                        category: z.enum(WorldFirstBoards)
+                    })
                     .merge(zLeaderboardQueryPagination)
                     .strict(),
-                date: z.date(),
+                date: zISODateString(),
                 entries: z.array(zWorldFirstLeaderboardEntry)
             })
             .strict(),
         error: z
             .object({
-                notFound: z.boolean(),
-                params: RaidPathSchema.extend({
-                    category: z.enum(WorldFirstBoards)
-                })
+                notFound: z.literal(true),
+                params: z
+                    .object({
+                        raid: zRaidPath,
+                        category: z.enum(WorldFirstBoards)
+                    })
                     .merge(zLeaderboardQueryPagination)
                     .strict()
             })

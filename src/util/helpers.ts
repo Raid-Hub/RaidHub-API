@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function includedIn<T>(arr: readonly T[], element: any): element is T {
     return arr.includes(element)
 }
