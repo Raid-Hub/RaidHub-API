@@ -37,7 +37,7 @@ writeFile("open-api/openapi.json", JSON.stringify(doc, null, 2), err => {
         }
 
         console.log("Generating static HTML docs...")
-        exec(`redoc-cli bundle -o ${dir}/docs.html ${fileName} --options='${redocOpts}'`, err => {
+        exec(`redoc-cli bundle -o ${dir}/index.html ${fileName} --options='${redocOpts}'`, err => {
             if (err) {
                 console.error(err)
                 process.exit(1)

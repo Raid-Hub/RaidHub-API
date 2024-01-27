@@ -22,3 +22,5 @@ test.js
 !prisma/3_data/migration.sql
 !prisma/4_materialized-views/migration.sql
 !prisma/5_functions/migration.sql
+
+/open-api/*.html
