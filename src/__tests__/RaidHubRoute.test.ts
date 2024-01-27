@@ -1,3 +1,4 @@
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import express from "express"
 import request from "supertest"
 import { z } from "zod"
@@ -65,7 +66,54 @@ const testPostRoute = new RaidHubRoute({
     }
 })
 
+const testEmptyRoute = new RaidHubRoute({
+    method: "get",
+    handler: async () => {
+        return ok({
+            game: "destiny 2" as const
+        })
+    },
+    response: {
+        success: z.object({
+            game: z.literal("destiny 2")
+        })
+    }
+})
+
+const testFailRoute = new RaidHubRoute({
+    method: "get",
+    query: z.object({
+        fail: z.string().optional()
+    }),
+    handler: async args => {
+        if (args.query.fail === "d2") {
+            throw new Error("bad game")
+        } else if (args.query.fail === "prisma") {
+            throw new PrismaClientKnownRequestError(
+                "Invalid `prisma.player.findUnique()` invocation in...",
+                {
+                    code: "P2002",
+                    meta: {
+                        target: "user"
+                    },
+                    clientVersion: "0.0.0"
+                }
+            )
+        }
+        return ok({
+            game: "destiny 2" as const
+        })
+    },
+    response: {
+        success: z.object({
+            game: z.literal("destiny 2")
+        })
+    }
+})
+
+app.use("/test/", testEmptyRoute.express)
 app.use("/test/post", testPostRoute.express)
+app.use("/test/fail", testFailRoute.express)
 app.use("/test/:testId", testGetRoute.express)
 
 app.use(errorHandler)
@@ -119,6 +167,17 @@ describe("raidhub route middleware validators", () => {
         expect(res.body.error.issues[0].path).toEqual(["count"])
     })
 
+    test("passes parsing empty", async () => {
+        const res = await request(app).get("/test")
+        expect(res.body).toMatchObject({
+            success: true,
+            response: {
+                game: "destiny 2"
+            }
+        })
+        expect(res.status).toBe(200)
+    })
+
     test("passes parsing get", async () => {
         const res = await request(app).get("/test/123").query({ count: 10 })
         expect(res.body).toMatchObject({
@@ -155,5 +214,30 @@ describe("raidhub route middleware validators", () => {
             }
         })
         expect(res.status).toBe(200)
+    })
+})
+
+describe("raidhub route unhandled error", () => {
+    test("unhandled error thrown ", async () => {
+        const res = await request(app).get("/test/fail").query({ fail: "d2" })
+
+        expect(res.body.message).toBe("Something went wrong.")
+    })
+
+    test("prisma unhandled error thrown ", async () => {
+        const res = await request(app).get("/test/fail").query({ fail: "prisma" })
+
+        expect(res.body.error).toMatchObject({
+            type: "PrismaClientKnownRequestError",
+            at: "prisma.player.findUnique()"
+        })
+    })
+
+    test("no error thrown ", async () => {
+        const res = await request(app).get("/test/fail")
+
+        expect(res.body.response).toMatchObject({
+            game: "destiny 2"
+        })
     })
 })
