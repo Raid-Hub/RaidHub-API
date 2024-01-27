@@ -24,3 +24,4 @@ test.js
 !prisma/5_functions/migration.sql
 
 /open-api/*.html
+coverage/*
