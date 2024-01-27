@@ -43,9 +43,7 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test --coverage
-                  ls ./
-                  ls ./coverage
+                  yarn test --coverage --coverageReporters="lcov"
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -87,7 +85,7 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=10&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test --coverage
+                  yarn test --coverage --coverageReporters="lcov"
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report
