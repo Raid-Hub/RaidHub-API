@@ -18,12 +18,12 @@ jobs:
 
             - name: Generate File
               run: |
-                  cp ./openapi/openapi.json .
+                  cp ./open-api/openapi.json .
                   yarn openapi
 
             - name: Verify File
               run: |
-                  if ! diff -q ./openapi/openapi.json ./openapi.json; then
+                  if ! diff -q ./open-api/openapi.json ./openapi.json; then
                     echo "The openapi.json file is not up to date. Please run 'yarn openapi' and commit the changes."
                     exit 1
                   fi
