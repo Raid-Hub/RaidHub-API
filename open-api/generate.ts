@@ -17,7 +17,7 @@ const doc = new OpenApiGeneratorV3(registry.definitions).generateDocument({
     openapi: "3.0.0",
     info: {
         title: "RaidHub API",
-        description: "Semi-public API for RaidHub",
+        description: "The Semi-public API for RaidHub",
         version: "0.0.0"
     },
     servers: [{ url: "https://api.raidhub.io" }]
