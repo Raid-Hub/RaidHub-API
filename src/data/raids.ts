@@ -140,6 +140,17 @@ export const ListedRaids = [
 ] as const
 export type ListedRaid = (typeof ListedRaids)[number]
 
+export const RaidVersions = [
+    Difficulty.NORMAL,
+    Difficulty.GUIDEDGAMES,
+    Difficulty.PRESTIGE,
+    Difficulty.MASTER,
+    Difficulty.CHALLENGE_VOG,
+    Difficulty.CHALLENGE_KF,
+    Difficulty.CHALLENGE_CROTA
+] as const
+export type RaidVersion = (typeof RaidVersions)[number]
+
 export const SunsetRaids = [
     Raid.LEVIATHAN,
     Raid.EATER_OF_WORLDS,

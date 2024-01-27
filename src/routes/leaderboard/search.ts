@@ -1,19 +1,19 @@
-import { WorldFirstLeaderboardType } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import {
     GlobalBoard,
     GlobalBoards,
     IndividualBoard,
     IndividualBoards,
+    WorldFirstBoard,
     WorldFirstBoards,
     WorldFirstBoardsMap
 } from "../../data/leaderboards"
-import { ListedRaid, ListedRaids } from "../../data/raids"
+import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
+import { zRaidEnum } from "../../schema/common"
+import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
-import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
-import { z, zBigIntString } from "../../util/zod"
 import {
     GlobalBoardPositionKeys,
     IndividualBoardPositionKeys,
@@ -25,35 +25,23 @@ import { zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry } from "./_sch
 
 const CommonQueryParams = z.object({
     membershipId: zBigIntString(),
-    count: z.coerce.number()
+    count: zCount({ def: 25, min: 5, max: 100 })
 })
 
 const SearchQuery = z.discriminatedUnion("type", [
     CommonQueryParams.extend({
         type: z.literal("worldfirst"),
-        category: z.enum(WorldFirstBoards).transform(v => WorldFirstBoardsMap[v]),
-        raid: z.coerce.number().refine(r => includedIn(ListedRaids, r))
-    }).openapi("t1", {
-        param: {
-            name: "t1"
-        }
+        category: z.enum(WorldFirstBoards),
+        raid: z.coerce.number().pipe(zRaidEnum)
     }),
     CommonQueryParams.extend({
         type: z.literal("individual"),
         category: z.enum(IndividualBoards),
-        raid: z.coerce.number().refine(r => includedIn(ListedRaids, r))
-    }).openapi("t2", {
-        param: {
-            name: "t2"
-        }
+        raid: z.coerce.number().pipe(zRaidEnum)
     }),
     CommonQueryParams.extend({
         type: z.literal("global"),
         category: z.enum(GlobalBoards)
-    }).openapi("t3", {
-        param: {
-            name: "t3"
-        }
     })
 ])
 
@@ -119,11 +107,11 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             .strict(),
         error: z
             .object({
-                notFound: z.boolean(),
+                notFound: z.literal(true),
                 params: CommonQueryParams.extend({
                     type: z.string(),
                     category: z.string(),
-                    raid: z.number().optional()
+                    raid: zRaidEnum
                 }).strict()
             })
             .strict()
@@ -167,8 +155,9 @@ async function searchWorldFirstLeaderboard(query: {
     count: number
     membershipId: bigint
     raid: ListedRaid
-    category: WorldFirstLeaderboardType
+    category: WorldFirstBoard
 }) {
+    const type = WorldFirstBoardsMap[query.category]
     const memberPlacements = await prisma.playerActivity.findMany({
         where: {
             membershipId: query.membershipId,
@@ -176,7 +165,7 @@ async function searchWorldFirstLeaderboard(query: {
                 activityLeaderboardEntry: {
                     some: {
                         leaderboard: {
-                            type: query.category,
+                            type: type,
                             raidId: query.raid
                         }
                     }
@@ -205,7 +194,7 @@ async function searchWorldFirstLeaderboard(query: {
 
     const leaderboard = await getWorldFirstLeaderboardEntries({
         raidId: query.raid,
-        type: query.category,
+        type: type,
         page: Math.ceil(placements[0].rank / query.count),
         count: query.count
     })

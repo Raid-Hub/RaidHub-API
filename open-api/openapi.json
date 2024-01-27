@@ -11,7 +11,819 @@
     }
   ],
   "components": {
-    "schemas": {},
+    "schemas": {
+      "BungieMembershipType": {
+        "type": "integer",
+        "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1],
+        "externalDocs": {
+          "url": "https://bungie-net.github.io/#/components/schemas/BungieMembershipType"
+        }
+      },
+      "RaidEnum": {
+        "type": "number"
+      },
+      "RaidVersionEnum": {
+        "type": "number"
+      },
+      "PlayerInfo": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "membershipType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BungieMembershipType"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "iconPath": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "\\/common\\/destiny2_content\\/icons\\/\\w+\\.(jpg|gif)",
+            "example": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bungieGlobalDisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bungieGlobalDisplayNameCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "membershipId",
+          "membershipType",
+          "iconPath",
+          "displayName",
+          "bungieGlobalDisplayName",
+          "bungieGlobalDisplayNameCode"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "bungieGlobalDisplayName": "Newo",
+          "bungieGlobalDisplayNameCode": "9010",
+          "membershipId": "4611686018488107374",
+          "displayName": "xx_newo_xx",
+          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
+          "membershipType": 3
+        }
+      },
+      "Activity": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "raidHash": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "flawless": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "fresh": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "playerCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "dateStarted": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateCompleted": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "platformType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BungieMembershipType"
+              },
+              {
+                "default": 0
+              }
+            ]
+          }
+        },
+        "required": [
+          "instanceId",
+          "raidHash",
+          "completed",
+          "flawless",
+          "fresh",
+          "playerCount",
+          "dateStarted",
+          "dateCompleted",
+          "duration"
+        ],
+        "additionalProperties": false
+      },
+      "ActivityExtended": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dayOne": {
+                "type": "boolean"
+              },
+              "contest": {
+                "type": "boolean"
+              },
+              "weekOne": {
+                "type": "boolean"
+              }
+            },
+            "required": ["dayOne", "contest", "weekOne"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ActivityPlayerData": {
+        "type": "object",
+        "properties": {
+          "finishedRaid": {
+            "type": "boolean"
+          },
+          "kills": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assists": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deaths": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "classHash": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+n?$"
+          },
+          "sherpas": {
+            "type": "integer"
+          },
+          "isFirstClear": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "finishedRaid",
+          "kills",
+          "assists",
+          "deaths",
+          "timePlayedSeconds",
+          "classHash",
+          "sherpas",
+          "isFirstClear"
+        ],
+        "additionalProperties": false
+      },
+      "PlayerWithActivityData": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PlayerInfo"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "player": {
+                "$ref": "#/components/schemas/ActivityPlayerData"
+              }
+            },
+            "required": ["player"],
+            "additionalProperties": false
+          }
+        ],
+        "example": {
+          "bungieGlobalDisplayName": "Newo",
+          "bungieGlobalDisplayNameCode": "9010",
+          "membershipId": "4611686018488107374",
+          "displayName": "xx_newo_xx",
+          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
+          "membershipType": 3
+        }
+      },
+      "ActivityWithPlayerData": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActivityExtended"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "player": {
+                "$ref": "#/components/schemas/ActivityPlayerData"
+              }
+            },
+            "required": ["player"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "RaidHubError": {
+        "type": "object",
+        "properties": {
+          "minted": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "error": {
+            "nullable": true
+          }
+        },
+        "required": ["minted", "message", "success"]
+      },
+      "ZodIssue": {
+        "type": "object",
+        "properties": {
+          "fatal": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "invalid_type",
+              "invalid_literal",
+              "custom",
+              "invalid_union",
+              "invalid_union_discriminator",
+              "invalid_enum_value",
+              "unrecognized_keys",
+              "invalid_arguments",
+              "invalid_return_type",
+              "invalid_date",
+              "invalid_string",
+              "too_small",
+              "too_big",
+              "invalid_intersection_types",
+              "not_multiple_of",
+              "not_finite"
+            ]
+          }
+        },
+        "required": ["message", "path", "code"]
+      },
+      "PathValidationError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RaidHubError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "enum": ["Invalid path params"]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "issues": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ZodIssue"
+                    }
+                  }
+                },
+                "required": ["issues"]
+              }
+            },
+            "required": ["error"]
+          }
+        ]
+      },
+      "QueryValidationError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RaidHubError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "enum": ["Invalid query params"]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "issues": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ZodIssue"
+                    }
+                  }
+                },
+                "required": ["issues"]
+              }
+            },
+            "required": ["error"]
+          }
+        ]
+      },
+      "BodyValidationError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RaidHubError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "enum": ["Invalid JSON body"]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "issues": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ZodIssue"
+                    }
+                  }
+                },
+                "required": ["issues"]
+              }
+            },
+            "required": ["error"]
+          }
+        ]
+      },
+      "ServerError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RaidHubError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "enum": ["Something went wrong."]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "at": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": ["type", "at"]
+              }
+            },
+            "required": ["error"]
+          }
+        ]
+      },
+      "InsufficientPermissionsError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RaidHubError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "enum": ["Forbidden"]
+              }
+            }
+          }
+        ]
+      },
+      "ApiKeyError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RaidHubError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["Invalid API Key"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Missing API Key"]
+                  }
+                ]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["cors"]
+                  },
+                  "apiKey": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "origin": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": ["type", "apiKey", "origin"]
+              }
+            },
+            "required": ["error"]
+          }
+        ]
+      },
+      "RaidPath": {
+        "type": "string",
+        "enum": [
+          "leviathan",
+          "eaterofworlds",
+          "spireofstars",
+          "lastwish",
+          "scourgeofthepast",
+          "crownofsorrow",
+          "gardenofsalvation",
+          "deepstonecrypt",
+          "vaultofglass",
+          "vowofthedisciple",
+          "kingsfall",
+          "rootofnightmares",
+          "crotasend"
+        ]
+      },
+      "IndividualLeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "value": {
+            "type": "number"
+          },
+          "player": {
+            "$ref": "#/components/schemas/PlayerInfo"
+          }
+        },
+        "required": ["position", "rank", "value", "player"],
+        "additionalProperties": false
+      },
+      "WorldFirstLeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "value": {
+            "type": "number"
+          },
+          "activity": {
+            "$ref": "#/components/schemas/Activity"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlayerWithActivityData"
+            }
+          }
+        },
+        "required": ["position", "rank", "value", "activity", "players"],
+        "additionalProperties": false
+      },
+      "DestinyPostGameCarnageReport": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "startingPhaseIndex": {
+            "type": "number"
+          },
+          "activityWasStartedFromBeginning": {
+            "type": "boolean"
+          },
+          "activityDetails": {
+            "type": "object",
+            "properties": {
+              "directorActivityHash": {
+                "type": "string",
+                "pattern": "^\\d+n?$"
+              },
+              "instanceId": {
+                "type": "string",
+                "pattern": "^\\d+n?$"
+              },
+              "mode": {
+                "type": "integer",
+                "enum": [
+                  0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19,
+                  20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 37, 38, 39,
+                  40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+                  55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+                  70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+                  85, 86, 87, 88, 89, 90, 91
+                ]
+              },
+              "modes": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "enum": [
+                    0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19,
+                    20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 37, 38, 39,
+                    40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+                    55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+                    70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+                    85, 86, 87, 88, 89, 90, 91
+                  ]
+                }
+              },
+              "membershipType": {
+                "$ref": "#/components/schemas/BungieMembershipType"
+              }
+            },
+            "required": [
+              "directorActivityHash",
+              "instanceId",
+              "mode",
+              "modes",
+              "membershipType"
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "player": {
+                  "type": "object",
+                  "properties": {
+                    "destinyUserInfo": {
+                      "type": "object",
+                      "properties": {
+                        "iconPath": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "crossSaveOverride": {
+                          "$ref": "#/components/schemas/BungieMembershipType"
+                        },
+                        "applicableMembershipTypes": {
+                          "type": "array",
+                          "nullable": true,
+                          "items": {
+                            "$ref": "#/components/schemas/BungieMembershipType"
+                          }
+                        },
+                        "membershipType": {
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/BungieMembershipType"
+                            },
+                            {
+                              "nullable": true
+                            }
+                          ]
+                        },
+                        "membershipId": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "bungieGlobalDisplayName": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "bungieGlobalDisplayNameCode": {
+                          "type": "number",
+                          "nullable": true
+                        }
+                      },
+                      "required": ["crossSaveOverride", "membershipId"]
+                    },
+                    "characterClass": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "classHash": {
+                      "type": "number"
+                    },
+                    "raceHash": {
+                      "type": "number"
+                    },
+                    "genderHash": {
+                      "type": "number"
+                    },
+                    "characterLevel": {
+                      "type": "number"
+                    },
+                    "lightLevel": {
+                      "type": "number"
+                    },
+                    "emblemHash": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "destinyUserInfo",
+                    "classHash",
+                    "raceHash",
+                    "genderHash",
+                    "characterLevel",
+                    "lightLevel",
+                    "emblemHash"
+                  ]
+                },
+                "characterId": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "basic": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "displayValue": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["value", "displayValue"]
+                      }
+                    },
+                    "required": ["basic"]
+                  }
+                },
+                "extended": {
+                  "type": "object",
+                  "properties": {
+                    "weapons": {
+                      "type": "array",
+                      "nullable": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "referenceId": {
+                            "type": "number"
+                          },
+                          "values": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "object",
+                              "properties": {
+                                "basic": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {
+                                      "type": "number"
+                                    },
+                                    "displayValue": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["value", "displayValue"]
+                                }
+                              },
+                              "required": ["basic"]
+                            }
+                          }
+                        },
+                        "required": ["referenceId", "values"]
+                      }
+                    },
+                    "values": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "basic": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "number"
+                              },
+                              "displayValue": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["value", "displayValue"]
+                          }
+                        },
+                        "required": ["basic"]
+                      }
+                    }
+                  },
+                  "required": ["values"]
+                }
+              },
+              "required": ["player", "characterId", "values"]
+            }
+          }
+        },
+        "required": ["period", "activityDetails", "entries"],
+        "description": "A raw PGCR with a few redundant fields removed",
+        "externalDocs": {
+          "description": "Bungie.net API documentation",
+          "url": "https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData"
+        }
+      },
+      "PlayerStatRanking": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "nullable": true
+          },
+          "rank": {
+            "type": "integer",
+            "nullable": true
+          }
+        },
+        "required": ["value", "rank"]
+      }
+    },
     "parameters": {}
   },
   "paths": {
@@ -43,10 +855,14 @@
                         "type": "object",
                         "properties": {
                           "raid": {
-                            "type": "number"
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
                           },
                           "difficulty": {
-                            "type": "number"
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
                           }
                         },
                         "required": ["raid", "difficulty"]
@@ -55,31 +871,41 @@
                     "listed": {
                       "type": "array",
                       "items": {
-                        "type": "number"
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
                       }
                     },
                     "sunset": {
                       "type": "array",
                       "items": {
-                        "type": "number"
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
                       }
                     },
                     "contest": {
                       "type": "array",
                       "items": {
-                        "type": "number"
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
                       }
                     },
                     "master": {
                       "type": "array",
                       "items": {
-                        "type": "number"
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
                       }
                     },
                     "prestige": {
                       "type": "array",
                       "items": {
-                        "type": "number"
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
                       }
                     },
                     "reprisedChallengePairings": {
@@ -114,7 +940,8 @@
                                   "type": "string"
                                 },
                                 "date": {
-                                  "type": "string"
+                                  "type": "string",
+                                  "nullable": true
                                 }
                               },
                               "required": ["id", "type", "date"]
@@ -200,38 +1027,22 @@
                       "type": "object",
                       "properties": {
                         "count": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
                         },
                         "term": {
-                          "anyOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "displayName": {
-                                  "type": "string",
-                                  "nullable": true
-                                }
-                              },
-                              "required": ["displayName"]
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
                             },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "bungieGlobalDisplayName": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "bungieGlobalDisplayNameCode": {
-                                  "type": "string",
-                                  "nullable": true
-                                }
-                              },
-                              "required": [
-                                "bungieGlobalDisplayName",
-                                "bungieGlobalDisplayNameCode"
-                              ]
+                            "nameWithCode": {
+                              "type": "string",
+                              "nullable": true
                             }
-                          ]
+                          },
+                          "required": ["name", "nameWithCode"]
                         }
                       },
                       "required": ["count", "term"]
@@ -239,50 +1050,22 @@
                     "results": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "membershipId": {
-                            "type": "string"
-                          },
-                          "membershipType": {
-                            "type": "number",
-                            "nullable": true
-                          },
-                          "iconPath": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "displayName": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "bungieGlobalDisplayName": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "bungieGlobalDisplayNameCode": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "lastSeen": {
-                            "type": "string",
-                            "nullable": true
-                          }
-                        },
-                        "required": [
-                          "membershipId",
-                          "membershipType",
-                          "iconPath",
-                          "displayName",
-                          "bungieGlobalDisplayName",
-                          "bungieGlobalDisplayNameCode",
-                          "lastSeen"
-                        ]
+                        "$ref": "#/components/schemas/PlayerInfo"
                       }
                     }
                   },
                   "required": ["params", "results"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
                 }
               }
             }
@@ -335,129 +1118,44 @@
                     "activities": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "instanceId": {
-                            "type": "string",
-                            "pattern": "^\\d+n?$"
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/ActivityWithPlayerData"
                           },
-                          "completed": {
-                            "type": "boolean"
-                          },
-                          "fresh": {
-                            "type": "boolean",
-                            "nullable": true
-                          },
-                          "flawless": {
-                            "type": "boolean",
-                            "nullable": true
-                          },
-                          "playerCount": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "exclusiveMinimum": true
-                          },
-                          "dateStarted": {
-                            "type": "string"
-                          },
-                          "dateCompleted": {
-                            "type": "string"
-                          },
-                          "dayOne": {
-                            "type": "boolean"
-                          },
-                          "contest": {
-                            "type": "boolean"
-                          },
-                          "platformType": {
-                            "type": "integer"
-                          },
-                          "player": {
+                          {
                             "type": "object",
                             "properties": {
-                              "finishedRaid": {
-                                "type": "boolean"
-                              },
-                              "kills": {
-                                "type": "integer"
-                              },
-                              "assists": {
-                                "type": "integer"
-                              },
-                              "deaths": {
-                                "type": "integer"
-                              },
-                              "timePlayedSeconds": {
-                                "type": "integer"
-                              },
-                              "classHash": {
-                                "type": "string",
-                                "nullable": true,
-                                "pattern": "^\\d+n?$"
-                              },
-                              "sherpas": {
-                                "type": "integer"
-                              },
-                              "isFirstClear": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "finishedRaid",
-                              "kills",
-                              "assists",
-                              "deaths",
-                              "timePlayedSeconds",
-                              "classHash",
-                              "sherpas",
-                              "isFirstClear"
-                            ],
-                            "additionalProperties": false
-                          },
-                          "raid": {
-                            "type": "object",
-                            "properties": {
-                              "raidHash": {
-                                "type": "string",
-                                "pattern": "^\\d+n?$"
-                              },
                               "raidId": {
-                                "type": "integer",
-                                "minimum": 0,
-                                "exclusiveMinimum": true
+                                "$ref": "#/components/schemas/RaidEnum"
                               },
                               "versionId": {
-                                "type": "integer",
-                                "minimum": 0,
-                                "exclusiveMinimum": true
+                                "$ref": "#/components/schemas/RaidVersionEnum"
                               }
                             },
-                            "required": ["raidHash", "raidId", "versionId"]
+                            "required": ["raidId", "versionId"],
+                            "additionalProperties": false
                           }
-                        },
-                        "required": [
-                          "instanceId",
-                          "completed",
-                          "fresh",
-                          "flawless",
-                          "playerCount",
-                          "dateStarted",
-                          "dateCompleted",
-                          "dayOne",
-                          "contest",
-                          "platformType",
-                          "player",
-                          "raid"
                         ]
                       }
                     },
                     "nextCursor": {
                       "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "pattern": "^\\d+n?$"
                     }
                   },
                   "required": ["activities", "nextCursor"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
                 }
               }
             }
@@ -467,17 +1165,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notFound": {
-                      "type": "boolean"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["notFound", "membershipId"]
                     },
-                    "membershipId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
                     }
-                  },
-                  "required": ["notFound", "membershipId"]
+                  ]
                 }
               }
             }
@@ -504,47 +1210,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "membershipId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
-                    },
-                    "membershipType": {
-                      "type": "number",
-                      "nullable": true
-                    },
-                    "iconPath": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "displayName": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "bungieGlobalDisplayName": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "bungieGlobalDisplayNameCode": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "lastSeen": {
-                      "type": "string",
-                      "nullable": true
-                    }
-                  },
-                  "required": [
-                    "membershipId",
-                    "membershipType",
-                    "iconPath",
-                    "displayName",
-                    "bungieGlobalDisplayName",
-                    "bungieGlobalDisplayNameCode",
-                    "lastSeen"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/PlayerInfo"
                 }
               }
             }
@@ -554,17 +1220,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notFound": {
-                      "type": "boolean"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["notFound", "membershipId"]
                     },
-                    "membershipId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
                     }
-                  },
-                  "required": ["notFound", "membershipId"]
+                  ]
                 }
               }
             }
@@ -594,41 +1268,7 @@
                   "type": "object",
                   "properties": {
                     "player": {
-                      "type": "object",
-                      "properties": {
-                        "membershipId": {
-                          "type": "string",
-                          "pattern": "^\\d+n?$"
-                        },
-                        "membershipType": {
-                          "type": "number",
-                          "nullable": true
-                        },
-                        "iconPath": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "displayName": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "bungieGlobalDisplayName": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "bungieGlobalDisplayNameCode": {
-                          "type": "string",
-                          "nullable": true
-                        }
-                      },
-                      "required": [
-                        "membershipId",
-                        "membershipType",
-                        "iconPath",
-                        "displayName",
-                        "bungieGlobalDisplayName",
-                        "bungieGlobalDisplayNameCode"
-                      ]
+                      "$ref": "#/components/schemas/PlayerInfo"
                     },
                     "stats": {
                       "type": "object",
@@ -638,60 +1278,16 @@
                           "nullable": true,
                           "properties": {
                             "clears": {
-                              "type": "object",
-                              "properties": {
-                                "value": {
-                                  "type": "integer",
-                                  "nullable": true
-                                },
-                                "rank": {
-                                  "type": "integer",
-                                  "nullable": true
-                                }
-                              },
-                              "required": ["value", "rank"]
+                              "$ref": "#/components/schemas/PlayerStatRanking"
                             },
                             "fullClears": {
-                              "type": "object",
-                              "properties": {
-                                "value": {
-                                  "type": "integer",
-                                  "nullable": true
-                                },
-                                "rank": {
-                                  "type": "integer",
-                                  "nullable": true
-                                }
-                              },
-                              "required": ["value", "rank"]
+                              "$ref": "#/components/schemas/PlayerStatRanking"
                             },
                             "sherpas": {
-                              "type": "object",
-                              "properties": {
-                                "value": {
-                                  "type": "integer",
-                                  "nullable": true
-                                },
-                                "rank": {
-                                  "type": "integer",
-                                  "nullable": true
-                                }
-                              },
-                              "required": ["value", "rank"]
+                              "$ref": "#/components/schemas/PlayerStatRanking"
                             },
                             "speed": {
-                              "type": "object",
-                              "properties": {
-                                "value": {
-                                  "type": "integer",
-                                  "nullable": true
-                                },
-                                "rank": {
-                                  "type": "integer",
-                                  "nullable": true
-                                }
-                              },
-                              "required": ["value", "rank"]
+                              "$ref": "#/components/schemas/PlayerStatRanking"
                             }
                           },
                           "required": [
@@ -721,22 +1317,28 @@
                                 "required": ["instanceId", "duration"]
                               },
                               "clears": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": 0
                               },
                               "fullClears": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": 0
                               },
                               "sherpas": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": 0
                               },
                               "trios": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": 0
                               },
                               "duos": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": 0
                               },
                               "solos": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": 0
                               }
                             },
                             "required": [
@@ -761,7 +1363,9 @@
                           "type": "object",
                           "properties": {
                             "rank": {
-                              "type": "number"
+                              "type": "integer",
+                              "minimum": 0,
+                              "exclusiveMinimum": true
                             },
                             "instanceId": {
                               "type": "string",
@@ -804,17 +1408,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notFound": {
-                      "type": "boolean"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["notFound", "membershipId"]
                     },
-                    "membershipId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
                     }
-                  },
-                  "required": ["notFound", "membershipId"]
+                  ]
                 }
               }
             }
@@ -932,7 +1544,7 @@
           },
           {
             "schema": {
-              "type": "number"
+              "$ref": "#/components/schemas/RaidEnum"
             },
             "required": false,
             "name": "raid",
@@ -991,74 +1603,109 @@
                   "properties": {
                     "query": {
                       "type": "object",
-                      "additionalProperties": {
-                        "nullable": true
-                      }
+                      "properties": {
+                        "membershipId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^\\d+n?$"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "pattern": "^\\d+n?$"
+                              }
+                            }
+                          ]
+                        },
+                        "minPlayers": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 0
+                        },
+                        "maxPlayers": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 0
+                        },
+                        "minDate": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "maxDate": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "minSeason": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 0
+                        },
+                        "maxSeason": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 0
+                        },
+                        "fresh": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "completed": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "flawless": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "raid": {
+                          "$ref": "#/components/schemas/RaidEnum"
+                        },
+                        "platformType": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
+                        },
+                        "reversed": {
+                          "type": "boolean",
+                          "nullable": true,
+                          "default": false
+                        },
+                        "count": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "default": 25
+                        },
+                        "page": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "default": 1
+                        }
+                      },
+                      "required": ["membershipId"]
                     },
                     "results": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "instanceId": {
-                            "type": "string",
-                            "pattern": "^\\d+n?$"
-                          },
-                          "raidHash": {
-                            "type": "string",
-                            "pattern": "^\\d+n?$"
-                          },
-                          "fresh": {
-                            "type": "boolean"
-                          },
-                          "completed": {
-                            "type": "boolean"
-                          },
-                          "flawless": {
-                            "type": "boolean"
-                          },
-                          "playerCount": {
-                            "type": "number"
-                          },
-                          "dateStarted": {
-                            "type": "string"
-                          },
-                          "dateCompleted": {
-                            "type": "string"
-                          },
-                          "platformType": {
-                            "type": "number"
-                          },
-                          "dayOne": {
-                            "type": "boolean"
-                          },
-                          "contest": {
-                            "type": "boolean"
-                          },
-                          "weekOne": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "instanceId",
-                          "raidHash",
-                          "fresh",
-                          "completed",
-                          "flawless",
-                          "playerCount",
-                          "dateStarted",
-                          "dateCompleted",
-                          "platformType",
-                          "dayOne",
-                          "contest",
-                          "weekOne"
-                        ],
-                        "additionalProperties": false
+                        "$ref": "#/components/schemas/ActivityExtended"
                       }
                     }
                   },
                   "required": ["query", "results"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
                 }
               }
             }
@@ -1085,98 +1732,46 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "instanceId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ActivityExtended"
                     },
-                    "raidHash": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
-                    },
-                    "dateStarted": {
-                      "type": "string"
-                    },
-                    "dateCompleted": {
-                      "type": "string"
-                    },
-                    "duration": {
-                      "type": "number"
-                    },
-                    "fresh": {
-                      "type": "boolean",
-                      "nullable": true
-                    },
-                    "flawless": {
-                      "type": "boolean",
-                      "nullable": true
-                    },
-                    "completed": {
-                      "type": "boolean"
-                    },
-                    "playerCount": {
-                      "type": "number"
-                    },
-                    "platformType": {
-                      "type": "number"
-                    },
-                    "leaderboardEntries": {
+                    {
                       "type": "object",
-                      "additionalProperties": {
-                        "type": "number"
-                      }
-                    },
-                    "players": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "finishedRaid": {
-                            "type": "boolean"
-                          },
-                          "creditedSherpas": {
+                      "properties": {
+                        "leaderboardEntries": {
+                          "type": "object",
+                          "additionalProperties": {
                             "type": "number"
-                          },
-                          "isFirstClear": {
-                            "type": "boolean"
                           }
                         },
-                        "required": [
-                          "finishedRaid",
-                          "creditedSherpas",
-                          "isFirstClear"
-                        ]
-                      }
-                    },
-                    "dayOne": {
-                      "type": "boolean"
-                    },
-                    "contest": {
-                      "type": "boolean"
-                    },
-                    "weekOne": {
-                      "type": "boolean"
+                        "players": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "finishedRaid": {
+                                "type": "boolean"
+                              },
+                              "creditedSherpas": {
+                                "type": "number"
+                              },
+                              "isFirstClear": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "finishedRaid",
+                              "creditedSherpas",
+                              "isFirstClear"
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["leaderboardEntries", "players"],
+                      "additionalProperties": false
                     }
-                  },
-                  "required": [
-                    "instanceId",
-                    "raidHash",
-                    "dateStarted",
-                    "dateCompleted",
-                    "duration",
-                    "fresh",
-                    "flawless",
-                    "completed",
-                    "playerCount",
-                    "platformType",
-                    "leaderboardEntries",
-                    "players",
-                    "dayOne",
-                    "contest",
-                    "weekOne"
-                  ],
-                  "additionalProperties": false
+                  ]
                 }
               }
             }
@@ -1186,17 +1781,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notFound": {
-                      "type": "boolean"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "instanceId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["notFound", "instanceId"]
                     },
-                    "instanceId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
                     }
-                  },
-                  "required": ["notFound", "instanceId"]
+                  ]
                 }
               }
             }
@@ -1252,77 +1855,52 @@
                       "type": "object",
                       "properties": {
                         "category": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": ["clears", "sherpas", "fresh", "speed"]
                         },
                         "count": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
                         },
                         "page": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "default": 1
                         }
                       },
-                      "required": ["category", "count", "page"]
+                      "required": ["category", "count"]
                     },
                     "entries": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "position": {
-                            "type": "number"
-                          },
-                          "rank": {
-                            "type": "number"
-                          },
-                          "value": {
-                            "type": "number"
-                          },
-                          "player": {
-                            "type": "object",
-                            "properties": {
-                              "membershipId": {
-                                "type": "string",
-                                "pattern": "^\\d+n?$"
-                              },
-                              "membershipType": {
-                                "type": "number",
-                                "nullable": true
-                              },
-                              "iconPath": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "displayName": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "bungieGlobalDisplayName": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "bungieGlobalDisplayNameCode": {
-                                "type": "string",
-                                "nullable": true
-                              }
-                            },
-                            "required": [
-                              "membershipId",
-                              "membershipType",
-                              "iconPath",
-                              "displayName",
-                              "bungieGlobalDisplayName",
-                              "bungieGlobalDisplayNameCode"
-                            ],
-                            "additionalProperties": false
-                          }
-                        },
-                        "required": ["position", "rank", "value", "player"],
-                        "additionalProperties": false
+                        "$ref": "#/components/schemas/IndividualLeaderboardEntry"
                       }
                     }
                   },
                   "required": ["params", "entries"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyValidationError"
                 }
               }
             }
@@ -1335,22 +1913,7 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "enum": [
-                "leviathan",
-                "eaterofworlds",
-                "spireofstars",
-                "lastwish",
-                "scourgeofthepast",
-                "crownofsorrow",
-                "gardenofsalvation",
-                "deepstonecrypt",
-                "vaultofglass",
-                "vowofthedisciple",
-                "kingsfall",
-                "rootofnightmares",
-                "crotasend"
-              ]
+              "$ref": "#/components/schemas/RaidPath"
             },
             "required": true,
             "name": "raid",
@@ -1401,22 +1964,7 @@
                       "type": "object",
                       "properties": {
                         "raid": {
-                          "type": "string",
-                          "enum": [
-                            "leviathan",
-                            "eaterofworlds",
-                            "spireofstars",
-                            "lastwish",
-                            "scourgeofthepast",
-                            "crownofsorrow",
-                            "gardenofsalvation",
-                            "deepstonecrypt",
-                            "vaultofglass",
-                            "vowofthedisciple",
-                            "kingsfall",
-                            "rootofnightmares",
-                            "crotasend"
-                          ]
+                          "$ref": "#/components/schemas/RaidPath"
                         },
                         "category": {
                           "type": "string",
@@ -1440,168 +1988,13 @@
                       "additionalProperties": false
                     },
                     "date": {
-                      "type": "string"
+                      "type": "string",
+                      "nullable": true
                     },
                     "entries": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "position": {
-                            "type": "number"
-                          },
-                          "rank": {
-                            "type": "number"
-                          },
-                          "value": {
-                            "type": "number"
-                          },
-                          "activity": {
-                            "type": "object",
-                            "properties": {
-                              "instanceId": {
-                                "type": "string",
-                                "pattern": "^\\d+n?$"
-                              },
-                              "raidHash": {
-                                "type": "string",
-                                "pattern": "^\\d+n?$"
-                              },
-                              "completed": {
-                                "type": "boolean"
-                              },
-                              "flawless": {
-                                "type": "boolean",
-                                "nullable": true
-                              },
-                              "fresh": {
-                                "type": "boolean",
-                                "nullable": true
-                              },
-                              "playerCount": {
-                                "type": "integer",
-                                "minimum": 0,
-                                "exclusiveMinimum": true
-                              },
-                              "dateStarted": {
-                                "type": "string"
-                              },
-                              "dateCompleted": {
-                                "type": "string"
-                              },
-                              "duration": {
-                                "type": "number"
-                              },
-                              "platformType": {
-                                "type": "integer"
-                              }
-                            },
-                            "required": [
-                              "instanceId",
-                              "raidHash",
-                              "completed",
-                              "flawless",
-                              "fresh",
-                              "playerCount",
-                              "dateStarted",
-                              "dateCompleted",
-                              "duration",
-                              "platformType"
-                            ]
-                          },
-                          "players": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "membershipId": {
-                                  "type": "string",
-                                  "pattern": "^\\d+n?$"
-                                },
-                                "membershipType": {
-                                  "type": "number",
-                                  "nullable": true
-                                },
-                                "iconPath": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "displayName": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "bungieGlobalDisplayName": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "bungieGlobalDisplayNameCode": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "data": {
-                                  "type": "object",
-                                  "properties": {
-                                    "finishedRaid": {
-                                      "type": "boolean"
-                                    },
-                                    "kills": {
-                                      "type": "integer"
-                                    },
-                                    "assists": {
-                                      "type": "integer"
-                                    },
-                                    "deaths": {
-                                      "type": "integer"
-                                    },
-                                    "timePlayedSeconds": {
-                                      "type": "integer"
-                                    },
-                                    "classHash": {
-                                      "type": "string",
-                                      "nullable": true,
-                                      "pattern": "^\\d+n?$"
-                                    },
-                                    "sherpas": {
-                                      "type": "integer"
-                                    },
-                                    "isFirstClear": {
-                                      "type": "boolean"
-                                    }
-                                  },
-                                  "required": [
-                                    "finishedRaid",
-                                    "kills",
-                                    "assists",
-                                    "deaths",
-                                    "timePlayedSeconds",
-                                    "classHash",
-                                    "sherpas",
-                                    "isFirstClear"
-                                  ],
-                                  "additionalProperties": false
-                                }
-                              },
-                              "required": [
-                                "membershipId",
-                                "membershipType",
-                                "iconPath",
-                                "displayName",
-                                "bungieGlobalDisplayName",
-                                "bungieGlobalDisplayNameCode",
-                                "data"
-                              ],
-                              "additionalProperties": false
-                            }
-                          }
-                        },
-                        "required": [
-                          "position",
-                          "rank",
-                          "value",
-                          "activity",
-                          "players"
-                        ],
-                        "additionalProperties": false
+                        "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
                       }
                     }
                   },
@@ -1611,61 +2004,69 @@
               }
             }
           },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notFound": {
-                      "type": "boolean"
-                    },
-                    "params": {
+                  "anyOf": [
+                    {
                       "type": "object",
                       "properties": {
-                        "raid": {
-                          "type": "string",
-                          "enum": [
-                            "leviathan",
-                            "eaterofworlds",
-                            "spireofstars",
-                            "lastwish",
-                            "scourgeofthepast",
-                            "crownofsorrow",
-                            "gardenofsalvation",
-                            "deepstonecrypt",
-                            "vaultofglass",
-                            "vowofthedisciple",
-                            "kingsfall",
-                            "rootofnightmares",
-                            "crotasend"
-                          ]
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
                         },
-                        "category": {
-                          "type": "string",
-                          "enum": ["normal", "prestige", "challenge", "master"]
-                        },
-                        "count": {
-                          "type": "integer",
-                          "minimum": 25,
-                          "exclusiveMinimum": true,
-                          "maximum": 100,
-                          "default": 50
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "exclusiveMinimum": true,
-                          "default": 1
+                        "params": {
+                          "type": "object",
+                          "properties": {
+                            "raid": {
+                              "$ref": "#/components/schemas/RaidPath"
+                            },
+                            "category": {
+                              "type": "string",
+                              "enum": [
+                                "normal",
+                                "prestige",
+                                "challenge",
+                                "master"
+                              ]
+                            },
+                            "count": {
+                              "type": "integer",
+                              "minimum": 25,
+                              "exclusiveMinimum": true,
+                              "maximum": 100,
+                              "default": 50
+                            },
+                            "page": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "exclusiveMinimum": true,
+                              "default": 1
+                            }
+                          },
+                          "required": ["raid", "category"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["raid", "category"],
+                      "required": ["notFound", "params"],
                       "additionalProperties": false
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
                     }
-                  },
-                  "required": ["notFound", "params"],
-                  "additionalProperties": false
+                  ]
                 }
               }
             }
@@ -1678,22 +2079,7 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "enum": [
-                "leviathan",
-                "eaterofworlds",
-                "spireofstars",
-                "lastwish",
-                "scourgeofthepast",
-                "crownofsorrow",
-                "gardenofsalvation",
-                "deepstonecrypt",
-                "vaultofglass",
-                "vowofthedisciple",
-                "kingsfall",
-                "rootofnightmares",
-                "crotasend"
-              ]
+              "$ref": "#/components/schemas/RaidPath"
             },
             "required": true,
             "name": "raid",
@@ -1751,22 +2137,7 @@
                       "type": "object",
                       "properties": {
                         "raid": {
-                          "type": "string",
-                          "enum": [
-                            "leviathan",
-                            "eaterofworlds",
-                            "spireofstars",
-                            "lastwish",
-                            "scourgeofthepast",
-                            "crownofsorrow",
-                            "gardenofsalvation",
-                            "deepstonecrypt",
-                            "vaultofglass",
-                            "vowofthedisciple",
-                            "kingsfall",
-                            "rootofnightmares",
-                            "crotasend"
-                          ]
+                          "$ref": "#/components/schemas/RaidPath"
                         },
                         "category": {
                           "type": "string",
@@ -1780,74 +2151,48 @@
                           ]
                         },
                         "count": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
                         },
                         "page": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "default": 1
                         }
                       },
-                      "required": ["raid", "category", "count", "page"]
+                      "required": ["raid", "category", "count"]
                     },
                     "entries": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "position": {
-                            "type": "number"
-                          },
-                          "rank": {
-                            "type": "number"
-                          },
-                          "value": {
-                            "type": "number"
-                          },
-                          "player": {
-                            "type": "object",
-                            "properties": {
-                              "membershipId": {
-                                "type": "string",
-                                "pattern": "^\\d+n?$"
-                              },
-                              "membershipType": {
-                                "type": "number",
-                                "nullable": true
-                              },
-                              "iconPath": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "displayName": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "bungieGlobalDisplayName": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "bungieGlobalDisplayNameCode": {
-                                "type": "string",
-                                "nullable": true
-                              }
-                            },
-                            "required": [
-                              "membershipId",
-                              "membershipType",
-                              "iconPath",
-                              "displayName",
-                              "bungieGlobalDisplayName",
-                              "bungieGlobalDisplayNameCode"
-                            ],
-                            "additionalProperties": false
-                          }
-                        },
-                        "required": ["position", "rank", "value", "player"],
-                        "additionalProperties": false
+                        "$ref": "#/components/schemas/IndividualLeaderboardEntry"
                       }
                     }
                   },
                   "required": ["params", "entries"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyValidationError"
                 }
               }
             }
@@ -1860,22 +2205,7 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "enum": [
-                "leviathan",
-                "eaterofworlds",
-                "spireofstars",
-                "lastwish",
-                "scourgeofthepast",
-                "crownofsorrow",
-                "gardenofsalvation",
-                "deepstonecrypt",
-                "vaultofglass",
-                "vowofthedisciple",
-                "kingsfall",
-                "rootofnightmares",
-                "crotasend"
-              ]
+              "$ref": "#/components/schemas/RaidPath"
             },
             "required": true,
             "name": "raid",
@@ -1917,16 +2247,21 @@
                       "type": "object",
                       "properties": {
                         "count": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
                         },
                         "page": {
-                          "type": "number"
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "default": 1
                         },
                         "raid": {
-                          "type": "string"
+                          "$ref": "#/components/schemas/RaidPath"
                         }
                       },
-                      "required": ["count", "page", "raid"]
+                      "required": ["count", "raid"]
                     },
                     "entries": {
                       "type": "array",
@@ -1941,53 +2276,22 @@
                             "pattern": "^\\d+n?$"
                           },
                           "dateStarted": {
-                            "type": "string"
+                            "type": "string",
+                            "nullable": true
                           },
                           "dateCompleted": {
-                            "type": "string"
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "duration": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
                           },
                           "players": {
                             "type": "array",
                             "items": {
-                              "type": "object",
-                              "properties": {
-                                "membershipId": {
-                                  "type": "string",
-                                  "pattern": "^\\d+n?$"
-                                },
-                                "membershipType": {
-                                  "type": "number",
-                                  "nullable": true
-                                },
-                                "iconPath": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "displayName": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "bungieGlobalDisplayName": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "bungieGlobalDisplayNameCode": {
-                                  "type": "string",
-                                  "nullable": true
-                                },
-                                "didPlayerFinish": {
-                                  "type": "boolean"
-                                }
-                              },
-                              "required": [
-                                "membershipId",
-                                "membershipType",
-                                "iconPath",
-                                "displayName",
-                                "bungieGlobalDisplayName",
-                                "bungieGlobalDisplayNameCode",
-                                "didPlayerFinish"
-                              ]
+                              "$ref": "#/components/schemas/PlayerInfo"
                             }
                           }
                         },
@@ -1996,6 +2300,7 @@
                           "instanceId",
                           "dateStarted",
                           "dateCompleted",
+                          "duration",
                           "players"
                         ]
                       }
@@ -2003,6 +2308,26 @@
                   },
                   "required": ["params", "entries"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyValidationError"
                 }
               }
             }
@@ -2029,247 +2354,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "period": {
-                      "type": "string"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/DestinyPostGameCarnageReport"
                     },
-                    "startingPhaseIndex": {
-                      "type": "number"
-                    },
-                    "activityWasStartedFromBeginning": {
-                      "type": "boolean"
-                    },
-                    "activityDetails": {
-                      "type": "object",
-                      "properties": {
-                        "directorActivityHash": {
-                          "type": "number"
-                        },
-                        "instanceId": {
-                          "type": "string"
-                        },
-                        "mode": {
-                          "type": "integer",
-                          "enum": [
-                            0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17,
-                            18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31,
-                            32, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-                            49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
-                            62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
-                            75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-                            88, 89, 90, 91
-                          ]
-                        },
-                        "modes": {
-                          "type": "array",
-                          "items": {
-                            "type": "integer",
-                            "enum": [
-                              0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16,
-                              17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29,
-                              30, 31, 32, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-                              46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
-                              58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
-                              70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81,
-                              82, 83, 84, 85, 86, 87, 88, 89, 90, 91
-                            ]
-                          }
-                        },
-                        "membershipType": {
-                          "type": "integer",
-                          "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1]
-                        }
-                      },
-                      "required": [
-                        "directorActivityHash",
-                        "instanceId",
-                        "mode",
-                        "modes",
-                        "membershipType"
-                      ]
-                    },
-                    "entries": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "player": {
-                            "type": "object",
-                            "properties": {
-                              "destinyUserInfo": {
-                                "type": "object",
-                                "properties": {
-                                  "iconPath": {
-                                    "type": "string",
-                                    "nullable": true
-                                  },
-                                  "crossSaveOverride": {
-                                    "type": "integer",
-                                    "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1]
-                                  },
-                                  "applicableMembershipTypes": {
-                                    "type": "array",
-                                    "nullable": true,
-                                    "items": {
-                                      "type": "integer",
-                                      "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1]
-                                    }
-                                  },
-                                  "membershipType": {
-                                    "type": "integer",
-                                    "nullable": true,
-                                    "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1]
-                                  },
-                                  "membershipId": {
-                                    "type": "string"
-                                  },
-                                  "displayName": {
-                                    "type": "string",
-                                    "nullable": true
-                                  },
-                                  "bungieGlobalDisplayName": {
-                                    "type": "string",
-                                    "nullable": true
-                                  },
-                                  "bungieGlobalDisplayNameCode": {
-                                    "type": "number",
-                                    "nullable": true
-                                  }
-                                },
-                                "required": [
-                                  "crossSaveOverride",
-                                  "membershipId"
-                                ]
-                              },
-                              "characterClass": {
-                                "type": "string",
-                                "nullable": true
-                              },
-                              "classHash": {
-                                "type": "number"
-                              },
-                              "raceHash": {
-                                "type": "number"
-                              },
-                              "genderHash": {
-                                "type": "number"
-                              },
-                              "characterLevel": {
-                                "type": "number"
-                              },
-                              "lightLevel": {
-                                "type": "number"
-                              },
-                              "emblemHash": {
-                                "type": "number"
-                              }
-                            },
-                            "required": [
-                              "destinyUserInfo",
-                              "classHash",
-                              "raceHash",
-                              "genderHash",
-                              "characterLevel",
-                              "lightLevel",
-                              "emblemHash"
-                            ]
-                          },
-                          "characterId": {
-                            "type": "string"
-                          },
-                          "values": {
-                            "type": "object",
-                            "additionalProperties": {
-                              "type": "object",
-                              "properties": {
-                                "basic": {
-                                  "type": "object",
-                                  "properties": {
-                                    "value": {
-                                      "type": "number"
-                                    },
-                                    "displayValue": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": ["value", "displayValue"]
-                                }
-                              },
-                              "required": ["basic"]
-                            }
-                          },
-                          "extended": {
-                            "type": "object",
-                            "properties": {
-                              "weapons": {
-                                "type": "array",
-                                "nullable": true,
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "referenceId": {
-                                      "type": "number"
-                                    },
-                                    "values": {
-                                      "type": "object",
-                                      "additionalProperties": {
-                                        "type": "object",
-                                        "properties": {
-                                          "basic": {
-                                            "type": "object",
-                                            "properties": {
-                                              "value": {
-                                                "type": "number"
-                                              },
-                                              "displayValue": {
-                                                "type": "string"
-                                              }
-                                            },
-                                            "required": [
-                                              "value",
-                                              "displayValue"
-                                            ]
-                                          }
-                                        },
-                                        "required": ["basic"]
-                                      }
-                                    }
-                                  },
-                                  "required": ["referenceId", "values"]
-                                }
-                              },
-                              "values": {
-                                "type": "object",
-                                "additionalProperties": {
-                                  "type": "object",
-                                  "properties": {
-                                    "basic": {
-                                      "type": "object",
-                                      "properties": {
-                                        "value": {
-                                          "type": "number"
-                                        },
-                                        "displayValue": {
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": ["value", "displayValue"]
-                                    }
-                                  },
-                                  "required": ["basic"]
-                                }
-                              }
-                            },
-                            "required": ["values"]
-                          }
-                        },
-                        "required": ["player", "characterId", "values"]
-                      }
+                    {
+                      "additionalProperties": false
                     }
-                  },
-                  "required": ["period", "activityDetails", "entries"],
-                  "additionalProperties": false
+                  ]
                 }
               }
             }
@@ -2279,17 +2371,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notFound": {
-                      "type": "boolean"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "instanceId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["notFound", "instanceId"]
                     },
-                    "instanceId": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
                     }
-                  },
-                  "required": ["notFound", "instanceId"]
+                  ]
                 }
               }
             }
@@ -2315,7 +2415,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Success",
             "content": {
               "application/json": {
@@ -2328,13 +2428,12 @@
               }
             }
           },
-          "404": {
-            "description": "Not found",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {}
+                  "$ref": "#/components/schemas/BodyValidationError"
                 }
               }
             }

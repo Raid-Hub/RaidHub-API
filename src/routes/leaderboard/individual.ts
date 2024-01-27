@@ -5,20 +5,16 @@ import {
     UrlPathsToRaid
 } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { z, zPage, zPositiveInt } from "../../schema/zod"
 import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
-import { z } from "../../util/zod"
 import { getIndividualLeaderboardEntries } from "./_common"
-import {
-    RaidPathSchema,
-    zIndividualLeaderboardEntry,
-    zLeaderboardQueryPagination,
-    zRaidSchema
-} from "./_schema"
+import { zIndividualLeaderboardEntry, zLeaderboardQueryPagination, zRaidPath } from "./_schema"
 
 export const leaderboardRaidIndividualRoute = new RaidHubRoute({
     method: "get",
-    params: RaidPathSchema.extend({
+    params: z.object({
+        raid: zRaidPath,
         category: z.enum(IndividualBoards)
     }),
     query: zLeaderboardQueryPagination,
@@ -54,10 +50,10 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         success: z
             .object({
                 params: z.object({
-                    raid: zRaidSchema,
+                    raid: zRaidPath,
                     category: z.enum(IndividualBoards),
-                    count: z.number(),
-                    page: z.number()
+                    count: zPositiveInt(),
+                    page: zPage()
                 }),
                 entries: z.array(zIndividualLeaderboardEntry)
             })

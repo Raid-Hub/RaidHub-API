@@ -1,7 +1,6 @@
 import { RequestHandler } from "express"
-import { corsError } from "../RaidHubErrors"
+import { zApiKeyError } from "../RaidHubErrors"
 import { includedIn } from "../util/helpers"
-import { z } from "../util/zod"
 
 const isValidOrigin = (origin: string) => /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.io$/.test(origin)
 
@@ -35,12 +34,11 @@ export const cors: RequestHandler = (req, res, next) => {
             message: req.headers["x-api-key"] ? "Invalid API Key" : "Missing API Key",
             minted: new Date(),
             success: false,
-            statusCode: 401,
             error: {
                 type: "cors",
                 origin: req.headers.origin || null,
                 apiKey: req.headers["x-api-key"]?.toString() || null
             }
-        } satisfies z.infer<typeof corsError>)
+        } satisfies (typeof zApiKeyError)["_input"])
     }
 }

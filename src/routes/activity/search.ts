@@ -1,12 +1,14 @@
 import { Prisma } from "@prisma/client"
+import { BungieMembershipType } from "bungie-net-core/models"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne } from "../../data/raceDates"
-import { ListedRaids, RaidHashes, type ListedRaid } from "../../data/raids"
+import { RaidHashes, type ListedRaid } from "../../data/raids"
 import { SeasonDates } from "../../data/seasonDates"
 import { cacheControl } from "../../middlewares/cache-control"
+import { zActivityExtended, zRaidEnum } from "../../schema/common"
+import { z, zBigIntString, zBooleanString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
-import { z, zBigIntString, zBooleanString, zDigitString, zNumberEnum } from "../../util/zod"
 
 // Todo: add a query param for the difficulty
 export const activitySearchQuerySchema = z
@@ -23,7 +25,7 @@ export const activitySearchQuerySchema = z
         fresh: zBooleanString().optional(),
         completed: zBooleanString().optional(),
         flawless: zBooleanString().optional(),
-        raid: zNumberEnum(ListedRaids).optional(),
+        raid: zRaidEnum.optional(),
         platformType: z.coerce.number().int().positive().optional(),
         reversed: z.coerce.boolean().default(false),
         count: z.coerce.number().int().positive().default(25),
@@ -46,7 +48,8 @@ export const activitySearchRoute = new RaidHubRoute({
             playerCount: a.player_count,
             dateStarted: a.date_started,
             dateCompleted: a.date_completed,
-            platformType: a.platform_type,
+            platformType: a.platform_type as BungieMembershipType,
+            duration: a.duration,
             dayOne: isDayOne(a.raid_id, a.date_completed),
             contest: isContest(a.raid_id, a.date_started),
             weekOne: isContest(a.raid_id, a.date_completed)
@@ -60,25 +63,8 @@ export const activitySearchRoute = new RaidHubRoute({
     response: {
         success: z
             .object({
-                query: z.record(z.any()),
-                results: z.array(
-                    z
-                        .object({
-                            instanceId: zDigitString(),
-                            raidHash: zDigitString(),
-                            fresh: z.boolean(),
-                            completed: z.boolean(),
-                            flawless: z.boolean(),
-                            playerCount: z.number(),
-                            dateStarted: z.date(),
-                            dateCompleted: z.date(),
-                            platformType: z.number(),
-                            dayOne: z.boolean(),
-                            contest: z.boolean(),
-                            weekOne: z.boolean()
-                        })
-                        .strict()
-                )
+                query: activitySearchQuerySchema,
+                results: z.array(zActivityExtended)
             })
             .strict()
     }
@@ -95,6 +81,7 @@ type ActivitySearchResult = {
     date_started: Date
     date_completed: Date
     platform_type: number
+    duration: number
 }
 
 async function searchActivities({
@@ -178,6 +165,7 @@ async function searchActivities({
             player_count,
             date_started,
             date_completed,
+            duration,
             platform_type
         FROM activities_union
         WHERE _match_count = ${new Set(membershipIds).size}::int

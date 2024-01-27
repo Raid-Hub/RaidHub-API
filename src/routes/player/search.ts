@@ -1,9 +1,10 @@
 import { Player } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
+import { zPlayerInfo } from "../../schema/common"
+import { z, zCount, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
-import { z, zCount } from "../../util/zod"
 
 export const playerSearchRoute = new RaidHubRoute({
     method: "get",
@@ -21,28 +22,13 @@ export const playerSearchRoute = new RaidHubRoute({
         success: z
             .object({
                 params: z.object({
-                    count: z.number(),
-                    term: z.union([
-                        z.object({
-                            displayName: z.string().nullable()
-                        }),
-                        z.object({
-                            bungieGlobalDisplayName: z.string().nullable(),
-                            bungieGlobalDisplayNameCode: z.string().nullable()
-                        })
-                    ])
-                }),
-                results: z.array(
-                    z.object({
-                        membershipId: z.string(),
-                        membershipType: z.number().nullable(),
-                        iconPath: z.string().nullable(),
-                        displayName: z.string().nullable(),
-                        bungieGlobalDisplayName: z.string().nullable(),
-                        bungieGlobalDisplayNameCode: z.string().nullable(),
-                        lastSeen: z.date().nullable()
+                    count: zPositiveInt(),
+                    term: z.object({
+                        name: z.string(),
+                        nameWithCode: z.string().nullable()
                     })
-                )
+                }),
+                results: z.array(zPlayerInfo)
             })
             .strict()
     }
@@ -77,7 +63,7 @@ async function searchForPlayer(query: string, count: number) {
                         mode: "insensitive"
                     },
                     bungieGlobalDisplayNameCode: {
-                        startsWith: globalDisplayNameCode
+                        startsWith: globalDisplayNameCode.slice(0, 4)
                     }
                 },
                 take: count
@@ -88,8 +74,8 @@ async function searchForPlayer(query: string, count: number) {
             params: {
                 count: count,
                 term: {
-                    bungieGlobalDisplayName: globalDisplayName,
-                    bungieGlobalDisplayNameCode: globalDisplayNameCode
+                    name: globalDisplayName,
+                    nameWithCode: globalDisplayName + "#" + globalDisplayNameCode.slice(0, 4)
                 }
             },
             results: results.map(r => ({
@@ -144,8 +130,8 @@ async function searchForPlayer(query: string, count: number) {
             params: {
                 count: take,
                 term: {
-                    displayName: searchTerm,
-                    bungieGlobalDisplayName: searchTerm
+                    name: searchTerm,
+                    nameWithCode: null
                 }
             },
             // sort by a combination of last played and clears

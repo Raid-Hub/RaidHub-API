@@ -1,7 +1,7 @@
 import { RouteConfig } from "@asteasolutions/zod-to-openapi"
 import { Router } from "express"
 import { ZodType } from "zod"
-import { z } from "./util/zod"
+import { z } from "./schema/zod"
 
 export interface IRaidHubRoute {
     express: Router

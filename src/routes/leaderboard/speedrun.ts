@@ -1,14 +1,17 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { zPlayerInfo } from "../../schema/common"
+import { z, zDigitString, zISODateString, zPage, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
-import { z, zDigitString } from "../../util/zod"
-import { RaidPath, RaidPathSchema, zLeaderboardQueryPagination } from "./_schema"
+import { RaidPath, zLeaderboardQueryPagination, zRaidPath } from "./_schema"
 
 export const leaderboardSpeedrunRoute = new RaidHubRoute({
     method: "get",
-    params: RaidPathSchema,
+    params: z.object({
+        raid: zRaidPath
+    }),
     query: zLeaderboardQueryPagination,
     middlewares: [cacheControl(30)],
     async handler(req) {
@@ -23,27 +26,18 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
         success: z
             .object({
                 params: z.object({
-                    count: z.number(),
-                    page: z.number(),
-                    raid: z.string()
+                    count: zPositiveInt(),
+                    page: zPage(),
+                    raid: zRaidPath
                 }),
                 entries: z.array(
                     z.object({
                         rank: z.number(),
                         instanceId: zDigitString(),
-                        dateStarted: z.date(),
-                        dateCompleted: z.date(),
-                        players: z.array(
-                            z.object({
-                                membershipId: zDigitString(),
-                                membershipType: z.number().nullable(),
-                                iconPath: z.string().nullable(),
-                                displayName: z.string().nullable(),
-                                bungieGlobalDisplayName: z.string().nullable(),
-                                bungieGlobalDisplayNameCode: z.string().nullable(),
-                                didPlayerFinish: z.boolean()
-                            })
-                        )
+                        dateStarted: zISODateString(),
+                        dateCompleted: zISODateString(),
+                        duration: zPositiveInt(),
+                        players: z.array(zPlayerInfo)
                     })
                 )
             })
@@ -71,6 +65,7 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
             instanceId: true,
             dateStarted: true,
             dateCompleted: true,
+            duration: true,
             playerActivity: {
                 select: {
                     finishedRaid: true,
@@ -94,6 +89,7 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
         instanceId: e.instanceId,
         dateStarted: e.dateStarted,
         dateCompleted: e.dateCompleted,
+        duration: e.duration,
         players: e.playerActivity.map(pa => ({
             ...pa.player,
             didPlayerFinish: pa.finishedRaid

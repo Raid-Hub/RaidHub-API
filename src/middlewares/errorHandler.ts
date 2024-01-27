@@ -5,12 +5,12 @@ import {
     PrismaClientValidationError
 } from "@prisma/client/runtime/library"
 import { ErrorRequestHandler } from "express"
-import { serverError } from "../RaidHubErrors"
-import { z } from "../util/zod"
+import { zServerError } from "../RaidHubErrors"
+import { z } from "../schema/zod"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
-    let details: z.infer<typeof serverError>["error"] & Record<string, unknown> = {
+    let details: z.infer<typeof zServerError>["error"] & Record<string, unknown> = {
         type: "unknown",
         at: null
     }
@@ -33,7 +33,6 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
         message: "Something went wrong.",
         minted: new Date(),
         success: false,
-        statusCode: 500,
         error: details
-    } satisfies z.infer<typeof serverError>)
+    } satisfies (typeof zServerError)["_input"])
 }

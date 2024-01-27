@@ -17,10 +17,10 @@ import {
     SunsetRaids
 } from "../data/raids"
 import { cacheControl } from "../middlewares/cache-control"
+import { z, zISODateString, zPositiveInt } from "../schema/zod"
 import { prisma } from "../services/prisma"
 import { groupBy } from "../util/helpers"
 import { ok } from "../util/response"
-import { z, zNumberEnum } from "../util/zod"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -89,15 +89,15 @@ export const manifestRoute = new RaidHubRoute({
                 difficulties: z.record(z.string()),
                 hashes: z.record(
                     z.object({
-                        raid: z.number(),
-                        difficulty: z.number()
+                        raid: zPositiveInt(),
+                        difficulty: zPositiveInt()
                     })
                 ),
-                listed: z.array(zNumberEnum(ListedRaids)),
-                sunset: z.array(zNumberEnum(SunsetRaids)),
-                contest: z.array(zNumberEnum(ContestRaids)),
-                master: z.array(zNumberEnum(MasterRaids)),
-                prestige: z.array(zNumberEnum(PrestigeRaids)),
+                listed: z.array(zPositiveInt()),
+                sunset: z.array(zPositiveInt()),
+                contest: z.array(zPositiveInt()),
+                master: z.array(zPositiveInt()),
+                prestige: z.array(zPositiveInt()),
                 reprisedChallengePairings: z.array(
                     z.object({
                         raid: z.number(),
@@ -110,7 +110,7 @@ export const manifestRoute = new RaidHubRoute({
                             z.object({
                                 id: z.string(),
                                 type: z.string(),
-                                date: z.date()
+                                date: zISODateString()
                             })
                         )
                     ),

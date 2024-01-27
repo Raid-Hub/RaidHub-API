@@ -4,6 +4,8 @@ import { ZodStringDef, ZodType, z } from "zod"
 extendZodWithOpenApi(z)
 export { z }
 
+export const zPositiveInt = () => z.number().int().positive()
+
 export const zCount = ({ min = 1, max, def }: { min: number; max: number; def: number }) =>
     z.coerce.number().int().positive().min(min).max(max).default(def)
 
@@ -18,6 +20,12 @@ export const zBooleanString = () =>
         .pipe(z.boolean())
 
 export const zBigIntString = () => zDigitString().pipe(z.coerce.bigint())
+
+export const zISODateString = () =>
+    z.coerce
+        .date()
+        .transform(d => d.toISOString())
+        .pipe(z.string().datetime())
 
 export function zNumberEnum<T extends readonly number[]>(arr: T) {
     return z.number().refine(n => arr.includes(n)) as ZodType<T[number]>

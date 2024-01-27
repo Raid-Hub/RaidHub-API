@@ -1,9 +1,9 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne } from "../../data/raceDates"
+import { zActivityWithPlayerData, zRaidEnum, zRaidVersionEnum } from "../../schema/common"
+import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
-import { zActivityPlayerData } from "../../util/schema-common"
-import { z, zBigIntString, zCount } from "../../util/zod"
 import { playerRouterParams } from "./_schema"
 
 export const playerActivitiesRoute = new RaidHubRoute({
@@ -51,30 +51,17 @@ export const playerActivitiesRoute = new RaidHubRoute({
         success: z
             .object({
                 activities: z.array(
-                    z.object({
-                        instanceId: zBigIntString(),
-                        completed: z.boolean(),
-                        fresh: z.boolean().nullable(),
-                        flawless: z.boolean().nullable(),
-                        playerCount: z.number().int().positive(),
-                        dateStarted: z.date(),
-                        dateCompleted: z.date(),
-                        dayOne: z.boolean(),
-                        contest: z.boolean(),
-                        platformType: z.number().int(),
-                        player: zActivityPlayerData,
-                        raid: z.object({
-                            raidHash: zBigIntString(),
-                            raidId: z.number().positive().int(),
-                            versionId: z.number().positive().int()
-                        })
+                    zActivityWithPlayerData.extend({
+                        raidHash: zBigIntString(),
+                        raidId: zRaidEnum,
+                        versionId: zRaidVersionEnum
                     })
                 ),
-                nextCursor: z.string().nullable()
+                nextCursor: zBigIntString().nullable()
             })
             .strict(),
         error: z.object({
-            notFound: z.boolean(),
+            notFound: z.literal(true),
             membershipId: zBigIntString()
         })
     }

@@ -1,9 +1,10 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { cacheControl } from "../../middlewares/cache-control"
+import { zActivityExtended } from "../../schema/common"
+import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
-import { z, zBigIntString, zDigitString } from "../../util/zod"
 
 export const activityRootRoute = new RaidHubRoute({
     method: "get",
@@ -23,18 +24,8 @@ export const activityRootRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                instanceId: zDigitString(),
-                raidHash: zDigitString(),
-                dateStarted: z.date(),
-                dateCompleted: z.date(),
-                duration: z.number(),
-                fresh: z.boolean().nullable(),
-                flawless: z.boolean().nullable(),
-                completed: z.boolean(),
-                playerCount: z.number(),
-                platformType: z.number(),
+        success: zActivityExtended
+            .extend({
                 leaderboardEntries: z.record(z.number()),
                 players: z.record(
                     z.object({
@@ -42,15 +33,12 @@ export const activityRootRoute = new RaidHubRoute({
                         creditedSherpas: z.number(),
                         isFirstClear: z.boolean()
                     })
-                ),
-                dayOne: z.boolean(),
-                contest: z.boolean(),
-                weekOne: z.boolean()
+                )
             })
             .strict(),
         error: z.object({
-            notFound: z.boolean(),
-            instanceId: zDigitString()
+            notFound: z.literal(true),
+            instanceId: zBigIntString()
         })
     }
 })

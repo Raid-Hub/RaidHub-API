@@ -10,7 +10,7 @@
     "test": "jest",
     "lint": "eslint . --ext .ts,.json",
     "types": "tsc --noEmit",
-    "format": "prettier --write .",
+    "format": "prettier --write '**/*.{ts,json}'",
     "db:start": "docker-compose -f docker-compose.yml up -d",
     "db:stop": "docker-compose -f docker-compose.yml down",
     "db:push": "prisma db push",

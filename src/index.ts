@@ -22,7 +22,7 @@ if (process.env.PROD && !process.env.PRIVATE_KEY_PROD) {
 
 const app = express()
 
-// server the api docs at /docs
+// serve the open-api docs at /docs
 app.use("/docs", cacheControl(15), express.static(path.join(__dirname, "../open-api/docs.html")))
 
 app.use("*", (_, res, next) => {

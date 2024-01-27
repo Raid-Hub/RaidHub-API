@@ -1,47 +1,53 @@
-import { CommonPlayerSchema, zActivity, zActivityPlayer } from "../../util/schema-common"
-import { z, zCount, zPage } from "../../util/zod"
+import { registry, zActivity, zPlayerInfo, zPlayerWithActivityData } from "../../schema/common"
+import { z, zCount, zPage, zPositiveInt } from "../../schema/zod"
 
 export const zLeaderboardQueryPagination = z.object({
     count: zCount({ min: 25, max: 100, def: 50 }),
     page: zPage()
 })
 
-export const zRaidSchema = z.enum([
-    "leviathan",
-    "eaterofworlds",
-    "spireofstars",
-    "lastwish",
-    "scourgeofthepast",
-    "crownofsorrow",
-    "gardenofsalvation",
-    "deepstonecrypt",
-    "vaultofglass",
-    "vowofthedisciple",
-    "kingsfall",
-    "rootofnightmares",
-    "crotasend"
-])
-export type RaidPath = z.infer<typeof zRaidSchema>
+export const zRaidPath = registry.register(
+    "RaidPath",
+    z.enum([
+        "leviathan",
+        "eaterofworlds",
+        "spireofstars",
+        "lastwish",
+        "scourgeofthepast",
+        "crownofsorrow",
+        "gardenofsalvation",
+        "deepstonecrypt",
+        "vaultofglass",
+        "vowofthedisciple",
+        "kingsfall",
+        "rootofnightmares",
+        "crotasend"
+    ])
+)
 
-export const RaidPathSchema = z.object({
-    raid: zRaidSchema
-})
+export type RaidPath = z.infer<typeof zRaidPath>
 
-export const zIndividualLeaderboardEntry = z
-    .object({
-        position: z.number(),
-        rank: z.number(),
-        value: z.number(),
-        player: CommonPlayerSchema
-    })
-    .strict()
+export const zIndividualLeaderboardEntry = registry.register(
+    "IndividualLeaderboardEntry",
+    z
+        .object({
+            position: zPositiveInt(),
+            rank: zPositiveInt(),
+            value: z.number(),
+            player: zPlayerInfo
+        })
+        .strict()
+)
 
-export const zWorldFirstLeaderboardEntry = z
-    .object({
-        position: z.number(),
-        rank: z.number(),
-        value: z.number(),
-        activity: zActivity,
-        players: z.array(zActivityPlayer)
-    })
-    .strict()
+export const zWorldFirstLeaderboardEntry = registry.register(
+    "WorldFirstLeaderboardEntry",
+    z
+        .object({
+            position: zPositiveInt(),
+            rank: zPositiveInt(),
+            value: z.number(),
+            activity: zActivity,
+            players: z.array(zPlayerWithActivityData)
+        })
+        .strict()
+)

@@ -1,10 +1,10 @@
 import { gunzipSync } from "zlib"
 import { RaidHubRoute } from "../RaidHubRoute"
 import { cacheControl } from "../middlewares/cache-control"
+import { zPgcrSchema } from "../schema/pgcr"
+import { z, zBigIntString } from "../schema/zod"
 import { prisma } from "../services/prisma"
-import { pgcrSchema } from "../util/pgcr"
 import { fail, ok } from "../util/response"
-import { z, zBigIntString, zDigitString } from "../util/zod"
 
 export const pgcrRoute = new RaidHubRoute({
     method: "get",
@@ -15,16 +15,18 @@ export const pgcrRoute = new RaidHubRoute({
     async handler({ params }) {
         const instanceId = params.instanceId
         const bytes = await getRawPGCRBytes({ instanceId })
-        if (bytes === null)
+        if (bytes === null) {
             return fail({ notFound: true, instanceId }, `No activity found with id ${instanceId}`)
-        const data = decompressGzippedBytes(bytes)
-        return ok(data)
+        } else {
+            const data = decompressGzippedBytes(bytes)
+            return ok(data)
+        }
     },
     response: {
-        success: pgcrSchema.strict(),
+        success: zPgcrSchema.strict(),
         error: z.object({
-            notFound: z.boolean(),
-            instanceId: zDigitString()
+            notFound: z.literal(true),
+            instanceId: zBigIntString()
         })
     }
 })

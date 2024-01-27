@@ -1,13 +1,13 @@
-import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi"
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi"
 import { exec } from "child_process"
 import { writeFile } from "fs"
 import { router } from "../src/routes"
+import { registry } from "../src/schema/common"
 
 const dir = "./open-api"
 const fileName = dir + "/openapi.json"
 
 console.log("Generating OpenAPI spec...")
-const registry = new OpenAPIRegistry()
 
 router.openApiRoutes().forEach(route => {
     registry.registerPath(route)

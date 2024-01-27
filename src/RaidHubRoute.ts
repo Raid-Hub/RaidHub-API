@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
 import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodUnknown } from "zod"
-import { validationError } from "./RaidHubErrors"
+import { zBodyValidationError, zPathValidationError, zQueryValidationError } from "./RaidHubErrors"
 import { IRaidHubRoute, RaidHubHandler } from "./RaidHubRouterTypes"
-import { z } from "./util/zod"
+import { z } from "./schema/zod"
 
 // This class is used to define type-safe a route in the RaidHub API
 export class RaidHubRoute<
@@ -95,11 +95,10 @@ export class RaidHubRoute<
             req.params = parsed.data
             next()
         } else {
-            const result: z.infer<typeof validationError> = {
+            const result: (typeof zPathValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
                 message: "Invalid path params",
-                statusCode: 404,
                 error: {
                     issues: parsed.error.issues
                 }
@@ -122,11 +121,10 @@ export class RaidHubRoute<
             req.query = parsed.data
             next()
         } else {
-            const result: z.infer<typeof validationError> = {
+            const result: (typeof zQueryValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
                 message: "Invalid query params",
-                statusCode: 400,
                 error: {
                     issues: parsed.error.issues
                 }
@@ -146,11 +144,10 @@ export class RaidHubRoute<
             req.body = parsed.data
             next()
         } else {
-            const result: z.infer<typeof validationError> = {
+            const result: (typeof zBodyValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
                 message: "Invalid JSON body",
-                statusCode: 400,
                 error: {
                     issues: parsed.error.issues
                 }
@@ -165,7 +162,7 @@ export class RaidHubRoute<
             try {
                 const result = await this.handler(req)
                 if (result.success) {
-                    res.status(this.method === "get" ? 200 : 201).json(result)
+                    res.status(200).json(result)
                 } else {
                     res.status(404).json(result)
                 }
@@ -241,7 +238,7 @@ export class RaidHubRoute<
                 responses: {
                     ...(this.responseSchema
                         ? {
-                              [this.method === "get" ? 200 : 201]: {
+                              [200]: {
                                   description: "Success",
                                   content: {
                                       "application/json": {
@@ -251,13 +248,39 @@ export class RaidHubRoute<
                               }
                           }
                         : {}),
-                    ...(this.errorSchema
+                    ...(this.errorSchema || this.paramsSchema
                         ? {
                               [404]: {
                                   description: "Not found",
                                   content: {
                                       "application/json": {
-                                          schema: this.errorSchema
+                                          schema:
+                                              this.errorSchema && this.paramsSchema
+                                                  ? z.union([
+                                                        this.errorSchema,
+                                                        zPathValidationError
+                                                    ])
+                                                  : this.errorSchema ?? zBodyValidationError
+                                      }
+                                  }
+                              }
+                          }
+                        : {}),
+                    ...(this.querySchema || this.bodySchema
+                        ? {
+                              [400]: {
+                                  description: "Bad request",
+                                  content: {
+                                      "application/json": {
+                                          schema:
+                                              this.querySchema && this.bodySchema
+                                                  ? z.union([
+                                                        zQueryValidationError,
+                                                        zBodyValidationError
+                                                    ])
+                                                  : this.querySchema
+                                                  ? zQueryValidationError
+                                                  : zBodyValidationError
                                       }
                                   }
                               }
