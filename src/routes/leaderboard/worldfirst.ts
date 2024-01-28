@@ -56,6 +56,7 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
             statusCode: 404,
             schema: z
                 .object({
+                    type: z.literal("LeaderboardNotFoundError"),
                     notFound: z.literal(true),
                     params: z
                         .object({

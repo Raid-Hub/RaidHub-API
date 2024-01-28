@@ -33,6 +33,7 @@ export const authorizationRoute = new RaidHubRoute({
         error: {
             statusCode: 403,
             schema: z.object({
+                type: z.literal("InvalidClientSecretError"),
                 unauthorized: z.literal(true)
             })
         }

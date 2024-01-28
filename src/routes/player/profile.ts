@@ -81,6 +81,7 @@ export const playerProfileRoute = new RaidHubRoute({
         error: {
             statusCode: 404,
             schema: z.object({
+                type: z.literal("PlayerNotFoundError"),
                 notFound: z.literal(true),
                 membershipId: zBigIntString()
             })

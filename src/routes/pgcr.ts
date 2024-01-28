@@ -30,6 +30,7 @@ export const pgcrRoute = new RaidHubRoute({
         error: {
             statusCode: 404,
             schema: z.object({
+                type: z.literal("PGCRNotFoundError"),
                 notFound: z.literal(true),
                 instanceId: zBigIntString()
             })

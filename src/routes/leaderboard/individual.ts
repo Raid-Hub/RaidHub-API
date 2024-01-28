@@ -29,9 +29,7 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         )
 
         if (!isAvailable) {
-            return fail({
-                message: "This leaderboard is not available for this raid"
-            })
+            return fail({ unavailable: true }, "This leaderboard is not available for this raid")
         }
 
         const entries = await getIndividualLeaderboardEntries({
@@ -60,6 +58,13 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
                     entries: z.array(zIndividualLeaderboardEntry)
                 })
                 .strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z.object({
+                type: z.literal("LeaderboardNotFoundError"),
+                message: z.string()
+            })
         }
     }
 })

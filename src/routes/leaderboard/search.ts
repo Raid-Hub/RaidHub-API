@@ -112,6 +112,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             statusCode: 404,
             schema: z
                 .object({
+                    type: z.literal("PlayerNotFoundError"),
                     notFound: z.literal(true),
                     params: CommonQueryParams.extend({
                         type: z.string(),

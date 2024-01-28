@@ -9,7 +9,9 @@ import { z } from "./schema/zod"
 export class RaidHubRoute<
     M extends "get" | "post",
     ResponseBody extends ZodType,
-    ErrorResponseBody extends ZodObject<any> = ZodObject<any>,
+    ErrorResponseBody extends z.ZodObject<{
+        type: z.ZodLiteral<string>
+    }>,
     Params extends ZodObject<
         any,
         any,

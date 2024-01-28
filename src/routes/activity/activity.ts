@@ -42,6 +42,7 @@ export const activityRootRoute = new RaidHubRoute({
         error: {
             statusCode: 404,
             schema: z.object({
+                type: z.literal("ActivityNotFoundError"),
                 notFound: z.literal(true),
                 instanceId: zBigIntString()
             })

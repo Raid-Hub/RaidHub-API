@@ -28,6 +28,11 @@ describe("player search 200", () => {
             query: "Newo#90"
         }))
 
+    test("no raidhub results", () =>
+        t({
+            query: "lafoasdfasmfahffjfa#9999"
+        }))
+
     test("full bungie name", async () => {
         const data = await t({
             query: "Newo#9010",
