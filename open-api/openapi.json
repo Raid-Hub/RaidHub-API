@@ -1842,6 +1842,15 @@
         "items": {
           "nullable": true
         }
+      },
+      "AuthorizeResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": ["token"]
       }
     },
     "parameters": {}
@@ -2777,6 +2786,64 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authorize": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientSecret": {
+                    "type": "string"
+                  }
+                },
+                "required": ["clientSecret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "unauthorized": {
+                      "type": "boolean",
+                      "enum": [true]
+                    }
+                  },
+                  "required": ["unauthorized"]
                 }
               }
             }
