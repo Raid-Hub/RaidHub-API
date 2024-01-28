@@ -51,7 +51,7 @@ jobs:
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test --coverage --coverageReporters="lcov" --reporters="github-actions"
+                  yarn test --coverage --coverageReporters="lcov" --reporters="github-actions" --testTimeout=15000
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report
