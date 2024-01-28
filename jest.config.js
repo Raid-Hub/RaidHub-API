@@ -4,6 +4,7 @@ module.exports = {
     testTimeout: 15000,
     testEnvironment: "node",
     modulePathIgnorePatterns: ["dist/*"],
+    setupFiles: ["dotenv/config"],
     transform: {
         "^.+\\.ts$": [
             "ts-jest",

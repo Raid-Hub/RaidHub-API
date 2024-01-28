@@ -1,18 +1,20 @@
 import { RequestHandler } from "express"
+import jwt from "jsonwebtoken"
 import { zInsufficientPermissionsError } from "../RaidHubErrors"
 
-function isAdminAuthorized(key: string | undefined) {
-    return key != undefined && key === process.env.ADMIN_KEY
-}
-
 export const adminProtected: RequestHandler = (req, res, next) => {
-    if (isAdminAuthorized(req.headers["x-admin-key"]?.toString())) {
+    const authHeader = req.headers["authorization"]
+    const token = authHeader && authHeader.split(" ")[1]
+
+    jwt.verify(token!, process.env.ADMIN_SECRET!, (err, _) => {
+        if (err) {
+            res.status(403).json({
+                message: "Forbidden",
+                minted: new Date(),
+                success: false
+            } satisfies (typeof zInsufficientPermissionsError)["_input"])
+        }
+
         next()
-    } else {
-        res.status(403).json({
-            message: "Forbidden",
-            minted: new Date(),
-            success: false
-        } satisfies (typeof zInsufficientPermissionsError)["_input"])
-    }
+    })
 }
