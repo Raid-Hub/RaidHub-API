@@ -47,16 +47,19 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                params: z.object({
-                    raid: zRaidPath,
-                    category: z.enum(IndividualBoards),
-                    count: zPositiveInt(),
-                    page: zPage()
-                }),
-                entries: z.array(zIndividualLeaderboardEntry)
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z.object({
+                        raid: zRaidPath,
+                        category: z.enum(IndividualBoards),
+                        count: zPositiveInt(),
+                        page: zPage()
+                    }),
+                    entries: z.array(zIndividualLeaderboardEntry)
+                })
+                .strict()
+        }
     }
 })

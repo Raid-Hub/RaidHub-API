@@ -24,11 +24,17 @@ export const authorizationRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z.object({
-            token: z.string()
-        }),
-        error: z.object({
-            unauthorized: z.literal(true)
-        })
+        success: {
+            statusCode: 200,
+            schema: z.object({
+                token: z.string()
+            })
+        },
+        error: {
+            statusCode: 403,
+            schema: z.object({
+                unauthorized: z.literal(true)
+            })
+        }
     }
 })

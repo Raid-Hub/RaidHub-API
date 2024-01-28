@@ -29,15 +29,18 @@ export const leaderboardGlobalRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                params: z.object({
-                    category: z.enum(GlobalBoards),
-                    count: zPositiveInt(),
-                    page: zPage()
-                }),
-                entries: z.array(zIndividualLeaderboardEntry)
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z.object({
+                        category: z.enum(GlobalBoards),
+                        count: zPositiveInt(),
+                        page: zPage()
+                    }),
+                    entries: z.array(zIndividualLeaderboardEntry)
+                })
+                .strict()
+        }
     }
 })

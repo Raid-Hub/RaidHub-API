@@ -32,53 +32,59 @@ export const playerProfileRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                player: zPlayerInfo,
-                stats: z.object({
-                    global: z
-                        .object({
-                            clears: zPlayerStatRanking,
-                            fullClears: zPlayerStatRanking,
-                            sherpas: zPlayerStatRanking,
-                            speed: zPlayerStatRanking
-                        })
-                        .nullable(),
-                    byRaid: z.record(
-                        z.object({
-                            fastestClear: z
-                                .object({
-                                    instanceId: z.bigint(),
-                                    duration: z.number().int()
-                                })
-                                .nullable(),
-                            clears: z.number().int().nonnegative(),
-                            fullClears: z.number().int().nonnegative(),
-                            sherpas: z.number().int().nonnegative(),
-                            trios: z.number().int().nonnegative(),
-                            duos: z.number().int().nonnegative(),
-                            solos: z.number().int().nonnegative()
-                        })
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    player: zPlayerInfo,
+                    stats: z.object({
+                        global: z
+                            .object({
+                                clears: zPlayerStatRanking,
+                                fullClears: zPlayerStatRanking,
+                                sherpas: zPlayerStatRanking,
+                                speed: zPlayerStatRanking
+                            })
+                            .nullable(),
+                        byRaid: z.record(
+                            z.object({
+                                fastestClear: z
+                                    .object({
+                                        instanceId: z.bigint(),
+                                        duration: z.number().int()
+                                    })
+                                    .nullable(),
+                                clears: z.number().int().nonnegative(),
+                                fullClears: z.number().int().nonnegative(),
+                                sherpas: z.number().int().nonnegative(),
+                                trios: z.number().int().nonnegative(),
+                                duos: z.number().int().nonnegative(),
+                                solos: z.number().int().nonnegative()
+                            })
+                        )
+                    }),
+                    worldFirstEntries: z.record(
+                        z.array(
+                            z.object({
+                                rank: zPositiveInt(),
+                                instanceId: zBigIntString(),
+                                raidHash: zBigIntString(),
+                                dayOne: z.boolean(),
+                                contest: z.boolean(),
+                                weekOne: z.boolean()
+                            })
+                        )
                     )
-                }),
-                worldFirstEntries: z.record(
-                    z.array(
-                        z.object({
-                            rank: zPositiveInt(),
-                            instanceId: zBigIntString(),
-                            raidHash: zBigIntString(),
-                            dayOne: z.boolean(),
-                            contest: z.boolean(),
-                            weekOne: z.boolean()
-                        })
-                    )
-                )
+                })
+                .strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z.object({
+                notFound: z.literal(true),
+                membershipId: zBigIntString()
             })
-            .strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            membershipId: zBigIntString()
-        })
+        }
     }
 })
 

@@ -36,10 +36,16 @@ export const playerBasicRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: zPlayerInfo,
-        error: z.object({
-            notFound: z.literal(true),
-            membershipId: zBigIntString()
-        })
+        success: {
+            statusCode: 200,
+            schema: zPlayerInfo
+        },
+        error: {
+            statusCode: 404,
+            schema: z.object({
+                notFound: z.literal(true),
+                membershipId: zBigIntString()
+            })
+        }
     }
 })

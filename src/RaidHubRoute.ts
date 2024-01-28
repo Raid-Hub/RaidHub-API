@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
-import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodUnknown } from "zod"
+import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodTypeAny, ZodUnknown } from "zod"
 import { zBodyValidationError, zPathValidationError, zQueryValidationError } from "./RaidHubErrors"
 import { IRaidHubRoute, RaidHubHandler } from "./RaidHubRouterTypes"
 import { z } from "./schema/zod"
@@ -45,6 +45,10 @@ export class RaidHubRoute<
     >
     readonly responseSchema: ResponseBody
     readonly errorSchema: ErrorResponseBody | null
+    readonly errorCodes: {
+        success: 200 | 201 | 207
+        error: 400 | 401 | 403 | 404 | 503
+    }
 
     // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
@@ -63,8 +67,14 @@ export class RaidHubRoute<
             ErrorResponseBody["_input"]
         >
         response: {
-            success: ResponseBody
-            error?: ErrorResponseBody
+            success: {
+                statusCode: 200 | 201 | 207
+                schema: ResponseBody
+            }
+            error?: {
+                statusCode: 400 | 401 | 403 | 404 | 503
+                schema: ErrorResponseBody
+            }
         }
     }) {
         this.router = Router({
@@ -77,8 +87,12 @@ export class RaidHubRoute<
         this.bodySchema = args.body ?? null
         this.middlewares = args.middlewares ?? []
         this.handler = args.handler
-        this.responseSchema = args.response.success
-        this.errorSchema = args.response.error ?? null
+        this.responseSchema = args.response.success.schema
+        this.errorSchema = args.response.error?.schema ?? null
+        this.errorCodes = {
+            success: args.response.success.statusCode,
+            error: args.response.error?.statusCode ?? 400
+        }
     }
 
     private validateParams: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
@@ -160,11 +174,22 @@ export class RaidHubRoute<
     private controller: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> =
         async (req, res, next) => {
             try {
+                const minted = new Date()
                 const result = await this.handler(req)
                 if (result.success) {
-                    res.status(200).json(result)
+                    res.status(this.errorCodes.success).json({
+                        minted,
+                        success: true,
+                        response: result.response,
+                        message: result.message
+                    })
                 } else {
-                    res.status(404).json(result)
+                    res.status(this.errorCodes.error).json({
+                        minted,
+                        success: false,
+                        response: result.error,
+                        message: result.message
+                    })
                 }
             } catch (e) {
                 next(e)
@@ -211,6 +236,23 @@ export class RaidHubRoute<
     }
 
     openApiRoutes() {
+        const allResponses = [
+            [this.errorCodes.success, "Success", this.responseSchema],
+            this.errorSchema ? [this.errorCodes.error, "Error", this.errorSchema] : null,
+            this.paramsSchema ? [404, "Not found", zPathValidationError] : null,
+            this.querySchema ? [400, "Bad request", zQueryValidationError] : null,
+            this.bodySchema ? [400, "Bad request", zBodyValidationError] : null
+        ].filter(Boolean) as [number, string, ZodObject<any>][]
+
+        const byCode: { [statusCode: string]: ZodType<unknown>[] } = {}
+        allResponses.forEach(([code, _, schema]) => {
+            if (!byCode[code]) {
+                byCode[code] = [schema]
+            } else {
+                byCode[code] = [...byCode[code], schema]
+            }
+        })
+
         return [
             {
                 path: "",
@@ -230,54 +272,28 @@ export class RaidHubRoute<
                           }
                         : undefined
                 },
-                responses: {
-                    [200]: {
-                        description: "Success",
-                        content: {
-                            "application/json": {
-                                schema: this.responseSchema
+                responses: Object.fromEntries(
+                    Object.entries(byCode).map(([code, schemas]) => [
+                        code,
+                        {
+                            description: allResponses.findLast(([c]) => c === Number(code))![1],
+                            content: {
+                                "application/json": {
+                                    schema:
+                                        schemas.length > 1
+                                            ? z.union(
+                                                  schemas as [
+                                                      ZodTypeAny,
+                                                      ZodTypeAny,
+                                                      ...ZodTypeAny[]
+                                                  ]
+                                              )
+                                            : schemas[0]
+                                }
                             }
                         }
-                    },
-                    ...(this.errorSchema || this.paramsSchema
-                        ? {
-                              [404]: {
-                                  description: "Not found",
-                                  content: {
-                                      "application/json": {
-                                          schema:
-                                              this.errorSchema && this.paramsSchema
-                                                  ? z.union([
-                                                        this.errorSchema,
-                                                        zPathValidationError
-                                                    ])
-                                                  : this.errorSchema ?? zPathValidationError
-                                      }
-                                  }
-                              }
-                          }
-                        : {}),
-                    ...(this.querySchema || this.bodySchema
-                        ? {
-                              [400]: {
-                                  description: "Bad request",
-                                  content: {
-                                      "application/json": {
-                                          schema:
-                                              this.querySchema && this.bodySchema
-                                                  ? z.union([
-                                                        zQueryValidationError,
-                                                        zBodyValidationError
-                                                    ])
-                                                  : this.querySchema
-                                                  ? zQueryValidationError
-                                                  : zBodyValidationError
-                                      }
-                                  }
-                              }
-                          }
-                        : {})
-                }
+                    ])
+                )
             }
         ]
     }

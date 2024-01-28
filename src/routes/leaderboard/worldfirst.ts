@@ -36,30 +36,36 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                params: z
-                    .object({
-                        raid: zRaidPath,
-                        category: z.enum(WorldFirstBoards)
-                    })
-                    .merge(zLeaderboardQueryPagination)
-                    .strict(),
-                date: zISODateString(),
-                entries: z.array(zWorldFirstLeaderboardEntry)
-            })
-            .strict(),
-        error: z
-            .object({
-                notFound: z.literal(true),
-                params: z
-                    .object({
-                        raid: zRaidPath,
-                        category: z.enum(WorldFirstBoards)
-                    })
-                    .merge(zLeaderboardQueryPagination)
-                    .strict()
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z
+                        .object({
+                            raid: zRaidPath,
+                            category: z.enum(WorldFirstBoards)
+                        })
+                        .merge(zLeaderboardQueryPagination)
+                        .strict(),
+                    date: zISODateString(),
+                    entries: z.array(zWorldFirstLeaderboardEntry)
+                })
+                .strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z
+                .object({
+                    notFound: z.literal(true),
+                    params: z
+                        .object({
+                            raid: zRaidPath,
+                            category: z.enum(WorldFirstBoards)
+                        })
+                        .merge(zLeaderboardQueryPagination)
+                        .strict()
+                })
+                .strict()
+        }
     }
 })

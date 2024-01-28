@@ -23,25 +23,28 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                params: z.object({
-                    count: zPositiveInt(),
-                    page: zPage(),
-                    raid: zRaidPath
-                }),
-                entries: z.array(
-                    z.object({
-                        rank: z.number(),
-                        instanceId: zDigitString(),
-                        dateStarted: zISODateString(),
-                        dateCompleted: zISODateString(),
-                        duration: zPositiveInt(),
-                        players: z.array(zPlayerWithActivityData)
-                    })
-                )
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z.object({
+                        count: zPositiveInt(),
+                        page: zPage(),
+                        raid: zRaidPath
+                    }),
+                    entries: z.array(
+                        z.object({
+                            rank: z.number(),
+                            instanceId: zDigitString(),
+                            dateStarted: zISODateString(),
+                            dateCompleted: zISODateString(),
+                            duration: zPositiveInt(),
+                            players: z.array(zPlayerWithActivityData)
+                        })
+                    )
+                })
+                .strict()
+        }
     }
 })
 

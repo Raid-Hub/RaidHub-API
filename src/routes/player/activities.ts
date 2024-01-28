@@ -48,23 +48,29 @@ export const playerActivitiesRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                activities: z.array(
-                    zActivityWithPlayerData.extend({
-                        raid: z.object({
-                            raidId: zRaidEnum,
-                            versionId: zRaidVersionEnum
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    activities: z.array(
+                        zActivityWithPlayerData.extend({
+                            raid: z.object({
+                                raidId: zRaidEnum,
+                                versionId: zRaidVersionEnum
+                            })
                         })
-                    })
-                ),
-                nextCursor: zBigIntString().nullable()
+                    ),
+                    nextCursor: zBigIntString().nullable()
+                })
+                .strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z.object({
+                notFound: z.literal(true),
+                membershipId: zBigIntString()
             })
-            .strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            membershipId: zBigIntString()
-        })
+        }
     }
 })
 

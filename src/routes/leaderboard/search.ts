@@ -90,31 +90,37 @@ export const leaderboardSearchRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                params: CommonQueryParams.extend({
-                    type: z.string(),
-                    category: z.string(),
-                    raid: zRaidEnum.optional()
-                }).strict(),
-                page: z.number().positive().int(),
-                rank: z.number().positive().int(),
-                position: z.number().positive().int(),
-                entries: z.array(
-                    z.union([zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry])
-                )
-            })
-            .strict(),
-        error: z
-            .object({
-                notFound: z.literal(true),
-                params: CommonQueryParams.extend({
-                    type: z.string(),
-                    category: z.string(),
-                    raid: zRaidEnum.optional()
-                }).strict()
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: CommonQueryParams.extend({
+                        type: z.string(),
+                        category: z.string(),
+                        raid: zRaidEnum.optional()
+                    }).strict(),
+                    page: z.number().positive().int(),
+                    rank: z.number().positive().int(),
+                    position: z.number().positive().int(),
+                    entries: z.array(
+                        z.union([zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry])
+                    )
+                })
+                .strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z
+                .object({
+                    notFound: z.literal(true),
+                    params: CommonQueryParams.extend({
+                        type: z.string(),
+                        category: z.string(),
+                        raid: zRaidEnum.optional()
+                    }).strict()
+                })
+                .strict()
+        }
     }
 })
 

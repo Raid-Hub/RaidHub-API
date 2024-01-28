@@ -16,6 +16,9 @@ export const adminQueryRoute = new RaidHubRoute({
         return ok(rows)
     },
     response: {
-        success: z.array(z.any())
+        success: {
+            statusCode: 200,
+            schema: z.array(z.unknown())
+        }
     }
 })

@@ -30,11 +30,14 @@ const testGetRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                woo: z.string()
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    woo: z.string()
+                })
+                .strict()
+        }
     }
 })
 
@@ -55,14 +58,17 @@ const testPostRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                posted: z.object({
-                    id: z.string().optional(),
-                    hello: z.string().optional()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    posted: z.object({
+                        id: z.string().optional(),
+                        hello: z.string().optional()
+                    })
                 })
-            })
-            .strict()
+                .strict()
+        }
     }
 })
 
@@ -74,9 +80,12 @@ const testEmptyRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z.object({
-            game: z.literal("destiny 2")
-        })
+        success: {
+            statusCode: 200,
+            schema: z.object({
+                game: z.literal("destiny 2")
+            })
+        }
     }
 })
 
@@ -105,9 +114,12 @@ const testFailRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z.object({
-            game: z.literal("destiny 2")
-        })
+        success: {
+            statusCode: 200,
+            schema: z.object({
+                game: z.literal("destiny 2")
+            })
+        }
     }
 })
 

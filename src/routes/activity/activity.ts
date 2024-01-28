@@ -24,22 +24,28 @@ export const activityRootRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: zActivityExtended
-            .extend({
-                leaderboardEntries: z.record(z.number()),
-                players: z.record(
-                    z.object({
-                        finishedRaid: z.boolean(),
-                        creditedSherpas: z.number(),
-                        isFirstClear: z.boolean()
-                    })
-                )
+        success: {
+            statusCode: 200,
+            schema: zActivityExtended
+                .extend({
+                    leaderboardEntries: z.record(z.number()),
+                    players: z.record(
+                        z.object({
+                            finishedRaid: z.boolean(),
+                            creditedSherpas: z.number(),
+                            isFirstClear: z.boolean()
+                        })
+                    )
+                })
+                .strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z.object({
+                notFound: z.literal(true),
+                instanceId: zBigIntString()
             })
-            .strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            instanceId: zBigIntString()
-        })
+        }
     }
 })
 

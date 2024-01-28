@@ -19,18 +19,21 @@ export const playerSearchRoute = new RaidHubRoute({
         return ok(data)
     },
     response: {
-        success: z
-            .object({
-                params: z.object({
-                    count: zPositiveInt(),
-                    term: z.object({
-                        name: z.string(),
-                        nameWithCode: z.string().nullable()
-                    })
-                }),
-                results: z.array(zPlayerInfo.extend({ clears: z.number().int().nonnegative() }))
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z.object({
+                        count: zPositiveInt(),
+                        term: z.object({
+                            name: z.string(),
+                            nameWithCode: z.string().nullable()
+                        })
+                    }),
+                    results: z.array(zPlayerInfo.extend({ clears: z.number().int().nonnegative() }))
+                })
+                .strict()
+        }
     }
 })
 

@@ -23,11 +23,17 @@ export const pgcrRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: zPgcrSchema.strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            instanceId: zBigIntString()
-        })
+        success: {
+            statusCode: 200,
+            schema: zPgcrSchema.strict()
+        },
+        error: {
+            statusCode: 404,
+            schema: z.object({
+                notFound: z.literal(true),
+                instanceId: zBigIntString()
+            })
+        }
     }
 })
 

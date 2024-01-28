@@ -2835,8 +2835,8 @@
               }
             }
           },
-          "404": {
-            "description": "Not found",
+          "403": {
+            "description": "Error",
             "content": {
               "application/json": {
                 "schema": {
