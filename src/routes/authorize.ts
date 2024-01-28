@@ -3,6 +3,10 @@ import { RaidHubRoute } from "../RaidHubRoute"
 import { z } from "../schema/zod"
 import { fail, ok } from "../util/response"
 
+export function generateJWT() {
+    return jwt.sign({ admin: true }, process.env.JWT_SECRET!, { expiresIn: 3600 })
+}
+
 export const authorizationRoute = new RaidHubRoute({
     method: "post",
     body: z.object({
@@ -11,7 +15,7 @@ export const authorizationRoute = new RaidHubRoute({
     async handler({ body }) {
         if (body.clientSecret === process.env.ADMIN_CLIENT_SECRET) {
             return ok({
-                token: jwt.sign({ admin: true }, process.env.JWT_SECRET!, { expiresIn: 3600 })
+                token: generateJWT()
             })
         } else {
             return fail({

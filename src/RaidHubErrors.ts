@@ -13,7 +13,11 @@ export const zRaidHubError = registry.register(
         minted: zISODateString(),
         message: z.string(),
         success: z.literal(false),
-        error: z.any()
+        error: z
+            .object({
+                type: z.string()
+            })
+            .catchall(z.any())
     })
 )
 

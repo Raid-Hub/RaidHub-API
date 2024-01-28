@@ -275,10 +275,19 @@
             "enum": [false]
           },
           "error": {
-            "nullable": true
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": {
+              "nullable": true
+            }
           }
         },
-        "required": ["minted", "message", "success"]
+        "required": ["minted", "message", "success", "error"]
       },
       "ZodIssue": {
         "type": "object",
@@ -350,8 +359,7 @@
                 },
                 "required": ["issues"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -379,8 +387,7 @@
                 },
                 "required": ["issues"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -408,8 +415,7 @@
                 },
                 "required": ["issues"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -438,8 +444,7 @@
                 },
                 "required": ["type", "at"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -497,8 +502,7 @@
                 },
                 "required": ["type", "apiKey", "origin"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
