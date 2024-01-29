@@ -1,6 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid, WorldFirstBoards, WorldFirstBoardsMap } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { ErrorCode } from "../../schema/common"
 import { z, zISODateString } from "../../schema/zod"
 import { fail, ok } from "../../util/response"
 import { getWorldFirstLeaderboardEntries } from "./_common"
@@ -25,7 +26,7 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
         if (!leaderboard) {
             return fail(
                 { notFound: true, params: { ...req.params, ...req.query } },
-                "Leaderboard not found"
+                ErrorCode.PlayerNotFoundError
             )
         } else {
             return ok({
@@ -52,21 +53,23 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
                 })
                 .strict()
         },
-        error: {
-            statusCode: 404,
-            schema: z
-                .object({
-                    type: z.literal("LeaderboardNotFoundError"),
-                    notFound: z.literal(true),
-                    params: z
-                        .object({
-                            raid: zRaidPath,
-                            category: z.enum(WorldFirstBoards)
-                        })
-                        .merge(zLeaderboardQueryPagination)
-                        .strict()
-                })
-                .strict()
-        }
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z
+                    .object({
+                        notFound: z.literal(true),
+                        params: z
+                            .object({
+                                raid: zRaidPath,
+                                category: z.enum(WorldFirstBoards)
+                            })
+                            .merge(zLeaderboardQueryPagination)
+                            .strict()
+                    })
+                    .strict()
+            }
+        ]
     }
 })

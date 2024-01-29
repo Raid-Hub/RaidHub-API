@@ -1,7 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zActivityExtended } from "../../schema/common"
+import { ErrorCode, zActivityExtended } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -18,7 +18,11 @@ export const activityRootRoute = new RaidHubRoute({
         const data = await getActivity({ instanceId })
 
         if (!data) {
-            return fail({ notFound: true, instanceId: req.params.instanceId }, "Activity not found")
+            return fail(
+                { notFound: true, instanceId: req.params.instanceId },
+                ErrorCode.ActivityNotFoundError,
+                "Activity not found"
+            )
         } else {
             return ok(data)
         }
@@ -39,14 +43,16 @@ export const activityRootRoute = new RaidHubRoute({
                 })
                 .strict()
         },
-        error: {
-            statusCode: 404,
-            schema: z.object({
-                type: z.literal("ActivityNotFoundError"),
-                notFound: z.literal(true),
-                instanceId: zBigIntString()
-            })
-        }
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.ActivityNotFoundError,
+                schema: z.object({
+                    notFound: z.literal(true),
+                    instanceId: zBigIntString()
+                })
+            }
+        ]
     }
 })
 

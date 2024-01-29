@@ -2,7 +2,7 @@ import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
-import { registry, zPlayerInfo } from "../../schema/common"
+import { ErrorCode, registry, zPlayerInfo } from "../../schema/common"
 import { z, zBigIntString, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -25,7 +25,7 @@ export const playerProfileRoute = new RaidHubRoute({
         if (!data) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                "Player not found"
+                ErrorCode.PlayerNotFoundError
             )
         } else {
             return ok(data)
@@ -78,14 +78,16 @@ export const playerProfileRoute = new RaidHubRoute({
                 })
                 .strict()
         },
-        error: {
-            statusCode: 404,
-            schema: z.object({
-                type: z.literal("PlayerNotFoundError"),
-                notFound: z.literal(true),
-                membershipId: zBigIntString()
-            })
-        }
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z.object({
+                    notFound: z.literal(true),
+                    membershipId: zBigIntString()
+                })
+            }
+        ]
     }
 })
 

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import { RaidHubRoute } from "../RaidHubRoute"
+import { ErrorCode } from "../schema/common"
 import { z } from "../schema/zod"
 import { fail, ok } from "../util/response"
 
@@ -18,9 +19,12 @@ export const authorizationRoute = new RaidHubRoute({
                 token: generateJWT()
             })
         } else {
-            return fail({
-                unauthorized: true
-            })
+            return fail(
+                {
+                    unauthorized: true
+                },
+                ErrorCode.InvalidClientSecretError
+            )
         }
     },
     response: {
@@ -30,12 +34,14 @@ export const authorizationRoute = new RaidHubRoute({
                 token: z.string()
             })
         },
-        error: {
-            statusCode: 403,
-            schema: z.object({
-                type: z.literal("InvalidClientSecretError"),
-                unauthorized: z.literal(true)
-            })
-        }
+        errors: [
+            {
+                statusCode: 403,
+                type: ErrorCode.InvalidClientSecretError,
+                schema: z.object({
+                    unauthorized: z.literal(true)
+                })
+            }
+        ]
     }
 })

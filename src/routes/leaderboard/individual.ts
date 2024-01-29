@@ -5,6 +5,7 @@ import {
     UrlPathsToRaid
 } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { ErrorCode } from "../../schema/common"
 import { z, zPage, zPositiveInt } from "../../schema/zod"
 import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
@@ -29,7 +30,7 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         )
 
         if (!isAvailable) {
-            return fail({ unavailable: true }, "This leaderboard is not available for this raid")
+            return fail({ unavailable: true }, ErrorCode.LeaderboardNotFoundError)
         }
 
         const entries = await getIndividualLeaderboardEntries({
@@ -59,12 +60,14 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
                 })
                 .strict()
         },
-        error: {
-            statusCode: 404,
-            schema: z.object({
-                type: z.literal("LeaderboardNotFoundError"),
-                message: z.string()
-            })
-        }
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.LeaderboardNotFoundError,
+                schema: z.object({
+                    message: z.string()
+                })
+            }
+        ]
     }
 })

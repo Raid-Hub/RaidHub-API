@@ -1,7 +1,6 @@
 import { RaidHubHandlerReturn } from "../RaidHubRouterTypes"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function ok<T>(response: T, message?: string): RaidHubHandlerReturn<T, any> {
+export function ok<T>(response: T, message?: string): RaidHubHandlerReturn<T, never, never> {
     return {
         message,
         response,
@@ -9,11 +8,15 @@ export function ok<T>(response: T, message?: string): RaidHubHandlerReturn<T, an
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function fail<E>(error: E, message?: string): RaidHubHandlerReturn<any, E> {
+export function fail<E, C extends string>(
+    error: E,
+    type: C,
+    message?: string
+): RaidHubHandlerReturn<never, E, C> {
     return {
         message,
         error,
-        success: false
+        success: false,
+        type: type
     }
 }

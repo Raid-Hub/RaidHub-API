@@ -10,7 +10,7 @@ import {
 } from "../../data/leaderboards"
 import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zRaidEnum } from "../../schema/common"
+import { ErrorCode, zRaidEnum } from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -54,7 +54,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "individual":
                 const individualResults = await searchIndividualLeaderboard(req.query)
                 if (!individualResults)
-                    return fail({ notFound: true, params: req.query }, "Player not found")
+                    return fail(
+                        { notFound: true, params: req.query },
+                        ErrorCode.PlayerNotFoundError
+                    )
 
                 return ok({
                     params: req.query,
@@ -66,7 +69,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "worldfirst":
                 const wfResults = await searchWorldFirstLeaderboard(req.query)
                 if (!wfResults)
-                    return fail({ notFound: true, params: req.query }, "Player not found")
+                    return fail(
+                        { notFound: true, params: req.query },
+                        ErrorCode.PlayerNotFoundError
+                    )
 
                 return ok({
                     params: req.query,
@@ -78,7 +84,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "global":
                 const globalResults = await searchGlobalLeaderboard(req.query)
                 if (!globalResults)
-                    return fail({ notFound: true, params: req.query }, "Player not found")
+                    return fail(
+                        { notFound: true, params: req.query },
+                        ErrorCode.PlayerNotFoundError
+                    )
 
                 return ok({
                     params: req.query,
@@ -108,20 +117,22 @@ export const leaderboardSearchRoute = new RaidHubRoute({
                 })
                 .strict()
         },
-        error: {
-            statusCode: 404,
-            schema: z
-                .object({
-                    type: z.literal("PlayerNotFoundError"),
-                    notFound: z.literal(true),
-                    params: CommonQueryParams.extend({
-                        type: z.string(),
-                        category: z.string(),
-                        raid: zRaidEnum.optional()
-                    }).strict()
-                })
-                .strict()
-        }
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z
+                    .object({
+                        notFound: z.literal(true),
+                        params: CommonQueryParams.extend({
+                            type: z.string(),
+                            category: z.string(),
+                            raid: zRaidEnum.optional()
+                        }).strict()
+                    })
+                    .strict()
+            }
+        ]
     }
 })
 

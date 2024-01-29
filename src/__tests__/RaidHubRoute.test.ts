@@ -247,7 +247,7 @@ describe("raidhub route unhandled error", () => {
 
     test("no error thrown ", async () => {
         const res = await request(app).get("/test/fail")
-
+        console.log(res.body)
         expect(res.body.response).toMatchObject({
             game: "destiny 2"
         })
