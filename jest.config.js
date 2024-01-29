@@ -5,6 +5,7 @@ module.exports = {
     testTimeout: 15000,
     modulePathIgnorePatterns: ["dist/*"],
     setupFiles: ["dotenv/config"],
+    coverageReporters: ["html"],
     transform: {
         "^.+\\.ts$": [
             "ts-jest",

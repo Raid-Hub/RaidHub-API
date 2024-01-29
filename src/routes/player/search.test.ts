@@ -28,9 +28,14 @@ describe("player search 200", () => {
             query: "Newo#90"
         }))
 
-    test("no raidhub results", () =>
+    test("no raidhub results global", () =>
         t({
             query: "lafoasdfasmfahffjfa#9999"
+        }))
+
+    test("no raidhub results display", () =>
+        t({
+            query: "lafoasdfasmfahffjfa"
         }))
 
     test("full bungie name", async () => {

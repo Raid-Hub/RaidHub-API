@@ -4,7 +4,8 @@ import request from "supertest"
 import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
 import { errorHandler } from "../middlewares/errorHandler"
-import { zDigitString } from "../schema/zod"
+import { ErrorCode } from "../schema/common"
+import { zBigIntString, zDigitString } from "../schema/zod"
 import { ok } from "../util/response"
 
 const app = express()
@@ -13,6 +14,8 @@ app.use(express.json())
 
 const testGetRoute = new RaidHubRoute({
     method: "get",
+    description: "test route",
+    summary: "do it.",
     params: z
         .object({
             testId: zDigitString()
@@ -37,7 +40,16 @@ const testGetRoute = new RaidHubRoute({
                     woo: z.string()
                 })
                 .strict()
-        }
+        },
+        errors: [
+            {
+                type: ErrorCode.PlayerNotFoundError,
+                statusCode: 404,
+                schema: z.object({
+                    testId: zBigIntString()
+                })
+            }
+        ]
     }
 })
 
@@ -247,9 +259,35 @@ describe("raidhub route unhandled error", () => {
 
     test("no error thrown ", async () => {
         const res = await request(app).get("/test/fail")
-        console.log(res.body)
         expect(res.body.response).toMatchObject({
             game: "destiny 2"
         })
+    })
+})
+
+describe("test raidhub route openapi gen", () => {
+    test("get schema", () => {
+        const openapi = testGetRoute.openApiRoutes()[0]
+        expect(openapi.method).toBe("get")
+        expect(openapi.description).toBe("test route")
+        expect(openapi.path).toBe("")
+        expect(openapi.summary).toBe("do it.")
+        expect(openapi.request.params).toBeDefined()
+        expect(openapi.request.query).toBeDefined()
+        expect(openapi.request.body).toBeUndefined()
+        expect(openapi.responses).toHaveProperty("200")
+        expect(openapi.responses).toHaveProperty("400")
+        expect(openapi.responses).toHaveProperty("404")
+    })
+
+    test("post schema", () => {
+        const openapi = testPostRoute.openApiRoutes()[0]
+        expect(openapi.method).toBe("post")
+        expect(openapi.path).toBe("")
+        expect(openapi.request.params).toBeUndefined()
+        expect(openapi.request.query).toBeDefined()
+        expect(openapi.request.body).toBeDefined()
+        expect(openapi.responses).toHaveProperty("200")
+        expect(openapi.responses).toHaveProperty("400")
     })
 })

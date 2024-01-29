@@ -62,7 +62,7 @@ export class RaidHubRoute<
     // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
         method: M
-        descritiption?: string
+        description?: string
         summary?: string
         params?: Params
         query?: Query
@@ -93,6 +93,8 @@ export class RaidHubRoute<
             mergeParams: true
         })
         this.method = args.method
+        this.description = args.description
+        this.summary = args.summary
         this.paramsSchema = args.params ?? null
         this.querySchema = args.query ?? null
         this.bodySchema = args.body ?? null
