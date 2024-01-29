@@ -242,7 +242,7 @@ async function getFirstPageOfActivities(membershipId: bigint, count: number) {
         return [activities, playerActivities] as const
     } else {
         const lastYear = new Date(today)
-        lastYear.setMonth(today.getUTCFullYear() - 1)
+        lastYear.setFullYear(today.getUTCFullYear() - 1)
 
         const [lastYearActivities, lastYearPlayerActivities] = await getActivites(lastYear)
         if (lastYearActivities.length) {
