@@ -2,7 +2,7 @@ import { leaderboardRaidIndividualRoute } from "./individual"
 
 describe("leaderboard individual 200", () => {
     const t = async (raid: string, category: string, query: unknown) => {
-        const result = await leaderboardRaidIndividualRoute.mock({
+        const result = await leaderboardRaidIndividualRoute.$mock({
             params: { raid, category },
             query
         })
@@ -48,7 +48,7 @@ describe("leaderboard individual 200", () => {
 
 describe("leaderboard individual 404", () => {
     const t = async (raid: string, category: string, query: unknown) => {
-        const result = await leaderboardRaidIndividualRoute.mock({
+        const result = await leaderboardRaidIndividualRoute.$mock({
             params: { raid, category },
             query
         })

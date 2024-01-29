@@ -27,7 +27,8 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
         }
     }
 
-    console.error(err)
+    /* istanbul ignore next */
+    !process.env.TS_JEST && console.error(err)
 
     res.status(500).send({
         message: "Something went wrong.",

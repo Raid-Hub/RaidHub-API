@@ -2,18 +2,20 @@ import { playerProfileRoute } from "./profile"
 
 describe("player profile 200", () => {
     const t = async (membershipId: string) => {
-        const result = await playerProfileRoute.mock({ params: { membershipId } })
+        const result = await playerProfileRoute.$mock({ params: { membershipId } })
         expect(result.type).toBe("ok")
     }
 
     test("4611686018488107374", () => t("4611686018488107374"))
 
     test("4611686018467831285", () => t("4611686018467831285"))
+
+    test("no clears", () => t("4611686018497002892"))
 })
 
 describe("player profile 404", () => {
     const t = async (membershipId: string) => {
-        const result = await playerProfileRoute.mock({
+        const result = await playerProfileRoute.$mock({
             params: {
                 membershipId
             }

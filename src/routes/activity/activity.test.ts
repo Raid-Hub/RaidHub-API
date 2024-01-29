@@ -2,7 +2,7 @@ import { activityRootRoute } from "./activity"
 
 describe("activity 200", () => {
     const t = async (instanceId: string) => {
-        const result = await activityRootRoute.mock({ params: { instanceId } })
+        const result = await activityRootRoute.$mock({ params: { instanceId } })
         expect(result.type).toBe("ok")
     }
 
@@ -17,7 +17,7 @@ describe("activity 200", () => {
 
 describe("activity 404", () => {
     const t = async (instanceId: string) => {
-        const result = await activityRootRoute.mock({
+        const result = await activityRootRoute.$mock({
             params: {
                 instanceId
             }

@@ -46,7 +46,14 @@ const testGetRoute = new RaidHubRoute({
                 type: ErrorCode.PlayerNotFoundError,
                 statusCode: 404,
                 schema: z.object({
-                    testId: zBigIntString()
+                    playerId: zBigIntString()
+                })
+            },
+            {
+                type: ErrorCode.ActivityNotFoundError,
+                statusCode: 404,
+                schema: z.object({
+                    activityId: zBigIntString()
                 })
             }
         ]
@@ -289,5 +296,15 @@ describe("test raidhub route openapi gen", () => {
         expect(openapi.request.body).toBeDefined()
         expect(openapi.responses).toHaveProperty("200")
         expect(openapi.responses).toHaveProperty("400")
+    })
+
+    test("empty schema", () => {
+        const openapi = testEmptyRoute.openApiRoutes()[0]
+        expect(openapi.method).toBe("get")
+        expect(openapi.path).toBe("")
+        expect(openapi.request.params).toBeUndefined()
+        expect(openapi.request.query).toBeUndefined()
+        expect(openapi.request.body).toBeUndefined()
+        expect(openapi.responses).toHaveProperty("200")
     })
 })

@@ -3,21 +3,37 @@ import request from "supertest"
 import { playerActivitiesRoute } from "./activities"
 
 describe("player activities 200", () => {
-    const t = async (membershipId: string) => {
-        const result = await playerActivitiesRoute.mock({ params: { membershipId }, query: {} })
+    const t = async (membershipId: string, cursor?: string) => {
+        const result = await playerActivitiesRoute.$mock({
+            params: { membershipId },
+            query: { cursor }
+        })
         expect(result.type).toBe("ok")
+        return result
     }
 
     test("4611686018488107374", () => t("4611686018488107374"))
 
     test("4611686018467831285", () => t("4611686018467831285"))
 
-    test("4611686018439759736", () => t("4611686018439759736"))
+    test("month cursor", () => t("4611686018439759736"))
+
+    test("year cursor", () => t("4611686018501336567"))
+
+    test("end of list", () =>
+        t("4611686018488107374", "1").then(result => {
+            expect(result.parsed.activities.length).toBeFalsy()
+        }))
+
+    test("final raid", () =>
+        t("4611686018488107374", "4153035974").then(result => {
+            expect(result.parsed.activities.length).toBe(4)
+        }))
 })
 
 describe("player activities 404", () => {
     const t = async (membershipId: string) => {
-        const result = await playerActivitiesRoute.mock({
+        const result = await playerActivitiesRoute.$mock({
             params: {
                 membershipId
             },

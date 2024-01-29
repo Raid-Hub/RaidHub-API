@@ -2,7 +2,7 @@ import { pgcrRoute } from "./pgcr"
 
 describe("pgcr 200", () => {
     const t = async (instanceId: string) => {
-        const result = await pgcrRoute.mock({
+        const result = await pgcrRoute.$mock({
             params: {
                 instanceId
             }
@@ -20,7 +20,7 @@ describe("pgcr 200", () => {
 
 describe("pgcr 404", () => {
     const t = async (instanceId: string) => {
-        const result = await pgcrRoute.mock({
+        const result = await pgcrRoute.$mock({
             params: {
                 instanceId
             }

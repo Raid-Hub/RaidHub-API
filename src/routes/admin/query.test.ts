@@ -2,7 +2,7 @@ import { adminQueryRoute } from "./query"
 
 describe("admin query 200", () => {
     const t = async (query: string) => {
-        const result = await adminQueryRoute.mock({ body: { query } })
+        const result = await adminQueryRoute.$mock({ body: { query } })
         expect(result.type).toBe("ok")
     }
 
@@ -47,7 +47,7 @@ describe("admin query 200", () => {
 })
 
 describe("admin query 500", () => {
-    const t = (query: string) => () => adminQueryRoute.mock({ body: { query } })
+    const t = (query: string) => () => adminQueryRoute.$mock({ body: { query } })
 
     test("Bad table", () => {
         const f = t("SELECT * from fasdhfahfuiasdf")

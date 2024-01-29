@@ -210,13 +210,12 @@ async function searchWorldFirstLeaderboard(query: {
         .map(({ activity }) => activity.activityLeaderboardEntry[0])
         .sort((a, b) => a.rank - b.rank)
 
-    const leaderboard = await getWorldFirstLeaderboardEntries({
+    const leaderboard = (await getWorldFirstLeaderboardEntries({
         raidId: query.raid,
         type: type,
         page: Math.ceil(placements[0].rank / query.count),
         count: query.count
-    })
-    if (!leaderboard) return null
+    }))! // we know this exists because we just got the placement
 
     return {
         entries: leaderboard.entries,

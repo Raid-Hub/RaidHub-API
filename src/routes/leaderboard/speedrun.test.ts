@@ -2,7 +2,7 @@ import { leaderboardSpeedrunRoute } from "./speedrun"
 
 describe("leaderboard speedrun 200", () => {
     const t = async (raid: string, query: unknown) => {
-        const result = await leaderboardSpeedrunRoute.mock({
+        const result = await leaderboardSpeedrunRoute.$mock({
             params: { raid },
             query
         })

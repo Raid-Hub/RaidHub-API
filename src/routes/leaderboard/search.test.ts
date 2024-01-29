@@ -2,7 +2,7 @@ import { leaderboardSearchRoute } from "./search"
 
 describe("leaderboard search 200", () => {
     const t = async (query: unknown) => {
-        const result = await leaderboardSearchRoute.mock({
+        const result = await leaderboardSearchRoute.$mock({
             query
         })
         expect(result.type).toBe("ok")
@@ -57,10 +57,11 @@ describe("leaderboard search 200", () => {
 
 describe("leaderboard search 404", () => {
     const t = async (query: unknown) => {
-        const result = await leaderboardSearchRoute.mock({
+        const result = await leaderboardSearchRoute.$mock({
             query
         })
         expect(result.type).toBe("err")
+        return result
     }
 
     test("individual levi sherpas", () =>
@@ -99,4 +100,15 @@ describe("leaderboard search 404", () => {
             type: "global",
             category: "speed"
         }))
+
+    test("world first master leviathan", async () => {
+        t({
+            count: 50,
+            page: 1,
+            membershipId: "4611686018488107374",
+            type: "worldfirst",
+            category: "master",
+            raid: 1
+        })
+    })
 })

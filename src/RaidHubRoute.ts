@@ -303,8 +303,9 @@ export class RaidHubRoute<
         ]
     }
 
-    // Used for testing to mcok a request by passing the data directly to the handler
-    async mock(req: { params?: unknown; query?: unknown; body?: unknown }) {
+    /* istanbul ignore next */
+    // Used for testing to mock a request by passing the data directly to the handler
+    async $mock(req: { params?: unknown; query?: unknown; body?: unknown }) {
         const res = await this.handler({
             params: this.paramsSchema?.parse(req.params) ?? {},
             query: this.querySchema?.parse(req.query) ?? {},

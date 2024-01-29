@@ -2,7 +2,7 @@ import { leaderboardGlobalRoute } from "./global"
 
 describe("leaderboard global 200", () => {
     const t = async (category: string, query: unknown) => {
-        const result = await leaderboardGlobalRoute.mock({ params: { category }, query })
+        const result = await leaderboardGlobalRoute.$mock({ params: { category }, query })
         expect(result.type).toBe("ok")
     }
 
