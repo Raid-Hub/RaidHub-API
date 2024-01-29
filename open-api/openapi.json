@@ -12,6 +12,16 @@
   ],
   "components": {
     "schemas": {
+      "RaidHubErrorCode": {
+        "type": "string",
+        "enum": [
+          "PlayerNotFoundError",
+          "ActivityNotFoundError",
+          "PGCRNotFoundError",
+          "LeaderboardNotFoundError",
+          "InvalidClientSecretError"
+        ]
+      },
       "BungieMembershipType": {
         "type": "integer",
         "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1],
@@ -2624,7 +2634,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["message"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
                 }
               }
             }
@@ -2836,7 +2859,7 @@
             }
           },
           "403": {
-            "description": "Error",
+            "description": "InvalidClientSecretError",
             "content": {
               "application/json": {
                 "schema": {
