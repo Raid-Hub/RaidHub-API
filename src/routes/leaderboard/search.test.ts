@@ -43,6 +43,16 @@ describe("leaderboard search 200", () => {
             type: "global",
             category: "speed"
         }))
+
+    test("world first crota challenge", () =>
+        t({
+            count: 60,
+            page: 7,
+            raid: 13,
+            membershipId: "4611686018488107374",
+            type: "worldfirst",
+            category: "challenge"
+        }))
 })
 
 describe("leaderboard search 404", () => {

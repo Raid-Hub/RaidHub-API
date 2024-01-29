@@ -25,7 +25,9 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         const { page, count } = req.query
 
         const isAvailable = includedIn(
-            Object.keys(ClearsLeaderboardsForRaid[UrlPathsToRaid[raid]]),
+            Object.entries(ClearsLeaderboardsForRaid[UrlPathsToRaid[raid]])
+                .filter(([_, v]) => v)
+                .map(([k, _]) => k),
             category
         )
 
@@ -65,7 +67,7 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
                 statusCode: 404,
                 type: ErrorCode.LeaderboardNotFoundError,
                 schema: z.object({
-                    message: z.string()
+                    unavailable: z.literal(true)
                 })
             }
         ]
