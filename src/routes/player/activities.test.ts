@@ -1,3 +1,5 @@
+import express from "express"
+import request from "supertest"
 import { playerActivitiesRoute } from "./activities"
 
 describe("player activities 200", () => {
@@ -26,4 +28,44 @@ describe("player activities 404", () => {
     test("1", () => t("1"))
 
     test("4711686018488107374", () => t("4711686018488107374"))
+})
+
+// @ts-expect-error BigInt override
+BigInt.prototype.toJSON = function () {
+    return this.toString()
+}
+
+const app = express()
+
+app.use(express.json())
+
+app.use("/test/:membershipId", playerActivitiesRoute.express)
+
+describe("activities middleware test", () => {
+    test("1 day cache on 200 cursor query", async () => {
+        const res = await request(app)
+            .get("/test/4611686018488107374")
+            .query({ cursor: "14324460394" })
+
+        expect(res.status).toBe(200)
+        expect(res.headers).toMatchObject({
+            "cache-control": "max-age=86400"
+        })
+    })
+
+    test("30s cache on 200", async () => {
+        const res = await request(app).get("/test/4611686018488107374")
+
+        expect(res.status).toBe(200)
+        expect(res.headers).toMatchObject({
+            "cache-control": "max-age=30"
+        })
+    })
+
+    test("no cache on error", async () => {
+        const res = await request(app).get("/test/3611686018488107374")
+
+        expect(res.status).toBe(404)
+        expect(res.headers["cache-control"]).toBeUndefined()
+    })
 })

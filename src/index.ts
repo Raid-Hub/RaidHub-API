@@ -7,7 +7,7 @@ import { router } from "./routes"
 dotenv.config()
 
 // @ts-expect-error this is a hack to make BigInts work with JSON.stringify
-BigInt.prototype["toJSON"] = function () {
+BigInt.prototype.toJSON = function () {
     return this.toString()
 }
 
@@ -31,14 +31,8 @@ app.options("*", options)
 // Apply CORS
 app.use(cors)
 
-// parse incoming request body with json
-app.use(express.json())
-
-// apply the router
-app.use(router.express)
-
-// handle any uncaught errors
-app.use(errorHandler)
+// parse incoming request body with json, apply the router, handle any uncaught errors
+app.use(express.json(), router.express, errorHandler)
 
 // Start the server
 app.listen(port, () => {
