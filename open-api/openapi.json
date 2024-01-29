@@ -2638,11 +2638,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "message": {
-                          "type": "string"
+                        "unavailable": {
+                          "type": "boolean",
+                          "enum": [true]
                         }
                       },
-                      "required": ["message"]
+                      "required": ["unavailable"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
