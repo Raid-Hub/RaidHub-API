@@ -13,14 +13,19 @@ export type RaidHubResponse<T, E> = {
     message?: string
 } & ({ success: true; response: T } | { success: false; error: E })
 
+export type RaidHubHandlerReturn<T, E, C> =
+    | { success: true; response: T; message?: string }
+    | { success: false; error: E; type: C; message?: string }
+
 export type RaidHubHandler<
     Params extends ZodType,
     Query extends ZodType,
     Body extends ZodType,
     T,
-    E
+    E,
+    C extends string
 > = (req: {
     params: z.infer<Params>
     query: z.infer<Query>
     body: z.infer<Body>
-}) => Promise<RaidHubResponse<T, E>>
+}) => Promise<RaidHubHandlerReturn<T, E, C>>

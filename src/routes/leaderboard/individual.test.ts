@@ -2,7 +2,7 @@ import { leaderboardRaidIndividualRoute } from "./individual"
 
 describe("leaderboard individual 200", () => {
     const t = async (raid: string, category: string, query: unknown) => {
-        const result = await leaderboardRaidIndividualRoute.mock({
+        const result = await leaderboardRaidIndividualRoute.$mock({
             params: { raid, category },
             query
         })
@@ -43,5 +43,27 @@ describe("leaderboard individual 200", () => {
         t("rootofnightmares", "solos", {
             page: 43,
             count: 45
+        }))
+})
+
+describe("leaderboard individual 404", () => {
+    const t = async (raid: string, category: string, query: unknown) => {
+        const result = await leaderboardRaidIndividualRoute.$mock({
+            params: { raid, category },
+            query
+        })
+        expect(result.type).toBe("err")
+    }
+
+    test("levi solos", () =>
+        t("leviathan", "solos", {
+            page: 1,
+            count: 32
+        }))
+
+    test("vow duos", () =>
+        t("vowofthedisciple", "duos", {
+            page: 3,
+            count: 25
         }))
 })

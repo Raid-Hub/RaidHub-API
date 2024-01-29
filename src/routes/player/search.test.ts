@@ -2,7 +2,7 @@ import { playerSearchRoute } from "./search"
 
 describe("player search 200", () => {
     const t = async (query: unknown) => {
-        const result = await playerSearchRoute.mock({ query })
+        const result = await playerSearchRoute.$mock({ query })
         expect(result.type).toBe("ok")
 
         return result.parsed
@@ -26,6 +26,22 @@ describe("player search 200", () => {
     test("partial bungie name", () =>
         t({
             query: "Newo#90"
+        }))
+
+    test("no raidhub results global", () =>
+        t({
+            query: "lafoasdfasmfahffjfa#9999"
+        }))
+
+    test("no raidhub results display", () =>
+        t({
+            query: "lafoasdfasmfahffjfa"
+        }))
+
+    test("zero clears on at least 1 player", () =>
+        t({
+            query: "Noob#2",
+            count: 50
         }))
 
     test("full bungie name", async () => {

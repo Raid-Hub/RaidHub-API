@@ -2,8 +2,10 @@ import { activitySearchRoute } from "./search"
 
 describe("activity search 200", () => {
     const t = async (query: unknown) => {
-        const result = await activitySearchRoute.mock({ query })
+        const result = await activitySearchRoute.$mock({ query })
         expect(result.type).toBe("ok")
+
+        return result
     }
 
     test("owen and owen, completed & flawless", () =>
@@ -42,5 +44,13 @@ describe("activity search 200", () => {
             reversed: true,
             count: 5,
             page: 2
+        }))
+
+    test("invalid min/max season", () =>
+        t({
+            membershipId: ["4611686018488107374", "4611686018467831285"],
+            raid: 7,
+            minSeason: 99,
+            maxSeason: 99
         }))
 })

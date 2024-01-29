@@ -6,7 +6,7 @@ export { z }
 
 export const zPositiveInt = () => z.number().int().positive()
 
-export const zCount = ({ min = 1, max, def }: { min: number; max: number; def: number }) =>
+export const zCount = ({ min, max, def }: { min: number; max: number; def: number }) =>
     z.coerce.number().int().positive().min(min).max(max).default(def)
 
 export const zPage = () => z.coerce.number().int().positive().default(1)

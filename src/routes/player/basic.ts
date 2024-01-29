@@ -1,6 +1,6 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zPlayerInfo } from "../../schema/common"
+import { ErrorCode, zPlayerInfo } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -29,17 +29,26 @@ export const playerBasicRoute = new RaidHubRoute({
         if (!member) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                "Player not found"
+                ErrorCode.PlayerNotFoundError
             )
         } else {
             return ok(member)
         }
     },
     response: {
-        success: zPlayerInfo,
-        error: z.object({
-            notFound: z.literal(true),
-            membershipId: zBigIntString()
-        })
+        success: {
+            statusCode: 200,
+            schema: zPlayerInfo
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z.object({
+                    notFound: z.literal(true),
+                    membershipId: zBigIntString()
+                })
+            }
+        ]
     }
 })

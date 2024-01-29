@@ -1,5 +1,5 @@
 import { RaidHubRouter } from "../../RaidHubRouter"
-import { adminProtected } from "../../middlewares/admin-protect"
+import { adminProtected } from "../../middlewares/admin"
 import { adminQueryRoute } from "./query"
 
 export const adminRouter = new RaidHubRouter({

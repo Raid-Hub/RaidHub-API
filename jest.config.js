@@ -1,9 +1,12 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
     preset: "ts-jest",
-    testTimeout: 15000,
     testEnvironment: "node",
+    testTimeout: 15000,
     modulePathIgnorePatterns: ["dist/*"],
+    coveragePathIgnorePatterns: ["prisma.ts"],
+    setupFiles: ["dotenv/config"],
+    coverageReporters: ["html"],
     transform: {
         "^.+\\.ts$": [
             "ts-jest",

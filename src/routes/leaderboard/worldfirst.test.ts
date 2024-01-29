@@ -2,7 +2,7 @@ import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
 
 describe("leaderboard worldfirst 200", () => {
     const t = async (raid: string, category: string, query: unknown) => {
-        const result = await leaderboardRaidWorldfirstRoute.mock({
+        const result = await leaderboardRaidWorldfirstRoute.$mock({
             params: { raid, category },
             query
         })
@@ -35,7 +35,7 @@ describe("leaderboard worldfirst 200", () => {
         }))
 
     test("leaderboards are in order", async () => {
-        const { parsed } = await leaderboardRaidWorldfirstRoute.mock({
+        const { parsed } = await leaderboardRaidWorldfirstRoute.$mock({
             params: { raid: "rootofnightmares", category: "normal" },
             query: {
                 page: 1,
@@ -51,7 +51,7 @@ describe("leaderboard worldfirst 200", () => {
 
 describe("leaderboard worldfirst 404", () => {
     const t = async (raid: string, category: string, query: unknown) => {
-        const result = await leaderboardRaidWorldfirstRoute.mock({
+        const result = await leaderboardRaidWorldfirstRoute.$mock({
             params: { raid, category },
             query
         })

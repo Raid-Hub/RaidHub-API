@@ -10,7 +10,7 @@ import {
 } from "../../data/leaderboards"
 import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zRaidEnum } from "../../schema/common"
+import { ErrorCode, zRaidEnum } from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -54,7 +54,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "individual":
                 const individualResults = await searchIndividualLeaderboard(req.query)
                 if (!individualResults)
-                    return fail({ notFound: true, params: req.query }, "Player not found")
+                    return fail(
+                        { notFound: true, params: req.query },
+                        ErrorCode.PlayerNotFoundError
+                    )
 
                 return ok({
                     params: req.query,
@@ -66,7 +69,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "worldfirst":
                 const wfResults = await searchWorldFirstLeaderboard(req.query)
                 if (!wfResults)
-                    return fail({ notFound: true, params: req.query }, "Player not found")
+                    return fail(
+                        { notFound: true, params: req.query },
+                        ErrorCode.PlayerNotFoundError
+                    )
 
                 return ok({
                     params: req.query,
@@ -78,7 +84,10 @@ export const leaderboardSearchRoute = new RaidHubRoute({
             case "global":
                 const globalResults = await searchGlobalLeaderboard(req.query)
                 if (!globalResults)
-                    return fail({ notFound: true, params: req.query }, "Player not found")
+                    return fail(
+                        { notFound: true, params: req.query },
+                        ErrorCode.PlayerNotFoundError
+                    )
 
                 return ok({
                     params: req.query,
@@ -90,31 +99,40 @@ export const leaderboardSearchRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                params: CommonQueryParams.extend({
-                    type: z.string(),
-                    category: z.string(),
-                    raid: zRaidEnum.optional()
-                }).strict(),
-                page: z.number().positive().int(),
-                rank: z.number().positive().int(),
-                position: z.number().positive().int(),
-                entries: z.array(
-                    z.union([zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry])
-                )
-            })
-            .strict(),
-        error: z
-            .object({
-                notFound: z.literal(true),
-                params: CommonQueryParams.extend({
-                    type: z.string(),
-                    category: z.string(),
-                    raid: zRaidEnum.optional()
-                }).strict()
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: CommonQueryParams.extend({
+                        type: z.string(),
+                        category: z.string(),
+                        raid: zRaidEnum.optional()
+                    }).strict(),
+                    page: z.number().positive().int(),
+                    rank: z.number().positive().int(),
+                    position: z.number().positive().int(),
+                    entries: z.array(
+                        z.union([zIndividualLeaderboardEntry, zWorldFirstLeaderboardEntry])
+                    )
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z
+                    .object({
+                        notFound: z.literal(true),
+                        params: CommonQueryParams.extend({
+                            type: z.string(),
+                            category: z.string(),
+                            raid: zRaidEnum.optional()
+                        }).strict()
+                    })
+                    .strict()
+            }
+        ]
     }
 })
 
@@ -192,13 +210,12 @@ async function searchWorldFirstLeaderboard(query: {
         .map(({ activity }) => activity.activityLeaderboardEntry[0])
         .sort((a, b) => a.rank - b.rank)
 
-    const leaderboard = await getWorldFirstLeaderboardEntries({
+    const leaderboard = (await getWorldFirstLeaderboardEntries({
         raidId: query.raid,
         type: type,
         page: Math.ceil(placements[0].rank / query.count),
         count: query.count
-    })
-    if (!leaderboard) return null
+    }))! // we know this exists because we just got the placement
 
     return {
         entries: leaderboard.entries,

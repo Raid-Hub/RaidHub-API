@@ -83,48 +83,51 @@ export const manifestRoute = new RaidHubRoute({
             }
         }),
     response: {
-        success: z
-            .object({
-                raids: z.record(z.string()),
-                difficulties: z.record(z.string()),
-                hashes: z.record(
-                    z.object({
-                        raid: zPositiveInt(),
-                        difficulty: zPositiveInt()
-                    })
-                ),
-                listed: z.array(zPositiveInt()),
-                sunset: z.array(zPositiveInt()),
-                contest: z.array(zPositiveInt()),
-                master: z.array(zPositiveInt()),
-                prestige: z.array(zPositiveInt()),
-                reprisedChallengePairings: z.array(
-                    z.object({
-                        raid: z.number(),
-                        difficulty: z.number()
-                    })
-                ),
-                leaderboards: z.object({
-                    worldFirst: z.record(
-                        z.array(
-                            z.object({
-                                id: z.string(),
-                                type: z.string(),
-                                date: zISODateString()
-                            })
-                        )
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    raids: z.record(z.string()),
+                    difficulties: z.record(z.string()),
+                    hashes: z.record(
+                        z.object({
+                            raid: zPositiveInt(),
+                            difficulty: zPositiveInt()
+                        })
                     ),
-                    individual: z.record(
-                        z.array(
-                            z.object({
-                                name: z.string(),
-                                category: z.string()
-                            })
+                    listed: z.array(zPositiveInt()),
+                    sunset: z.array(zPositiveInt()),
+                    contest: z.array(zPositiveInt()),
+                    master: z.array(zPositiveInt()),
+                    prestige: z.array(zPositiveInt()),
+                    reprisedChallengePairings: z.array(
+                        z.object({
+                            raid: z.number(),
+                            difficulty: z.number()
+                        })
+                    ),
+                    leaderboards: z.object({
+                        worldFirst: z.record(
+                            z.array(
+                                z.object({
+                                    id: z.string(),
+                                    type: z.string(),
+                                    date: zISODateString()
+                                })
+                            )
+                        ),
+                        individual: z.record(
+                            z.array(
+                                z.object({
+                                    name: z.string(),
+                                    category: z.string()
+                                })
+                            )
                         )
-                    )
+                    })
                 })
-            })
-            .strict()
+                .strict()
+        }
     }
 })
 

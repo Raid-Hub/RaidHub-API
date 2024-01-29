@@ -1,21 +1,22 @@
-import { RaidHubResponse } from "../RaidHubRouterTypes"
+import { RaidHubHandlerReturn } from "../RaidHubRouterTypes"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function ok<T>(response: T, message?: string): RaidHubResponse<T, any> {
+export function ok<T>(response: T, message?: string): RaidHubHandlerReturn<T, never, never> {
     return {
-        minted: new Date(),
         message,
         response,
         success: true
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function fail<E>(error: E, message?: string): RaidHubResponse<any, E> {
+export function fail<E, C extends string>(
+    error: E,
+    type: C,
+    message?: string
+): RaidHubHandlerReturn<never, E, C> {
     return {
-        minted: new Date(),
         message,
         error,
-        success: false
+        success: false,
+        type: type
     }
 }

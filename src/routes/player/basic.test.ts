@@ -2,7 +2,7 @@ import { playerBasicRoute } from "./basic"
 
 describe("player basic 200", () => {
     const t = async (membershipId: string) => {
-        const result = await playerBasicRoute.mock({ params: { membershipId } })
+        const result = await playerBasicRoute.$mock({ params: { membershipId } })
         expect(result.type).toBe("ok")
     }
 
@@ -13,7 +13,7 @@ describe("player basic 200", () => {
 
 describe("player basic 404", () => {
     const t = async (membershipId: string) => {
-        const result = await playerBasicRoute.mock({
+        const result = await playerBasicRoute.$mock({
             params: {
                 membershipId
             }

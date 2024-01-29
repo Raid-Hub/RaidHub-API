@@ -61,12 +61,15 @@ export const activitySearchRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                query: activitySearchQuerySchema,
-                results: z.array(zActivityExtended)
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    query: activitySearchQuerySchema,
+                    results: z.array(zActivityExtended)
+                })
+                .strict()
+        }
     }
 })
 

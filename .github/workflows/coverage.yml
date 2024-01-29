@@ -35,10 +35,12 @@ jobs:
 
             - name: Run Tests
               env:
+                  ADMIN_CLIENT_SECRET: "secret-token"
+                  JWT_SECRET: "jwt-secret"
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
               run: |
                   yarn && yarn prisma generate
-                  yarn test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false
+                  yarn test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false --testTimeout=20000
               continue-on-error: true
 
             - name: Upload coverage reports

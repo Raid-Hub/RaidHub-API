@@ -1,6 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid, WorldFirstBoards, WorldFirstBoardsMap } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { ErrorCode } from "../../schema/common"
 import { z, zISODateString } from "../../schema/zod"
 import { fail, ok } from "../../util/response"
 import { getWorldFirstLeaderboardEntries } from "./_common"
@@ -25,7 +26,7 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
         if (!leaderboard) {
             return fail(
                 { notFound: true, params: { ...req.params, ...req.query } },
-                "Leaderboard not found"
+                ErrorCode.PlayerNotFoundError
             )
         } else {
             return ok({
@@ -36,30 +37,39 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
         }
     },
     response: {
-        success: z
-            .object({
-                params: z
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z
+                        .object({
+                            raid: zRaidPath,
+                            category: z.enum(WorldFirstBoards)
+                        })
+                        .merge(zLeaderboardQueryPagination)
+                        .strict(),
+                    date: zISODateString(),
+                    entries: z.array(zWorldFirstLeaderboardEntry)
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z
                     .object({
-                        raid: zRaidPath,
-                        category: z.enum(WorldFirstBoards)
+                        notFound: z.literal(true),
+                        params: z
+                            .object({
+                                raid: zRaidPath,
+                                category: z.enum(WorldFirstBoards)
+                            })
+                            .merge(zLeaderboardQueryPagination)
+                            .strict()
                     })
-                    .merge(zLeaderboardQueryPagination)
-                    .strict(),
-                date: zISODateString(),
-                entries: z.array(zWorldFirstLeaderboardEntry)
-            })
-            .strict(),
-        error: z
-            .object({
-                notFound: z.literal(true),
-                params: z
-                    .object({
-                        raid: zRaidPath,
-                        category: z.enum(WorldFirstBoards)
-                    })
-                    .merge(zLeaderboardQueryPagination)
                     .strict()
-            })
-            .strict()
+            }
+        ]
     }
 })

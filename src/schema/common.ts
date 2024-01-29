@@ -6,6 +6,16 @@ import { z, zBigIntString, zISODateString, zNumberEnum, zPositiveInt } from "./z
 
 export const registry = new OpenAPIRegistry()
 
+export enum ErrorCode {
+    PlayerNotFoundError = "PlayerNotFoundError",
+    ActivityNotFoundError = "ActivityNotFoundError",
+    PGCRNotFoundError = "PGCRNotFoundError",
+    LeaderboardNotFoundError = "LeaderboardNotFoundError",
+    InvalidClientSecretError = "InvalidClientSecretError"
+}
+
+registry.register("RaidHubErrorCode", z.nativeEnum(ErrorCode))
+
 export const zBungieMembershipType = registry.register(
     "BungieMembershipType",
     (

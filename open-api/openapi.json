@@ -12,6 +12,16 @@
   ],
   "components": {
     "schemas": {
+      "RaidHubErrorCode": {
+        "type": "string",
+        "enum": [
+          "PlayerNotFoundError",
+          "ActivityNotFoundError",
+          "PGCRNotFoundError",
+          "LeaderboardNotFoundError",
+          "InvalidClientSecretError"
+        ]
+      },
       "BungieMembershipType": {
         "type": "integer",
         "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1],
@@ -275,10 +285,19 @@
             "enum": [false]
           },
           "error": {
-            "nullable": true
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": {
+              "nullable": true
+            }
           }
         },
-        "required": ["minted", "message", "success"]
+        "required": ["minted", "message", "success", "error"]
       },
       "ZodIssue": {
         "type": "object",
@@ -350,8 +369,7 @@
                 },
                 "required": ["issues"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -379,8 +397,7 @@
                 },
                 "required": ["issues"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -408,8 +425,7 @@
                 },
                 "required": ["issues"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -438,8 +454,7 @@
                 },
                 "required": ["type", "at"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -497,8 +512,7 @@
                 },
                 "required": ["type", "apiKey", "origin"]
               }
-            },
-            "required": ["error"]
+            }
           }
         ]
       },
@@ -1842,6 +1856,15 @@
         "items": {
           "nullable": true
         }
+      },
+      "AuthorizeResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": ["token"]
       }
     },
     "parameters": {}
@@ -2611,7 +2634,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "unavailable": {
+                          "type": "boolean",
+                          "enum": [true]
+                        }
+                      },
+                      "required": ["unavailable"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
                 }
               }
             }
@@ -2777,6 +2814,64 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authorize": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientSecret": {
+                    "type": "string"
+                  }
+                },
+                "required": ["clientSecret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "InvalidClientSecretError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "unauthorized": {
+                      "type": "boolean",
+                      "enum": [true]
+                    }
+                  },
+                  "required": ["unauthorized"]
                 }
               }
             }

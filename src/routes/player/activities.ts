@@ -1,6 +1,11 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
-import { zActivityWithPlayerData, zRaidEnum, zRaidVersionEnum } from "../../schema/common"
+import {
+    ErrorCode,
+    zActivityWithPlayerData,
+    zRaidEnum,
+    zRaidVersionEnum
+} from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -42,29 +47,38 @@ export const playerActivitiesRoute = new RaidHubRoute({
             count
         })
         if (!data) {
-            return fail({ membershipId, notFound: true }, "Player not found")
+            return fail({ membershipId, notFound: true }, ErrorCode.PlayerNotFoundError)
         } else {
             return ok(data)
         }
     },
     response: {
-        success: z
-            .object({
-                activities: z.array(
-                    zActivityWithPlayerData.extend({
-                        raid: z.object({
-                            raidId: zRaidEnum,
-                            versionId: zRaidVersionEnum
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    activities: z.array(
+                        zActivityWithPlayerData.extend({
+                            raid: z.object({
+                                raidId: zRaidEnum,
+                                versionId: zRaidVersionEnum
+                            })
                         })
-                    })
-                ),
-                nextCursor: zBigIntString().nullable()
-            })
-            .strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            membershipId: zBigIntString()
-        })
+                    ),
+                    nextCursor: zBigIntString().nullable()
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z.object({
+                    notFound: z.literal(true),
+                    membershipId: zBigIntString()
+                })
+            }
+        ]
     }
 })
 
@@ -228,7 +242,7 @@ async function getFirstPageOfActivities(membershipId: bigint, count: number) {
         return [activities, playerActivities] as const
     } else {
         const lastYear = new Date(today)
-        lastYear.setMonth(today.getUTCFullYear() - 1)
+        lastYear.setFullYear(today.getUTCFullYear() - 1)
 
         const [lastYearActivities, lastYearPlayerActivities] = await getActivites(lastYear)
         if (lastYearActivities.length) {

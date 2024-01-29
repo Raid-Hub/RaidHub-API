@@ -2,11 +2,13 @@ import { activityRootRoute } from "./activity"
 
 describe("activity 200", () => {
     const t = async (instanceId: string) => {
-        const result = await activityRootRoute.mock({ params: { instanceId } })
+        const result = await activityRootRoute.$mock({ params: { instanceId } })
         expect(result.type).toBe("ok")
     }
 
     test("13478946450", () => t("13478946450"))
+
+    test("13779269605", () => t("13779269605"))
 
     test("6318497407", () => t("6318497407"))
 
@@ -15,7 +17,7 @@ describe("activity 200", () => {
 
 describe("activity 404", () => {
     const t = async (instanceId: string) => {
-        const result = await activityRootRoute.mock({
+        const result = await activityRootRoute.$mock({
             params: {
                 instanceId
             }

@@ -1,15 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
-import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodUnknown } from "zod"
+import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodTypeAny, ZodUnknown } from "zod"
 import { zBodyValidationError, zPathValidationError, zQueryValidationError } from "./RaidHubErrors"
-import { IRaidHubRoute, RaidHubHandler } from "./RaidHubRouterTypes"
+import {
+    IRaidHubRoute,
+    RaidHubHandler,
+    RaidHubHandlerReturn,
+    RaidHubResponse
+} from "./RaidHubRouterTypes"
+import { ErrorCode } from "./schema/common"
 import { z } from "./schema/zod"
 
 // This class is used to define type-safe a route in the RaidHub API
 export class RaidHubRoute<
     M extends "get" | "post",
     ResponseBody extends ZodType,
-    ErrorResponseBody extends ZodObject<any> = ZodObject<any>,
+    ErrorResponseBody extends readonly z.ZodObject<any>[],
     Params extends ZodObject<
         any,
         any,
@@ -20,7 +26,8 @@ export class RaidHubRoute<
     Query extends
         | ZodObject<any, any, any, { [x: string]: any }, { [x: string]: any }>
         | ZodDiscriminatedUnion<any, any> = ZodObject<any>,
-    Body extends ZodType = ZodUnknown
+    Body extends ZodType = ZodUnknown,
+    ErrorType extends ErrorCode = never
 > implements IRaidHubRoute
 {
     private readonly router: Router
@@ -41,15 +48,21 @@ export class RaidHubRoute<
         Query,
         Body,
         ResponseBody["_input"],
-        ErrorResponseBody["_input"]
+        ErrorResponseBody[number]["_input"],
+        ErrorType
     >
     readonly responseSchema: ResponseBody
-    readonly errorSchema: ErrorResponseBody | null
+    readonly errors: [
+        400 | 401 | 403 | 404 | 503,
+        type: ErrorType,
+        schema: ErrorResponseBody[number]
+    ][]
+    readonly successCode: 200 | 201 | 207
 
     // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
         method: M
-        descritiption?: string
+        description?: string
         summary?: string
         params?: Params
         query?: Query
@@ -60,11 +73,19 @@ export class RaidHubRoute<
             Query,
             Body,
             ResponseBody["_input"],
-            ErrorResponseBody["_input"]
+            ErrorResponseBody[number]["_input"],
+            ErrorType
         >
         response: {
-            success: ResponseBody
-            error?: ErrorResponseBody
+            success: {
+                statusCode: 200 | 201 | 207
+                schema: ResponseBody
+            }
+            errors?: {
+                statusCode: 400 | 401 | 403 | 404 | 503
+                type: ErrorType
+                schema: ErrorResponseBody[number]
+            }[]
         }
     }) {
         this.router = Router({
@@ -72,13 +93,16 @@ export class RaidHubRoute<
             mergeParams: true
         })
         this.method = args.method
+        this.description = args.description
+        this.summary = args.summary
         this.paramsSchema = args.params ?? null
         this.querySchema = args.query ?? null
         this.bodySchema = args.body ?? null
         this.middlewares = args.middlewares ?? []
         this.handler = args.handler
-        this.responseSchema = args.response.success
-        this.errorSchema = args.response.error ?? null
+        this.responseSchema = args.response.success.schema
+        this.errors = args.response.errors?.map(e => [e.statusCode, e.type, e.schema]) ?? []
+        this.successCode = args.response.success.statusCode
     }
 
     private validateParams: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
@@ -161,15 +185,45 @@ export class RaidHubRoute<
         async (req, res, next) => {
             try {
                 const result = await this.handler(req)
+                const response = this.buildResponse(result)
                 if (result.success) {
-                    res.status(200).json(result)
+                    res.status(this.successCode).json(response)
                 } else {
-                    res.status(404).json(result)
+                    res.status(this.errors.find(([_, type]) => type === result.type)![0]).json(
+                        response
+                    )
                 }
             } catch (e) {
                 next(e)
             }
         }
+    private buildResponse(
+        result: RaidHubHandlerReturn<
+            ResponseBody["_input"],
+            ErrorResponseBody[number]["_input"],
+            ErrorType
+        >
+    ): RaidHubResponse<ResponseBody["_input"], ErrorResponseBody[number]["_input"]> {
+        const minted = new Date()
+        if (result.success) {
+            return {
+                minted,
+                message: result.message,
+                success: true,
+                response: result.response
+            } as const
+        } else {
+            return {
+                minted,
+                message: result.message,
+                success: false,
+                error: {
+                    type: result.type,
+                    ...result.error
+                }
+            } as const
+        }
+    }
 
     // This is the express router that is returnedand used to create the actual express route
     get express() {
@@ -186,31 +240,24 @@ export class RaidHubRoute<
             : this.router.post("/", ...args)
     }
 
-    // Used for testing to mcok a request by passing the data directly to the handler
-    async mock(req: { params?: unknown; query?: unknown; body?: unknown }) {
-        const res = await this.handler({
-            params: this.paramsSchema?.parse(req.params) ?? {},
-            query: this.querySchema?.parse(req.query) ?? {},
-            body: this.bodySchema?.parse(req.body) ?? {}
+    openApiRoutes() {
+        const allResponses = [
+            [this.successCode, "Success", this.responseSchema],
+            ...this.errors,
+            this.paramsSchema ? [404, "Not found", zPathValidationError] : null,
+            this.querySchema ? [400, "Bad request", zQueryValidationError] : null,
+            this.bodySchema ? [400, "Bad request", zBodyValidationError] : null
+        ].filter(Boolean) as [number, string, ZodObject<any>][]
+
+        const byCode: { [statusCode: string]: ZodType<unknown>[] } = {}
+        allResponses.forEach(([code, _, schema]) => {
+            if (!byCode[code]) {
+                byCode[code] = [schema]
+            } else {
+                byCode[code] = [...byCode[code], schema]
+            }
         })
 
-        // We essentially can use this type to narrow down the type of res in our unit tests
-        // This will guarantee that we are testing the correct type of response and that
-        // also the shape matches the schema
-        if (res.success) {
-            return {
-                type: "ok",
-                parsed: this.responseSchema.parse(res.response)
-            } as const
-        } else {
-            return {
-                type: "err",
-                parsed: this.errorSchema?.strict().parse(res.error)
-            } as const
-        }
-    }
-
-    openApiRoutes() {
         return [
             {
                 path: "",
@@ -230,55 +277,64 @@ export class RaidHubRoute<
                           }
                         : undefined
                 },
-                responses: {
-                    [200]: {
-                        description: "Success",
-                        content: {
-                            "application/json": {
-                                schema: this.responseSchema
+                responses: Object.fromEntries(
+                    Object.entries(byCode).map(([code, schemas]) => [
+                        code,
+                        {
+                            description: allResponses.findLast(([c]) => c === Number(code))![1],
+                            content: {
+                                "application/json": {
+                                    schema:
+                                        schemas.length > 1
+                                            ? z.union(
+                                                  schemas as [
+                                                      ZodTypeAny,
+                                                      ZodTypeAny,
+                                                      ...ZodTypeAny[]
+                                                  ]
+                                              )
+                                            : schemas[0]
+                                }
                             }
                         }
-                    },
-                    ...(this.errorSchema || this.paramsSchema
-                        ? {
-                              [404]: {
-                                  description: "Not found",
-                                  content: {
-                                      "application/json": {
-                                          schema:
-                                              this.errorSchema && this.paramsSchema
-                                                  ? z.union([
-                                                        this.errorSchema,
-                                                        zPathValidationError
-                                                    ])
-                                                  : this.errorSchema ?? zPathValidationError
-                                      }
-                                  }
-                              }
-                          }
-                        : {}),
-                    ...(this.querySchema || this.bodySchema
-                        ? {
-                              [400]: {
-                                  description: "Bad request",
-                                  content: {
-                                      "application/json": {
-                                          schema:
-                                              this.querySchema && this.bodySchema
-                                                  ? z.union([
-                                                        zQueryValidationError,
-                                                        zBodyValidationError
-                                                    ])
-                                                  : this.querySchema
-                                                  ? zQueryValidationError
-                                                  : zBodyValidationError
-                                      }
-                                  }
-                              }
-                          }
-                        : {})
-                }
+                    ])
+                )
             }
         ]
+    }
+
+    /* istanbul ignore next */
+    // Used for testing to mock a request by passing the data directly to the handler
+    async $mock(req: { params?: unknown; query?: unknown; body?: unknown }) {
+        const res = await this.handler({
+            params: this.paramsSchema?.parse(req.params) ?? {},
+            query: this.querySchema?.parse(req.query) ?? {},
+            body: this.bodySchema?.parse(req.body) ?? {}
+        }).then(this.buildResponse)
+
+        // We essentially can use this type to narrow down the type of res in our unit tests
+        // This will guarantee that we are testing the correct type of response and that
+        // also the shape matches the schema
+        if (res.success) {
+            return {
+                type: "ok",
+                parsed: this.responseSchema.parse(res.response)
+            } as const
+        } else {
+            const schema =
+                this.errors.length === 0
+                    ? z.never()
+                    : this.errors.length > 1
+                    ? z.union(
+                          this.errors.map(([_, type, schema]) =>
+                              schema.extend({ type: z.literal(type) })
+                          ) as unknown as readonly [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]
+                      )
+                    : this.errors[0][2].extend({ type: z.literal(this.errors[0][1]) })
+            return {
+                type: "err",
+                parsed: schema.parse(res.error)
+            } as const
+        }
     }
 }

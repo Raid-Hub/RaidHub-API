@@ -1,7 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zActivityExtended } from "../../schema/common"
+import { ErrorCode, zActivityExtended } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -18,28 +18,41 @@ export const activityRootRoute = new RaidHubRoute({
         const data = await getActivity({ instanceId })
 
         if (!data) {
-            return fail({ notFound: true, instanceId: req.params.instanceId }, "Activity not found")
+            return fail(
+                { notFound: true, instanceId: req.params.instanceId },
+                ErrorCode.ActivityNotFoundError,
+                "Activity not found"
+            )
         } else {
             return ok(data)
         }
     },
     response: {
-        success: zActivityExtended
-            .extend({
-                leaderboardEntries: z.record(z.number()),
-                players: z.record(
-                    z.object({
-                        finishedRaid: z.boolean(),
-                        creditedSherpas: z.number(),
-                        isFirstClear: z.boolean()
-                    })
-                )
-            })
-            .strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            instanceId: zBigIntString()
-        })
+        success: {
+            statusCode: 200,
+            schema: zActivityExtended
+                .extend({
+                    leaderboardEntries: z.record(z.number()),
+                    players: z.record(
+                        z.object({
+                            finishedRaid: z.boolean(),
+                            creditedSherpas: z.number(),
+                            isFirstClear: z.boolean()
+                        })
+                    )
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.ActivityNotFoundError,
+                schema: z.object({
+                    notFound: z.literal(true),
+                    instanceId: zBigIntString()
+                })
+            }
+        ]
     }
 })
 

@@ -2,7 +2,7 @@ import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
-import { registry, zPlayerInfo } from "../../schema/common"
+import { ErrorCode, registry, zPlayerInfo } from "../../schema/common"
 import { z, zBigIntString, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -25,60 +25,69 @@ export const playerProfileRoute = new RaidHubRoute({
         if (!data) {
             return fail(
                 { notFound: true, membershipId: req.params.membershipId },
-                "Player not found"
+                ErrorCode.PlayerNotFoundError
             )
         } else {
             return ok(data)
         }
     },
     response: {
-        success: z
-            .object({
-                player: zPlayerInfo,
-                stats: z.object({
-                    global: z
-                        .object({
-                            clears: zPlayerStatRanking,
-                            fullClears: zPlayerStatRanking,
-                            sherpas: zPlayerStatRanking,
-                            speed: zPlayerStatRanking
-                        })
-                        .nullable(),
-                    byRaid: z.record(
-                        z.object({
-                            fastestClear: z
-                                .object({
-                                    instanceId: z.bigint(),
-                                    duration: z.number().int()
-                                })
-                                .nullable(),
-                            clears: z.number().int().nonnegative(),
-                            fullClears: z.number().int().nonnegative(),
-                            sherpas: z.number().int().nonnegative(),
-                            trios: z.number().int().nonnegative(),
-                            duos: z.number().int().nonnegative(),
-                            solos: z.number().int().nonnegative()
-                        })
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    player: zPlayerInfo,
+                    stats: z.object({
+                        global: z
+                            .object({
+                                clears: zPlayerStatRanking,
+                                fullClears: zPlayerStatRanking,
+                                sherpas: zPlayerStatRanking,
+                                speed: zPlayerStatRanking
+                            })
+                            .nullable(),
+                        byRaid: z.record(
+                            z.object({
+                                fastestClear: z
+                                    .object({
+                                        instanceId: z.bigint(),
+                                        duration: z.number().int()
+                                    })
+                                    .nullable(),
+                                clears: z.number().int().nonnegative(),
+                                fullClears: z.number().int().nonnegative(),
+                                sherpas: z.number().int().nonnegative(),
+                                trios: z.number().int().nonnegative(),
+                                duos: z.number().int().nonnegative(),
+                                solos: z.number().int().nonnegative()
+                            })
+                        )
+                    }),
+                    worldFirstEntries: z.record(
+                        z.array(
+                            z.object({
+                                rank: zPositiveInt(),
+                                instanceId: zBigIntString(),
+                                raidHash: zBigIntString(),
+                                dayOne: z.boolean(),
+                                contest: z.boolean(),
+                                weekOne: z.boolean()
+                            })
+                        )
                     )
-                }),
-                worldFirstEntries: z.record(
-                    z.array(
-                        z.object({
-                            rank: zPositiveInt(),
-                            instanceId: zBigIntString(),
-                            raidHash: zBigIntString(),
-                            dayOne: z.boolean(),
-                            contest: z.boolean(),
-                            weekOne: z.boolean()
-                        })
-                    )
-                )
-            })
-            .strict(),
-        error: z.object({
-            notFound: z.literal(true),
-            membershipId: zBigIntString()
-        })
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.PlayerNotFoundError,
+                schema: z.object({
+                    notFound: z.literal(true),
+                    membershipId: zBigIntString()
+                })
+            }
+        ]
     }
 })
 

@@ -5,6 +5,7 @@ import {
     UrlPathsToRaid
 } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
+import { ErrorCode } from "../../schema/common"
 import { z, zPage, zPositiveInt } from "../../schema/zod"
 import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
@@ -24,14 +25,14 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         const { page, count } = req.query
 
         const isAvailable = includedIn(
-            Object.keys(ClearsLeaderboardsForRaid[UrlPathsToRaid[raid]]),
+            Object.entries(ClearsLeaderboardsForRaid[UrlPathsToRaid[raid]])
+                .filter(([_, v]) => v)
+                .map(([k, _]) => k),
             category
         )
 
         if (!isAvailable) {
-            return fail({
-                message: "This leaderboard is not available for this raid"
-            })
+            return fail({ unavailable: true }, ErrorCode.LeaderboardNotFoundError)
         }
 
         const entries = await getIndividualLeaderboardEntries({
@@ -47,16 +48,28 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         })
     },
     response: {
-        success: z
-            .object({
-                params: z.object({
-                    raid: zRaidPath,
-                    category: z.enum(IndividualBoards),
-                    count: zPositiveInt(),
-                    page: zPage()
-                }),
-                entries: z.array(zIndividualLeaderboardEntry)
-            })
-            .strict()
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    params: z.object({
+                        raid: zRaidPath,
+                        category: z.enum(IndividualBoards),
+                        count: zPositiveInt(),
+                        page: zPage()
+                    }),
+                    entries: z.array(zIndividualLeaderboardEntry)
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                type: ErrorCode.LeaderboardNotFoundError,
+                schema: z.object({
+                    unavailable: z.literal(true)
+                })
+            }
+        ]
     }
 })
