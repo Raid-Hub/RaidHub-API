@@ -2,7 +2,8 @@ import { RaidHubRoute } from "../RaidHubRoute"
 import {
     ClearsLeaderboardsForRaid,
     IndividualBoard,
-    IndividualBoardNames
+    IndividualBoardNames,
+    UrlPathsToRaid
 } from "../data/leaderboards"
 import {
     AllRaidHashes,
@@ -17,10 +18,12 @@ import {
     SunsetRaids
 } from "../data/raids"
 import { cacheControl } from "../middlewares/cache-control"
-import { z, zISODateString, zPositiveInt } from "../schema/zod"
+import { registry, zRaidEnum, zRaidVersionEnum } from "../schema/common"
+import { z, zISODateString, zNumberEnum } from "../schema/zod"
 import { prisma } from "../services/prisma"
 import { groupBy } from "../util/helpers"
 import { ok } from "../util/response"
+import { zRaidPath } from "./leaderboard/_schema"
 
 const raids: Record<Raid, string> = {
     [Raid.NA]: "N/A",
@@ -50,13 +53,18 @@ const difficulties: Record<Difficulty, string> = {
     [Difficulty.CONTEST]: "Contest"
 }
 
+const zSunsetRaidEnum = registry.register("SunsetRaidEnum", zNumberEnum(SunsetRaids))
+const zMasterRaidEnum = registry.register("MasterRaidEnum", zNumberEnum(MasterRaids))
+const zPrestigeRaidEnum = registry.register("PrestigeRaidEnum", zNumberEnum(PrestigeRaids))
+const zContestRaidEnum = registry.register("ContestRaidEnum", zNumberEnum(ContestRaids))
+
 export const manifestRoute = new RaidHubRoute({
     method: "get",
     middlewares: [cacheControl(60)],
     handler: async () =>
         ok({
-            raids,
-            difficulties,
+            raidStrings: raids,
+            difficultyStrings: difficulties,
             hashes: AllRaidHashes,
             listed: [...ListedRaids],
             sunset: [...SunsetRaids],
@@ -67,6 +75,12 @@ export const manifestRoute = new RaidHubRoute({
                 raid,
                 difficulty
             })),
+            raidUrlPaths: Object.fromEntries(
+                Object.entries(UrlPathsToRaid).map(([k, v]) => [
+                    v,
+                    k as keyof typeof UrlPathsToRaid
+                ])
+            ),
             leaderboards: {
                 worldFirst: await listLeaderboards(),
                 individual: Object.fromEntries(
@@ -87,23 +101,21 @@ export const manifestRoute = new RaidHubRoute({
             statusCode: 200,
             schema: z
                 .object({
-                    raids: z.record(z.string()),
-                    difficulties: z.record(z.string()),
                     hashes: z.record(
                         z.object({
-                            raid: zPositiveInt(),
-                            difficulty: zPositiveInt()
+                            raid: zRaidEnum,
+                            difficulty: zRaidVersionEnum
                         })
                     ),
-                    listed: z.array(zPositiveInt()),
-                    sunset: z.array(zPositiveInt()),
-                    contest: z.array(zPositiveInt()),
-                    master: z.array(zPositiveInt()),
-                    prestige: z.array(zPositiveInt()),
+                    listed: z.array(zRaidEnum),
+                    sunset: z.array(zSunsetRaidEnum),
+                    contest: z.array(zContestRaidEnum),
+                    master: z.array(zMasterRaidEnum),
+                    prestige: z.array(zPrestigeRaidEnum),
                     reprisedChallengePairings: z.array(
                         z.object({
-                            raid: z.number(),
-                            difficulty: z.number()
+                            raid: zRaidEnum,
+                            difficulty: zRaidVersionEnum
                         })
                     ),
                     leaderboards: z.object({
@@ -124,7 +136,10 @@ export const manifestRoute = new RaidHubRoute({
                                 })
                             )
                         )
-                    })
+                    }),
+                    raidUrlPaths: z.record(zRaidPath),
+                    raidStrings: z.record(z.string()),
+                    difficultyStrings: z.record(z.string())
                 })
                 .strict()
         }

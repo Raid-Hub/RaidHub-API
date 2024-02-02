@@ -1,7 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { cacheControl } from "../../middlewares/cache-control"
-import { ErrorCode, zActivityExtended } from "../../schema/common"
+import { ErrorCode, zActivityExtended, zRaidEnum, zRaidVersionEnum } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -32,6 +32,10 @@ export const activityRootRoute = new RaidHubRoute({
             statusCode: 200,
             schema: zActivityExtended
                 .extend({
+                    meta: z.object({
+                        raid: zRaidEnum,
+                        version: zRaidVersionEnum
+                    }),
                     leaderboardEntries: z.record(z.number()),
                     players: z.record(
                         z.object({
@@ -64,7 +68,8 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         include: {
             raidDefinition: {
                 select: {
-                    raidId: true
+                    raidId: true,
+                    versionId: true
                 }
             },
             playerActivity: {
@@ -104,6 +109,10 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         dayOne,
         contest,
         weekOne,
+        meta: {
+            raid: raidDefinition.raidId,
+            version: raidDefinition.versionId
+        },
         players: Object.fromEntries(
             playerActivity.map(pa => [
                 pa.membershipId,

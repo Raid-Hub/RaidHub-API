@@ -6,12 +6,13 @@ import {
 } from "@prisma/client/runtime/library"
 import { ErrorRequestHandler } from "express"
 import { zServerError } from "../RaidHubErrors"
+import { ErrorCode } from "../schema/common"
 import { z } from "../schema/zod"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
     let details: z.infer<typeof zServerError>["error"] & Record<string, unknown> = {
-        type: "unknown",
+        type: ErrorCode.InternalServerError,
         at: null
     }
 
@@ -22,7 +23,8 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
         err instanceof PrismaClientKnownRequestError
     ) {
         details = {
-            type: err.name,
+            type: ErrorCode.InternalServerError,
+            cause: err.name,
             at: err.message.split("`")[1]
         }
     }

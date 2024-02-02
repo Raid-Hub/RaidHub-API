@@ -15,7 +15,7 @@ import * as dotenv from "dotenv"
 import { gzipSync } from "zlib"
 import { ZodError } from "zod"
 import { Difficulty, ListedRaids } from "../src/data/raids"
-import { pgcrSchema } from "../src/util/pgcr"
+import { zPgcrSchema } from "../src/schema/pgcr"
 
 const prisma = new PrismaClient()
 
@@ -412,7 +412,7 @@ async function seedPlayers(names: string[]) {
             fetchedPGCRs.map(async report => {
                 try {
                     const compressed = gzipSync(
-                        Buffer.from(JSON.stringify(pgcrSchema.parse(report)), "utf-8")
+                        Buffer.from(JSON.stringify(zPgcrSchema.parse(report)), "utf-8")
                     )
                     await Promise.all([
                         prisma.pGCR.create({

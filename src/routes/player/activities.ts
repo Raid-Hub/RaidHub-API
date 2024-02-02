@@ -59,7 +59,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
                 .object({
                     activities: z.array(
                         zActivityWithPlayerData.extend({
-                            raid: z.object({
+                            meta: z.object({
                                 raidId: zRaidEnum,
                                 versionId: zRaidVersionEnum
                             })
@@ -190,7 +190,7 @@ async function getPlayerActivities({
                 dayOne: isDayOne(raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(raidDefinition.raidId, a.dateStarted),
                 weekOne: isWeekOne(raidDefinition.raidId, a.dateCompleted),
-                raid: {
+                meta: {
                     ...raidDefinition
                 },
                 player: playerActivities[i]

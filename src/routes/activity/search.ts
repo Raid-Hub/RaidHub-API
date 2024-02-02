@@ -5,38 +5,41 @@ import { isContest, isDayOne } from "../../data/raceDates"
 import { RaidHashes, type ListedRaid } from "../../data/raids"
 import { SeasonDates } from "../../data/seasonDates"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zActivityExtended, zRaidEnum } from "../../schema/common"
+import { registry, zActivityExtended, zRaidEnum } from "../../schema/common"
 import { z, zBigIntString, zBooleanString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
 
 // Todo: add a query param for the difficulty
-export const activitySearchQuerySchema = z
-    .object({
-        membershipId: z
-            .union([zBigIntString().transform(m => [m]), z.array(zBigIntString())])
-            .pipe(z.array(zBigIntString()).min(1)),
-        minPlayers: z.coerce.number().int().nonnegative().optional(),
-        maxPlayers: z.coerce.number().int().nonnegative().optional(),
-        minDate: z.coerce.date().optional(),
-        maxDate: z.coerce.date().optional(),
-        minSeason: z.coerce.number().int().nonnegative().optional(),
-        maxSeason: z.coerce.number().int().nonnegative().optional(),
-        fresh: zBooleanString().optional(),
-        completed: zBooleanString().optional(),
-        flawless: zBooleanString().optional(),
-        raid: zRaidEnum.optional(),
-        platformType: z.coerce.number().int().positive().optional(),
-        reversed: z.coerce.boolean().default(false),
-        count: z.coerce.number().int().positive().default(25),
-        page: z.coerce.number().int().positive().default(1)
-    })
-    .strip()
+export const zActivitySearchQuerySchema = registry.register(
+    "ActivitySearchQuery",
+    z
+        .object({
+            membershipId: z
+                .union([zBigIntString().transform(m => [m]), z.array(zBigIntString())])
+                .pipe(z.array(zBigIntString()).min(1)),
+            minPlayers: z.coerce.number().int().nonnegative().optional(),
+            maxPlayers: z.coerce.number().int().nonnegative().optional(),
+            minDate: z.coerce.date().optional(),
+            maxDate: z.coerce.date().optional(),
+            minSeason: z.coerce.number().int().nonnegative().optional(),
+            maxSeason: z.coerce.number().int().nonnegative().optional(),
+            fresh: zBooleanString().optional(),
+            completed: zBooleanString().optional(),
+            flawless: zBooleanString().optional(),
+            raid: zRaidEnum.optional(),
+            platformType: z.coerce.number().int().positive().optional(),
+            reversed: z.coerce.boolean().default(false),
+            count: z.coerce.number().int().positive().default(25),
+            page: z.coerce.number().int().positive().default(1)
+        })
+        .strip()
+)
 
 export const activitySearchRoute = new RaidHubRoute({
     method: "get",
     middlewares: [cacheControl(30)],
-    query: activitySearchQuerySchema,
+    query: zActivitySearchQuerySchema,
     async handler(req) {
         const activities = await searchActivities(req.query)
         const results = activities.map(a => ({
@@ -65,7 +68,7 @@ export const activitySearchRoute = new RaidHubRoute({
             statusCode: 200,
             schema: z
                 .object({
-                    query: activitySearchQuerySchema,
+                    query: zActivitySearchQuerySchema,
                     results: z.array(zActivityExtended)
                 })
                 .strict()
@@ -103,7 +106,7 @@ async function searchActivities({
     reversed,
     count,
     page
-}: z.infer<typeof activitySearchQuerySchema>) {
+}: z.infer<typeof zActivitySearchQuerySchema>) {
     const hashes =
         raid && RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
     const minSeasonDate = minSeason ? SeasonDates[minSeason - 1] ?? SeasonDates[0] : SeasonDates[0]
