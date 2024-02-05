@@ -319,9 +319,9 @@ async function seedPlayers(names: string[]) {
                                           destinyUserInfo.bungieGlobalDisplayName || null,
                                       bungieGlobalDisplayNameCode:
                                           destinyUserInfo.bungieGlobalDisplayNameCode
-                                              ? fixBungieCode(
+                                              ? String(
                                                     destinyUserInfo.bungieGlobalDisplayNameCode
-                                                )
+                                                ).padStart(4, "0")
                                               : null
                                   }
                                 : null)
@@ -533,10 +533,4 @@ function isFresh(pgcr: DestinyPostGameCarnageReportData): boolean | null {
     } else {
         return pgcr.activityWasStartedFromBeginning || (start < hauntedStart ? null : false)
     }
-}
-
-function fixBungieCode(code: number) {
-    const str = String(code)
-    const missingZeroes = 4 - str.length
-    return `${"0".repeat(missingZeroes)}${str}`
 }
