@@ -1,11 +1,13 @@
 import jwt from "jsonwebtoken"
 import { RaidHubRoute } from "../RaidHubRoute"
 import { ErrorCode } from "../schema/common"
-import { z } from "../schema/zod"
+import { z, zISODateString } from "../schema/zod"
 import { fail, ok } from "../util/response"
 
+const TOKEN_EXPIRY = 3600
+
 export function generateJWT() {
-    return jwt.sign({ admin: true }, process.env.JWT_SECRET!, { expiresIn: 3600 })
+    return jwt.sign({ admin: true }, process.env.JWT_SECRET!, { expiresIn: TOKEN_EXPIRY })
 }
 
 export const authorizationRoute = new RaidHubRoute({
@@ -16,7 +18,8 @@ export const authorizationRoute = new RaidHubRoute({
     async handler({ body }) {
         if (body.clientSecret === process.env.ADMIN_CLIENT_SECRET) {
             return ok({
-                token: generateJWT()
+                value: generateJWT(),
+                expires: new Date(Date.now() + TOKEN_EXPIRY * 1000)
             })
         } else {
             return fail(
@@ -31,7 +34,8 @@ export const authorizationRoute = new RaidHubRoute({
         success: {
             statusCode: 200,
             schema: z.object({
-                token: z.string()
+                value: z.string(),
+                expires: zISODateString()
             })
         },
         errors: [

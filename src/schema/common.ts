@@ -18,7 +18,8 @@ export enum ErrorCode {
     QueryValidationError = "QueryValidationError",
     BodyValidationError = "BodyValidationError",
     InternalServerError = "InternalServerError",
-    ApiKeyError = "ApiKeyError"
+    ApiKeyError = "ApiKeyError",
+    AdminQuerySyntaxError = "AdminQuerySyntaxError"
 }
 
 export const zBungieMembershipType = registry.register(

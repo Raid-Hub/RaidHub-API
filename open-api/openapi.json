@@ -277,7 +277,8 @@
           "QueryValidationError",
           "BodyValidationError",
           "InternalServerError",
-          "ApiKeyError"
+          "ApiKeyError",
+          "AdminQuerySyntaxError"
         ]
       },
       "RaidHubError": {
@@ -311,7 +312,8 @@
                   "QueryValidationError",
                   "BodyValidationError",
                   "InternalServerError",
-                  "ApiKeyError"
+                  "ApiKeyError",
+                  "AdminQuerySyntaxError"
                 ]
               }
             },
@@ -645,6 +647,21 @@
           }
         },
         "required": ["membershipId"]
+      },
+      "AdminQuerySyntaxError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "code", "message"]
       },
       "RaidPath": {
         "type": "string",
@@ -1099,14 +1116,10 @@
               "type": "object",
               "properties": {
                 "raid": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": true
+                  "$ref": "#/components/schemas/RaidEnum"
                 },
                 "difficulty": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": true
+                  "$ref": "#/components/schemas/RaidVersionEnum"
                 }
               },
               "required": ["raid", "difficulty"]
@@ -2069,19 +2082,72 @@
         }
       },
       "AdminQueryResponse": {
-        "type": "array",
-        "items": {
-          "nullable": true
-        }
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["SELECT"]
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            },
+            "required": ["type", "data"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["HIGH COST"]
+              },
+              "data": {
+                "nullable": true
+              },
+              "cost": {
+                "type": "number"
+              },
+              "estimatedDuration": {
+                "type": "number"
+              }
+            },
+            "required": ["type", "data", "cost", "estimatedDuration"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["EXPLAIN"]
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": ["type", "data"]
+          }
+        ]
       },
       "AuthorizeResponse": {
         "type": "object",
         "properties": {
-          "token": {
+          "value": {
             "type": "string"
+          },
+          "expires": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "required": ["token"]
+        "required": ["value", "expires"]
       }
     },
     "parameters": {}
@@ -3223,9 +3289,17 @@
                 "properties": {
                   "query": {
                     "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["SELECT", "EXPLAIN"]
+                  },
+                  "ignoreCost": {
+                    "type": "boolean",
+                    "default": false
                   }
                 },
-                "required": ["query"]
+                "required": ["query", "type"]
               }
             }
           }
@@ -3247,6 +3321,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "AdminQuerySyntaxError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminQuerySyntaxError"
                 }
               }
             }

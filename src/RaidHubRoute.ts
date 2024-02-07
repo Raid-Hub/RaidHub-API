@@ -57,7 +57,7 @@ export class RaidHubRoute<
     >
     readonly responseSchema: ResponseBody
     readonly errors: [
-        400 | 401 | 403 | 404 | 503,
+        400 | 401 | 403 | 404 | 501 | 503,
         type: ErrorType,
         schema: ErrorResponseBody[number]
     ][]
@@ -86,7 +86,7 @@ export class RaidHubRoute<
                 schema: ResponseBody
             }
             errors?: {
-                statusCode: 400 | 401 | 403 | 404 | 503
+                statusCode: 400 | 401 | 403 | 404 | 501 | 503
                 type: ErrorType
                 schema: ErrorResponseBody[number]
             }[]
