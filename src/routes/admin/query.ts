@@ -19,15 +19,23 @@ export const adminQueryRoute = new RaidHubRoute({
             if (req.body.type === "EXPLAIN") {
                 const explained = await explainQuery(req.body.query)
                 return ok({
-                    data: explained.map(r => r["QUERY PLAN"]).join("\n"),
+                    data: explained.map(r => r["QUERY PLAN"]),
                     type: "EXPLAIN" as const
                 })
             }
 
+            // Wrap the query in a subquery to limit the number of rows returned
+            // This is not a security measure, but rather a way to prevent the server from
+            // returning too much data at once. The client is trusted to not abuse this, but
+            // the server will still enforce the limit to prevent mistakes.
+            const wrappedQuery = `SELECT * FROM (${req.body.query.replace(
+                ";",
+                ""
+            )}) AS foo LIMIT 50`
+
             if (req.body.ignoreCost) {
-                const rows = await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(
-                    req.body.query
-                )
+                const rows =
+                    await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(wrappedQuery)
                 return ok({ data: rows, type: "SELECT" as const })
             }
 
@@ -53,9 +61,7 @@ export const adminQueryRoute = new RaidHubRoute({
                 })
             }
 
-            const rows = await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(
-                req.body.query
-            )
+            const rows = await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(wrappedQuery)
 
             return ok({ data: rows, type: "SELECT" as const })
         } catch (e) {
@@ -85,7 +91,7 @@ export const adminQueryRoute = new RaidHubRoute({
                 }),
                 z.object({
                     type: z.literal("EXPLAIN"),
-                    data: z.string()
+                    data: z.array(z.string())
                 })
             ])
         },

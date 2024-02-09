@@ -2129,7 +2129,10 @@
                 "enum": ["EXPLAIN"]
               },
               "data": {
-                "type": "string"
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "required": ["type", "data"]
