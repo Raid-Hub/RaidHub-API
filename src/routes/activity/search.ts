@@ -11,8 +11,8 @@ import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
 
 // Todo: add a query param for the difficulty
-export const zActivitySearchQuerySchema = registry.register(
-    "ActivitySearchQuery",
+export const zActivitySearchBodySchema = registry.register(
+    "ActivitySearchBody",
     z
         .object({
             membershipId: z
@@ -24,9 +24,9 @@ export const zActivitySearchQuerySchema = registry.register(
             maxDate: z.coerce.date().optional(),
             minSeason: z.coerce.number().int().nonnegative().optional(),
             maxSeason: z.coerce.number().int().nonnegative().optional(),
-            fresh: zBooleanString().optional(),
-            completed: zBooleanString().optional(),
-            flawless: zBooleanString().optional(),
+            fresh: z.optional(zBooleanString()),
+            completed: z.optional(zBooleanString()),
+            flawless: z.optional(zBooleanString()),
             raid: zRaidEnum.optional(),
             platformType: z.coerce.number().int().positive().optional(),
             reversed: z.coerce.boolean().default(false),
@@ -37,11 +37,11 @@ export const zActivitySearchQuerySchema = registry.register(
 )
 
 export const activitySearchRoute = new RaidHubRoute({
-    method: "get",
+    method: "post",
     middlewares: [cacheControl(30)],
-    query: zActivitySearchQuerySchema,
+    body: zActivitySearchBodySchema,
     async handler(req) {
-        const activities = await searchActivities(req.query)
+        const activities = await searchActivities(req.body)
         const results = activities.map(a => ({
             instanceId: a.instance_id,
             raidHash: a.raid_hash,
@@ -59,7 +59,7 @@ export const activitySearchRoute = new RaidHubRoute({
         }))
 
         return ok({
-            query: req.query,
+            query: req.body,
             results
         })
     },
@@ -68,7 +68,7 @@ export const activitySearchRoute = new RaidHubRoute({
             statusCode: 200,
             schema: z
                 .object({
-                    query: zActivitySearchQuerySchema,
+                    query: zActivitySearchBodySchema,
                     results: z.array(zActivityExtended)
                 })
                 .strict()
@@ -106,7 +106,7 @@ async function searchActivities({
     reversed,
     count,
     page
-}: z.infer<typeof zActivitySearchQuerySchema>) {
+}: z.infer<typeof zActivitySearchBodySchema>) {
     const hashes =
         raid && RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
     const minSeasonDate = minSeason ? SeasonDates[minSeason - 1] ?? SeasonDates[0] : SeasonDates[0]

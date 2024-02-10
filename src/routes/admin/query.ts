@@ -39,7 +39,7 @@ export const adminQueryRoute = new RaidHubRoute({
                 return ok({ data: rows, type: "SELECT" as const })
             }
 
-            const explained = await explainQuery(req.body.query)
+            const explained = await explainQuery(wrappedQuery)
             const costString = explained[0]["QUERY PLAN"]
                 .split(" ")
                 .find(s => s.startsWith("(cost="))!

@@ -15,8 +15,9 @@ export const zDigitString = () =>
     z.coerce.string().regex(/^\d+n?$/) as ZodType<string, ZodStringDef, string | number | bigint>
 
 export const zBooleanString = () =>
-    (z.coerce.string() as ZodType<string, ZodStringDef, string | boolean>)
-        .transform(s => JSON.parse(s))
+    z
+        .union([z.boolean(), z.string()])
+        .transform(s => JSON.parse(String(s)))
         .pipe(z.boolean())
         .openapi({
             type: "boolean"

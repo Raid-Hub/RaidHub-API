@@ -565,7 +565,7 @@
           }
         ]
       },
-      "ActivitySearchQuery": {
+      "ActivitySearchBody": {
         "type": "object",
         "properties": {
           "membershipId": {
@@ -1512,7 +1512,7 @@
         "type": "object",
         "properties": {
           "query": {
-            "$ref": "#/components/schemas/ActivitySearchQuery"
+            "$ref": "#/components/schemas/ActivitySearchBody"
           },
           "results": {
             "type": "array",
@@ -2418,161 +2418,16 @@
       }
     },
     "/activity/search": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^\\d+n?$"
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "pattern": "^\\d+n?$"
-                  }
-                }
-              ]
-            },
-            "required": true,
-            "name": "membershipId",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "minPlayers",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "maxPlayers",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "minDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "maxDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "minSeason",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "maxSeason",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "boolean"
-            },
-            "required": false,
-            "name": "fresh",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "boolean"
-            },
-            "required": false,
-            "name": "completed",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "boolean"
-            },
-            "required": false,
-            "name": "flawless",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "$ref": "#/components/schemas/RaidEnum"
-            },
-            "required": false,
-            "name": "raid",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
-            },
-            "required": false,
-            "name": "platformType",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "boolean",
-              "nullable": true,
-              "default": false
-            },
-            "required": false,
-            "name": "reversed",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 25
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivitySearchBody"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Success",
@@ -2589,7 +2444,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "$ref": "#/components/schemas/BodyValidationError"
                 }
               }
             }
