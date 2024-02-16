@@ -1,3 +1,4 @@
+import compression from "compression"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import {
@@ -36,7 +37,9 @@ export const playerActivitiesRoute = new RaidHubRoute({
                 return _send(body)
             }
             next()
-        }
+        },
+        // @ts-expect-error Compression is not typed well
+        compression()
     ],
     async handler(req) {
         const { membershipId } = req.params
@@ -57,11 +60,12 @@ export const playerActivitiesRoute = new RaidHubRoute({
             statusCode: 200,
             schema: z
                 .object({
+                    membershipId: zBigIntString(),
                     activities: z.array(
                         zActivityWithPlayerData.extend({
                             meta: z.object({
-                                raidId: zRaidEnum,
-                                versionId: zRaidVersionEnum
+                                raid: zRaidEnum,
+                                version: zRaidVersionEnum
                             })
                         })
                     ),
@@ -183,16 +187,18 @@ async function getPlayerActivities({
             : null
 
     return {
+        membershipId,
         nextCursor: nextCursor ? String(nextCursor) : null,
         activities: activities.slice(0, count).map(({ raidDefinition, ...a }, i) => {
             return {
+                meta: {
+                    raid: raidDefinition.raidId,
+                    version: raidDefinition.versionId
+                },
                 ...a,
                 dayOne: isDayOne(raidDefinition.raidId, a.dateCompleted),
                 contest: isContest(raidDefinition.raidId, a.dateStarted),
                 weekOne: isWeekOne(raidDefinition.raidId, a.dateCompleted),
-                meta: {
-                    ...raidDefinition
-                },
                 player: playerActivities[i]
             }
         })

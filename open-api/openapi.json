@@ -1314,6 +1314,10 @@
       "PlayerActivitiesResponse": {
         "type": "object",
         "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
           "activities": {
             "type": "array",
             "items": {
@@ -1327,14 +1331,14 @@
                     "meta": {
                       "type": "object",
                       "properties": {
-                        "raidId": {
+                        "raid": {
                           "$ref": "#/components/schemas/RaidEnum"
                         },
-                        "versionId": {
+                        "version": {
                           "$ref": "#/components/schemas/RaidVersionEnum"
                         }
                       },
-                      "required": ["raidId", "versionId"]
+                      "required": ["raid", "version"]
                     }
                   },
                   "required": ["meta"],
@@ -1349,7 +1353,7 @@
             "pattern": "^\\d+n?$"
           }
         },
-        "required": ["activities", "nextCursor"],
+        "required": ["membershipId", "activities", "nextCursor"],
         "additionalProperties": false
       },
       "PlayerBasicResponse": {
@@ -1551,25 +1555,9 @@
                 }
               },
               "players": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "finishedRaid": {
-                      "type": "boolean"
-                    },
-                    "creditedSherpas": {
-                      "type": "number"
-                    },
-                    "isFirstClear": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "finishedRaid",
-                    "creditedSherpas",
-                    "isFirstClear"
-                  ]
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PlayerWithActivityData"
                 }
               }
             },
