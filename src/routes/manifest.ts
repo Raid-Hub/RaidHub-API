@@ -53,6 +53,22 @@ const difficulties: Record<Difficulty, string> = {
     [Difficulty.CONTEST]: "Contest"
 }
 
+const checkpoints: Record<ListedRaid, string> = {
+    [Raid.LEVIATHAN]: "Calus",
+    [Raid.EATER_OF_WORLDS]: "Argos",
+    [Raid.SPIRE_OF_STARS]: "Val Ca'uor",
+    [Raid.LAST_WISH]: "Queenswalk",
+    [Raid.SCOURGE_OF_THE_PAST]: "Insurrection Prime",
+    [Raid.CROWN_OF_SORROW]: "Gahlran",
+    [Raid.GARDEN_OF_SALVATION]: "Sanctified Mind",
+    [Raid.DEEP_STONE_CRYPT]: "Taniks",
+    [Raid.VAULT_OF_GLASS]: "Atheon",
+    [Raid.VOW_OF_THE_DISCIPLE]: "Rhulk",
+    [Raid.KINGS_FALL]: "Oryx",
+    [Raid.ROOT_OF_NIGHTMARES]: "Nezarec",
+    [Raid.CROTAS_END]: "Crota"
+}
+
 const zSunsetRaidEnum = registry.register("SunsetRaidEnum", zNumberEnum(SunsetRaids))
 const zMasterRaidEnum = registry.register("MasterRaidEnum", zNumberEnum(MasterRaids))
 const zPrestigeRaidEnum = registry.register("PrestigeRaidEnum", zNumberEnum(PrestigeRaids))
@@ -71,10 +87,13 @@ export const manifestRoute = new RaidHubRoute({
             contest: [...ContestRaids],
             master: [...MasterRaids],
             prestige: [...PrestigeRaids],
-            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(([raid, difficulty]) => ({
-                raid,
-                difficulty
-            })),
+            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
+                ([raid, version, triumphName]) => ({
+                    raid,
+                    version,
+                    triumphName
+                })
+            ),
             raidUrlPaths: Object.fromEntries(
                 Object.entries(UrlPathsToRaid).map(([k, v]) => [
                     v,
@@ -94,7 +113,8 @@ export const manifestRoute = new RaidHubRoute({
                             }))
                     ])
                 )
-            }
+            },
+            checkpointNames: checkpoints
         }),
     response: {
         success: {
@@ -104,7 +124,7 @@ export const manifestRoute = new RaidHubRoute({
                     hashes: z.record(
                         z.object({
                             raid: zRaidEnum,
-                            difficulty: zRaidVersionEnum
+                            version: zRaidVersionEnum
                         })
                     ),
                     listed: z.array(zRaidEnum),
@@ -115,7 +135,8 @@ export const manifestRoute = new RaidHubRoute({
                     reprisedChallengePairings: z.array(
                         z.object({
                             raid: zRaidEnum,
-                            difficulty: zRaidVersionEnum
+                            version: zRaidVersionEnum,
+                            triumphName: z.string()
                         })
                     ),
                     leaderboards: z.object({
@@ -139,7 +160,8 @@ export const manifestRoute = new RaidHubRoute({
                     }),
                     raidUrlPaths: z.record(zRaidPath),
                     raidStrings: z.record(z.string()),
-                    difficultyStrings: z.record(z.string())
+                    difficultyStrings: z.record(z.string()),
+                    checkpointNames: z.record(z.string())
                 })
                 .strict()
         }

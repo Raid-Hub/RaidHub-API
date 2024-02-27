@@ -1118,11 +1118,11 @@
                 "raid": {
                   "$ref": "#/components/schemas/RaidEnum"
                 },
-                "difficulty": {
+                "version": {
                   "$ref": "#/components/schemas/RaidVersionEnum"
                 }
               },
-              "required": ["raid", "difficulty"]
+              "required": ["raid", "version"]
             }
           },
           "listed": {
@@ -1163,11 +1163,14 @@
                 "raid": {
                   "$ref": "#/components/schemas/RaidEnum"
                 },
-                "difficulty": {
+                "version": {
                   "$ref": "#/components/schemas/RaidVersionEnum"
+                },
+                "triumphName": {
+                  "type": "string"
                 }
               },
-              "required": ["raid", "difficulty"]
+              "required": ["raid", "version", "triumphName"]
             }
           },
           "leaderboards": {
@@ -1233,6 +1236,12 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "checkpointNames": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -1246,7 +1255,8 @@
           "leaderboards",
           "raidUrlPaths",
           "raidStrings",
-          "difficultyStrings"
+          "difficultyStrings",
+          "checkpointNames"
         ],
         "additionalProperties": false
       },
@@ -1542,11 +1552,17 @@
                   "raid": {
                     "$ref": "#/components/schemas/RaidEnum"
                   },
+                  "raidName": {
+                    "type": "string"
+                  },
                   "version": {
                     "$ref": "#/components/schemas/RaidVersionEnum"
+                  },
+                  "versionName": {
+                    "type": "string"
                   }
                 },
-                "required": ["raid", "version"]
+                "required": ["raid", "raidName", "version", "versionName"]
               },
               "leaderboardEntries": {
                 "type": "object",

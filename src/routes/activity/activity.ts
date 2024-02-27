@@ -40,7 +40,9 @@ export const activityRootRoute = new RaidHubRoute({
                 .extend({
                     meta: z.object({
                         raid: zRaidEnum,
-                        version: zRaidVersionEnum
+                        raidName: z.string(),
+                        version: zRaidVersionEnum,
+                        versionName: z.string()
                     }),
                     leaderboardEntries: z.record(z.number()),
                     players: z.array(zPlayerWithActivityData)
@@ -68,8 +70,8 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         include: {
             raidDefinition: {
                 select: {
-                    raidId: true,
-                    versionId: true
+                    raid: true,
+                    version: true
                 }
             },
             playerActivity: {
@@ -102,9 +104,9 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
 
     const { activityLeaderboardEntry, playerActivity, raidDefinition, ...activity } = result
 
-    const dayOne = isDayOne(raidDefinition.raidId, activity.dateCompleted)
-    const contest = isContest(raidDefinition.raidId, activity.dateStarted)
-    const weekOne = isWeekOne(raidDefinition.raidId, activity.dateCompleted)
+    const dayOne = isDayOne(raidDefinition.raid.id, activity.dateCompleted)
+    const contest = isContest(raidDefinition.raid.id, activity.dateStarted)
+    const weekOne = isWeekOne(raidDefinition.raid.id, activity.dateCompleted)
 
     return {
         ...activity,
@@ -115,8 +117,10 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         contest,
         weekOne,
         meta: {
-            raid: raidDefinition.raidId,
-            version: raidDefinition.versionId
+            raid: raidDefinition.raid.id,
+            raidName: raidDefinition.raid.name,
+            version: raidDefinition.version.id,
+            versionName: raidDefinition.version.name
         },
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         players: playerActivity.map(({ player, instanceId, membershipId, ...data }) => ({
