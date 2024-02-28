@@ -771,11 +771,16 @@
               },
               {
                 "type": "string",
-                "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
+                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
               },
               {
                 "type": "string",
-                "enum": ["clears", "sherpas", "fresh", "speed"]
+                "enum": [
+                  "total-clears",
+                  "sherpas",
+                  "full-clears",
+                  "cumulative-speedrun"
+                ]
               }
             ]
           },
@@ -1176,6 +1181,31 @@
           "leaderboards": {
             "type": "object",
             "properties": {
+              "global": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "total-clears",
+                        "sherpas",
+                        "full-clears",
+                        "cumulative-speedrun"
+                      ]
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string",
+                      "enum": ["number", "time"]
+                    }
+                  },
+                  "required": ["category", "displayName", "format"]
+                }
+              },
               "worldFirst": {
                 "type": "object",
                 "additionalProperties": {
@@ -1186,38 +1216,48 @@
                       "id": {
                         "type": "string"
                       },
-                      "type": {
+                      "displayName": {
                         "type": "string"
+                      },
+                      "category": {
+                        "type": "string",
+                        "enum": ["normal", "prestige", "challenge", "master"]
                       },
                       "date": {
                         "type": "string",
                         "format": "date-time"
                       }
                     },
-                    "required": ["id", "type", "date"]
+                    "required": ["id", "displayName", "category", "date"]
                   }
                 }
               },
               "individual": {
                 "type": "object",
-                "additionalProperties": {
-                  "type": "array",
-                  "items": {
+                "properties": {
+                  "clears": {
                     "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "category": {
-                        "type": "string"
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["name", "category"]
                       }
-                    },
-                    "required": ["name", "category"]
+                    }
                   }
-                }
+                },
+                "required": ["clears"]
               }
             },
-            "required": ["worldFirst", "individual"]
+            "required": ["global", "worldFirst", "individual"]
           },
           "raidUrlPaths": {
             "type": "object",
@@ -1665,7 +1705,12 @@
             "properties": {
               "category": {
                 "type": "string",
-                "enum": ["clears", "sherpas", "fresh", "speed"]
+                "enum": [
+                  "total-clears",
+                  "sherpas",
+                  "full-clears",
+                  "cumulative-speedrun"
+                ]
               },
               "count": {
                 "type": "integer",
@@ -1746,7 +1791,7 @@
               },
               "category": {
                 "type": "string",
-                "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
+                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
               },
               "count": {
                 "type": "integer",
@@ -2567,7 +2612,7 @@
                   "type": "string",
                   "enum": [
                     "fresh",
-                    "clears",
+                    "total",
                     "sherpas",
                     "trios",
                     "duos",
@@ -2576,7 +2621,12 @@
                 },
                 {
                   "type": "string",
-                  "enum": ["clears", "sherpas", "fresh", "speed"]
+                  "enum": [
+                    "total-clears",
+                    "sherpas",
+                    "full-clears",
+                    "cumulative-speedrun"
+                  ]
                 }
               ]
             },
@@ -2736,7 +2786,12 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["clears", "sherpas", "fresh", "speed"]
+              "enum": [
+                "total-clears",
+                "sherpas",
+                "full-clears",
+                "cumulative-speedrun"
+              ]
             },
             "required": true,
             "name": "category",
@@ -2939,7 +2994,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
+              "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
             },
             "required": true,
             "name": "category",

@@ -1,9 +1,14 @@
 import { RaidHubRoute } from "../RaidHubRoute"
 import {
-    ClearsLeaderboardsForRaid,
+    GlobalBoard,
+    GlobalBoardNames,
+    GlobalBoards,
     IndividualBoard,
     IndividualBoardNames,
-    UrlPathsToRaid
+    IndividualClearsLeaderboardsForRaid,
+    UrlPathsToRaid,
+    WorldFirstBoards,
+    WorldFirstBoardsMap
 } from "../data/leaderboards"
 import {
     AllRaidHashes,
@@ -101,18 +106,30 @@ export const manifestRoute = new RaidHubRoute({
                 ])
             ),
             leaderboards: {
-                worldFirst: await listLeaderboards(),
-                individual: Object.fromEntries(
-                    Object.entries(ClearsLeaderboardsForRaid).map(([raid, boards]) => [
-                        raid,
-                        Object.entries(boards)
-                            .filter(([_, v]) => v)
-                            .map(([k, _]) => ({
-                                name: IndividualBoardNames[k as IndividualBoard],
-                                category: k
-                            }))
-                    ])
-                )
+                worldFirst: await listWFLeaderboards(),
+                global: Object.entries(GlobalBoardNames).map(
+                    ([category, { displayName, format }]) => ({
+                        category: category as GlobalBoard,
+                        displayName,
+                        format
+                    })
+                ),
+                individual: {
+                    clears: Object.fromEntries(
+                        Object.entries(IndividualClearsLeaderboardsForRaid).map(
+                            ([raid, boards]) => [
+                                raid,
+                                Object.entries(boards)
+                                    .filter(([_, v]) => v)
+                                    .map(([k, _]) => ({
+                                        name:
+                                            IndividualBoardNames[k as IndividualBoard] + " Clears",
+                                        category: k
+                                    }))
+                            ]
+                        )
+                    )
+                }
             },
             checkpointNames: checkpoints
         }),
@@ -140,23 +157,33 @@ export const manifestRoute = new RaidHubRoute({
                         })
                     ),
                     leaderboards: z.object({
+                        global: z.array(
+                            z.object({
+                                category: z.enum(GlobalBoards),
+                                displayName: z.string(),
+                                format: z.enum(["number", "time"])
+                            })
+                        ),
                         worldFirst: z.record(
                             z.array(
                                 z.object({
                                     id: z.string(),
-                                    type: z.string(),
+                                    displayName: z.string(),
+                                    category: z.enum(WorldFirstBoards),
                                     date: zISODateString()
                                 })
                             )
                         ),
-                        individual: z.record(
-                            z.array(
-                                z.object({
-                                    name: z.string(),
-                                    category: z.string()
-                                })
+                        individual: z.object({
+                            clears: z.record(
+                                z.array(
+                                    z.object({
+                                        name: z.string(),
+                                        category: z.string()
+                                    })
+                                )
                             )
-                        )
+                        })
                     }),
                     raidUrlPaths: z.record(zRaidPath),
                     raidStrings: z.record(z.string()),
@@ -168,15 +195,17 @@ export const manifestRoute = new RaidHubRoute({
     }
 })
 
-async function listLeaderboards() {
+async function listWFLeaderboards() {
     const boards = await prisma.activityLeaderboard.findMany({})
-    const formattedBoards = boards.map(board => ({ ...board, type: board.type.toLowerCase() }))
+    const formatted = boards.map(b => ({
+        raidId: b.raidId,
+        id: b.id,
+        date: b.date,
+        category: WorldFirstBoardsMap.find(([, type]) => type === b.type)![0],
+        displayName: b.type
+    }))
 
-    return groupBy<(typeof formattedBoards)[number], "raidId", ListedRaid>(
-        formattedBoards,
-        "raidId",
-        {
-            remove: true
-        }
-    )
+    return groupBy<(typeof formatted)[number], "raidId", ListedRaid>(formatted, "raidId", {
+        remove: true
+    })
 }

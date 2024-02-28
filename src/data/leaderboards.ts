@@ -3,17 +3,29 @@ import { ListedRaid, Raid } from "./raids"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
 export type WorldFirstBoard = (typeof WorldFirstBoards)[number]
-export const WorldFirstBoardsMap = {
-    normal: WorldFirstLeaderboardType.Normal,
-    challenge: WorldFirstLeaderboardType.Challenge,
-    prestige: WorldFirstLeaderboardType.Prestige,
-    master: WorldFirstLeaderboardType.Master
-} satisfies Record<WorldFirstBoard, WorldFirstLeaderboardType>
+export const WorldFirstBoardsMap = [
+    ["normal", WorldFirstLeaderboardType.Normal],
+    ["challenge", WorldFirstLeaderboardType.Challenge],
+    ["prestige", WorldFirstLeaderboardType.Prestige],
+    ["master", WorldFirstLeaderboardType.Master]
+] satisfies [WorldFirstBoard, WorldFirstLeaderboardType][]
 
-export const IndividualBoards = ["fresh", "clears", "sherpas", "trios", "duos", "solos"] as const
+export const IndividualBoards = ["fresh", "total", "sherpas", "trios", "duos", "solos"] as const
+export const IndividualClearsBoards = [
+    "fresh",
+    "total",
+    "trios",
+    "duos",
+    "solos"
+] as const satisfies IndividualBoard[]
 export type IndividualBoard = (typeof IndividualBoards)[number]
 
-export const GlobalBoards = ["clears", "sherpas", "fresh", "speed"] as const
+export const GlobalBoards = [
+    "total-clears",
+    "sherpas",
+    "full-clears",
+    "cumulative-speedrun"
+] as const
 export type GlobalBoard = (typeof GlobalBoards)[number]
 
 export const UrlPathsToRaid = {
@@ -48,118 +60,130 @@ export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, WorldFirstLeaderb
     [Raid.CROTAS_END]: WorldFirstLeaderboardType.Challenge
 }
 
-export const ClearsLeaderboardsForRaid = {
+export const IndividualClearsLeaderboardsForRaid = {
     [Raid.LEVIATHAN]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.EATER_OF_WORLDS]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.SPIRE_OF_STARS]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: false,
         duos: false,
         solos: false
     },
     [Raid.LAST_WISH]: {
         fresh: false,
-        clears: true,
-        sherpas: true,
+        total: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.SCOURGE_OF_THE_PAST]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.CROWN_OF_SORROW]: {
-        sherpas: true,
         fresh: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.GARDEN_OF_SALVATION]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.DEEP_STONE_CRYPT]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.VAULT_OF_GLASS]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.VOW_OF_THE_DISCIPLE]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: false,
         solos: false
     },
     [Raid.KINGS_FALL]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: false
     },
     [Raid.ROOT_OF_NIGHTMARES]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: true
     },
     [Raid.CROTAS_END]: {
         fresh: true,
-        sherpas: true,
-        clears: true,
+        total: true,
         trios: true,
         duos: true,
         solos: false
     }
-} satisfies Record<ListedRaid, Record<IndividualBoard, boolean>>
+} satisfies Record<ListedRaid, Record<(typeof IndividualClearsBoards)[number], boolean>>
 
 export const IndividualBoardNames: Record<IndividualBoard, string> = {
-    fresh: "Full Clears",
-    clears: "Clears",
+    fresh: "Full",
+    total: "Total",
     sherpas: "Sherpas",
-    trios: "Trios",
-    duos: "Duos",
-    solos: "Solos"
+    trios: "Trio",
+    duos: "Duo",
+    solos: "Solo"
+}
+
+export const GlobalBoardNames: Record<
+    GlobalBoard,
+    {
+        displayName: string
+        format: "number" | "time"
+    }
+> = {
+    "total-clears": {
+        displayName: "Total Clears",
+        format: "number"
+    },
+    sherpas: {
+        displayName: "Total Sherpas",
+        format: "number"
+    },
+    "full-clears": {
+        displayName: "Full Clears",
+        format: "number"
+    },
+    "cumulative-speedrun": {
+        displayName: "Cumulative Speedrun",
+        format: "time"
+    }
 }

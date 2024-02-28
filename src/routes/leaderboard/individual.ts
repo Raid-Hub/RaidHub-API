@@ -1,7 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import {
-    ClearsLeaderboardsForRaid,
     IndividualBoards,
+    IndividualClearsLeaderboardsForRaid,
     UrlPathsToRaid
 } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
@@ -24,12 +24,14 @@ export const leaderboardRaidIndividualRoute = new RaidHubRoute({
         const { raid, category } = req.params
         const { page, count } = req.query
 
-        const isAvailable = includedIn(
-            Object.entries(ClearsLeaderboardsForRaid[UrlPathsToRaid[raid]])
-                .filter(([_, v]) => v)
-                .map(([k, _]) => k),
-            category
-        )
+        const isAvailable =
+            category === "sherpas" ||
+            includedIn(
+                Object.entries(IndividualClearsLeaderboardsForRaid[UrlPathsToRaid[raid]])
+                    .filter(([_, v]) => v)
+                    .map(([k, _]) => k),
+                category
+            )
 
         if (!isAvailable) {
             return fail({ unavailable: true }, ErrorCode.LeaderboardNotFoundError)

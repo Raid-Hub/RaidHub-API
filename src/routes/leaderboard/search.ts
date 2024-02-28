@@ -239,7 +239,8 @@ async function searchWorldFirstLeaderboard(query: {
     raid: ListedRaid
     category: WorldFirstBoard
 }) {
-    const type = WorldFirstBoardsMap[query.category]
+    const type = WorldFirstBoardsMap.find(([board]) => board === query.category)![1]
+
     const memberPlacements = await prisma.playerActivity.findMany({
         where: {
             membershipId: query.membershipId,
