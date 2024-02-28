@@ -1,5 +1,6 @@
 import dotenv from "dotenv"
 import express from "express"
+import path from "path"
 import { cors, options } from "./middlewares/cors"
 import { errorHandler } from "./middlewares/errorHandler"
 import { router } from "./routes"
@@ -19,6 +20,21 @@ if (process.env.PROD && !process.env.PRIVATE_KEY_PROD) {
 }
 
 const app = express()
+
+if (!process.env.PROD) {
+    // serve static files for development
+    const staticRouter = express.Router()
+    app.use("/static", staticRouter)
+    staticRouter.use("/docs", express.static(path.join(__dirname, "..", "open-api", "index.html")))
+    staticRouter.use(
+        "/openapi",
+        express.static(path.join(__dirname, "..", "open-api", "openapi.json"))
+    )
+    staticRouter.use(
+        "/coverage",
+        express.static(path.join(__dirname, "..", "coverage", "index.html"))
+    )
+}
 
 app.use("*", (_, res, next) => {
     res.header("X-Processed-By", String(process.pid))
