@@ -2,6 +2,7 @@
   "name": "raidhub-api",
   "version": "1.0.0",
   "description": "",
+  "license": "UNLICENSED",
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
@@ -35,8 +36,6 @@
     "type": "git",
     "url": "git+https://github.com/Raid-Hub/RaidHub-API.git"
   },
-  "author": "",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Raid-Hub/RaidHub-API/issues"
   },
@@ -87,5 +86,97 @@
     "core-js": "^3.1.4",
     "react-is": ">=16.8.0",
     "webpack": "^5.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testTimeout": 15000,
+    "modulePathIgnorePatterns": [
+      "dist/*"
+    ],
+    "coveragePathIgnorePatterns": [
+      "prisma.ts"
+    ],
+    "setupFiles": [
+      "dotenv/config"
+    ],
+    "coverageReporters": [
+      "html"
+    ],
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
+    }
+  },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 4,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": false,
+    "quoteProps": "as-needed",
+    "jsxSingleQuote": false,
+    "trailingComma": "none",
+    "bracketSpacing": true,
+    "bracketSameLine": true,
+    "arrowParens": "avoid",
+    "endOfLine": "auto",
+    "plugins": [
+      "prettier-plugin-organize-imports"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "**/*.json"
+        ],
+        "options": {
+          "tabWidth": 2,
+          "printWidth": 80
+        }
+      }
+    ]
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "env": {
+      "browser": true,
+      "es2021": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "no-unused-vars": "off",
+      "no-case-declarations": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ]
+    },
+    "overrides": [
+      {
+        "files": [
+          "**/*.test.ts"
+        ],
+        "rules": {
+          "@typescript-eslint/no-explicit-any": "off"
+        }
+      }
+    ]
   }
 }
