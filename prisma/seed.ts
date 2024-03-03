@@ -17,6 +17,11 @@ import { ZodError } from "zod"
 import { Difficulty, ListedRaids } from "../src/data/raids"
 import { zPgcrSchema } from "../src/schema/pgcr"
 
+// @ts-expect-error this is a hack to make BigInts work with JSON.stringify
+BigInt.prototype.toJSON = function () {
+    return this.toString()
+}
+
 const prisma = new PrismaClient()
 
 // interface with bungie api
@@ -175,7 +180,7 @@ async function seedPlayers(names: string[]) {
         characters.map(async char => {
             let page = 0
             let len = 0
-            while (len >= (THREADS / 20) * COUNT) {
+            do {
                 const activities = await Promise.all(
                     new Array(THREADS / 20).fill(undefined).map((_, i) =>
                         getActivityHistory(bungieClient, {
@@ -202,7 +207,7 @@ async function seedPlayers(names: string[]) {
 
                 page += THREADS / 20
                 len = activities.length
-            }
+            } while (len >= (THREADS / 20) * COUNT)
             return
         })
     )
@@ -330,7 +335,7 @@ async function seedPlayers(names: string[]) {
 
                         const statsCreate = {
                             clears: didFinish ? 1 : 0,
-                            fresh: didFinish && pgcr.fresh ? 1 : 0,
+                            fullClears: didFinish && pgcr.fresh ? 1 : 0,
                             trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
                             duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
                             solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
@@ -424,7 +429,9 @@ async function seedPlayers(names: string[]) {
                         })
                     ]).catch(console.error)
                 } catch (e) {
-                    console.error((e as ZodError).errors)
+                    if (e instanceof ZodError) {
+                        console.error(e.errors)
+                    }
                     throw e
                 }
                 return report
