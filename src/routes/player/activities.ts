@@ -1,4 +1,3 @@
-import compression from "compression"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import {
@@ -37,9 +36,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
                 return _send(body)
             }
             next()
-        },
-        // @ts-expect-error Compression is not typed well
-        compression()
+        }
     ],
     async handler(req) {
         const { membershipId } = req.params

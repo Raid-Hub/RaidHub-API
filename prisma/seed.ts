@@ -31,7 +31,8 @@ const bungieClient: BungieClientProtocol = {
             if (res.ok) {
                 return data as T
             } else {
-                throw new Error(data.Message)
+                // @ts-expect-error data is unknown
+                throw new Error("Message" in data ? data.Message : "Unknown")
             }
         })
     }

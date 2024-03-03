@@ -1,3 +1,4 @@
+import compression from "compression"
 import dotenv from "dotenv"
 import express from "express"
 import path from "path"
@@ -48,7 +49,7 @@ app.options("*", options)
 app.use(cors)
 
 // parse incoming request body with json, apply the router, handle any uncaught errors
-app.use(express.json(), router.express, errorHandler)
+app.use(express.json(), compression(), router.express, errorHandler)
 
 // Start the server
 app.listen(port, () => {
