@@ -202,7 +202,11 @@ async function listWFLeaderboards() {
         id: b.id,
         date: b.date,
         category: WorldFirstBoardsMap.find(([, type]) => type === b.type)![0],
-        displayName: b.type
+        displayName:
+            b.type === "Challenge"
+                ? ReprisedRaidDifficultyPairings.find(([raid]) => raid === b.raidId)?.[2] ??
+                  "Challenge"
+                : b.type
     }))
 
     return groupBy<(typeof formatted)[number], "raidId", ListedRaid>(formatted, "raidId", {

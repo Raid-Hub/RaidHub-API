@@ -97,6 +97,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
 
             case "worldfirst":
                 const wfCategory = z.enum(WorldFirstBoards).parse(req.query.category)
+                console.log({ wfCategory })
                 if (!req.query.raid) {
                     return fail(
                         { notFound: true, params: req.query },
@@ -263,6 +264,12 @@ async function searchWorldFirstLeaderboard(query: {
                             rank: "asc"
                         },
                         take: 1
+                    },
+                    playerActivity: {
+                        select: {
+                            membershipId: true,
+                            finishedRaid: true
+                        }
                     }
                 }
             }
@@ -272,6 +279,11 @@ async function searchWorldFirstLeaderboard(query: {
     if (!memberPlacements.length) return null
 
     const placements = memberPlacements
+        .filter(
+            ({ activity }) =>
+                !!activity.playerActivity.find(p => p.membershipId === query.membershipId)
+                    ?.finishedRaid
+        )
         .map(({ activity }) => activity.activityLeaderboardEntry[0])
         .sort((a, b) => a.rank - b.rank)
 
