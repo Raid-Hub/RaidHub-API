@@ -1242,14 +1242,15 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "name": {
+                          "displayName": {
                             "type": "string"
                           },
                           "category": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": ["fresh", "total", "trios", "duos", "solos"]
                           }
                         },
-                        "required": ["name", "category"]
+                        "required": ["displayName", "category"]
                       }
                     }
                   }

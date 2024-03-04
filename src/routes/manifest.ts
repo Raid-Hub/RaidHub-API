@@ -5,6 +5,7 @@ import {
     GlobalBoards,
     IndividualBoard,
     IndividualBoardNames,
+    IndividualClearsBoards,
     IndividualClearsLeaderboardsForRaid,
     UrlPathsToRaid,
     WorldFirstBoards,
@@ -122,9 +123,8 @@ export const manifestRoute = new RaidHubRoute({
                                 Object.entries(boards)
                                     .filter(([_, v]) => v)
                                     .map(([k, _]) => ({
-                                        name:
-                                            IndividualBoardNames[k as IndividualBoard] + " Clears",
-                                        category: k
+                                        displayName: IndividualBoardNames[k as IndividualBoard],
+                                        category: k as Exclude<IndividualBoard, "sherpas">
                                     }))
                             ]
                         )
@@ -178,8 +178,8 @@ export const manifestRoute = new RaidHubRoute({
                             clears: z.record(
                                 z.array(
                                     z.object({
-                                        name: z.string(),
-                                        category: z.string()
+                                        displayName: z.string(),
+                                        category: z.enum(IndividualClearsBoards)
                                     })
                                 )
                             )
