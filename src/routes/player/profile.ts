@@ -1,9 +1,10 @@
+import { WorldFirstLeaderboardType } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
 import { ErrorCode, registry, zPlayerInfo } from "../../schema/common"
-import { z, zBigIntString, zPositiveInt } from "../../schema/zod"
+import { z, zBigIntString, zISODateString, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
 import { playerRouterParams } from "./_schema"
@@ -63,12 +64,16 @@ export const playerProfileRoute = new RaidHubRoute({
                             })
                         )
                     }),
-                    worldFirstEntries: z.record(
-                        z.array(
+                    worldFirstEntries: z.array(
+                        registry.register(
+                            "PlayerProfileLeaderboardEntry",
                             z.object({
                                 rank: zPositiveInt(),
                                 instanceId: zBigIntString(),
+                                boardId: z.string(),
+                                type: z.nativeEnum(WorldFirstLeaderboardType),
                                 raidHash: zBigIntString(),
+                                dateCompleted: zISODateString(),
                                 dayOne: z.boolean(),
                                 contest: z.boolean(),
                                 weekOne: z.boolean()
@@ -94,6 +99,7 @@ export const playerProfileRoute = new RaidHubRoute({
 type PrismaRawLeaderboardEntry = {
     rank: number
     leaderboard_id: string
+    leaderboard_type: WorldFirstLeaderboardType
     instance_id: bigint
     raid_hash: bigint
     raid_id: ListedRaid
@@ -150,6 +156,7 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
             SELECT 
                 ale.rank, 
                 lb.id AS leaderboard_id,
+                lb.type as leaderboard_type,
                 a.instance_id,
                 a.raid_hash,
                 a.date_started,
@@ -169,15 +176,6 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
     if (!player) {
         return null
     }
-
-    const activityLeaderboardEntriesMap = new Map<string, PrismaRawLeaderboardEntry[]>()
-    activityLeaderboardEntries.forEach(entry => {
-        if (activityLeaderboardEntriesMap.has(entry.leaderboard_id)) {
-            activityLeaderboardEntriesMap.get(entry.leaderboard_id)!.push(entry)
-        } else {
-            activityLeaderboardEntriesMap.set(entry.leaderboard_id, [entry])
-        }
-    })
 
     const { stats, globalRanks, ...restOfPlayer } = player
 
@@ -212,22 +210,18 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 ])
             )
         },
-        worldFirstEntries: Object.fromEntries(
-            Array.from(activityLeaderboardEntriesMap.entries()).map(([leaderboardId, entries]) => [
-                leaderboardId,
-                entries
-                    .sort((a, b) => a.rank - b.rank)
-                    .map(entry => {
-                        return {
-                            rank: entry.rank,
-                            instanceId: entry.instance_id,
-                            raidHash: entry.raid_hash,
-                            dayOne: isDayOne(entry.raid_id, entry.date_completed),
-                            contest: isContest(entry.raid_id, entry.date_started),
-                            weekOne: isWeekOne(entry.raid_id, entry.date_completed)
-                        }
-                    })
-            ])
-        )
+        worldFirstEntries: activityLeaderboardEntries.map(entry => {
+            return {
+                boardId: entry.leaderboard_id,
+                type: entry.leaderboard_type,
+                rank: entry.rank,
+                instanceId: entry.instance_id,
+                raidHash: entry.raid_hash,
+                dateCompleted: entry.date_completed,
+                dayOne: isDayOne(entry.raid_id, entry.date_completed),
+                contest: isContest(entry.raid_id, entry.date_started),
+                weekOne: isWeekOne(entry.raid_id, entry.date_completed)
+            }
+        })
     }
 }

@@ -8,7 +8,6 @@ import { pgcrRoute } from "./pgcr"
 import { playerRouter } from "./player"
 
 export const router = new RaidHubRouter({
-    middlewares: [],
     routes: [
         {
             path: "/manifest",

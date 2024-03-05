@@ -185,9 +185,9 @@ export const ContestRaids = [
 export type ContestRaid = (typeof ContestRaids)[number]
 
 export const ReprisedRaidDifficultyPairings = [
-    [Raid.VAULT_OF_GLASS, Difficulty.CHALLENGE_VOG],
-    [Raid.KINGS_FALL, Difficulty.CHALLENGE_KF],
-    [Raid.CROTAS_END, Difficulty.CHALLENGE_CROTA]
+    [Raid.VAULT_OF_GLASS, Difficulty.CHALLENGE_VOG, "Tempo's Edge"],
+    [Raid.KINGS_FALL, Difficulty.CHALLENGE_KF, "Regicide"],
+    [Raid.CROTAS_END, Difficulty.CHALLENGE_CROTA, "Superior Swordplay"]
 ] as const
 
 export const AllRaidHashes = Object.fromEntries(
@@ -202,7 +202,7 @@ export const AllRaidHashes = Object.fromEntries(
                             hash,
                             {
                                 raid: parseInt(raid) as ListedRaid,
-                                difficulty: parseInt(difficulty) as Difficulty
+                                version: parseInt(difficulty) as Difficulty
                             }
                         ] as const
                 )

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
-import { ZodDiscriminatedUnion, ZodObject, ZodType, ZodTypeAny, ZodUnknown } from "zod"
+import { ZodObject, ZodType, ZodTypeAny, ZodUnknown } from "zod"
 import { zBodyValidationError, zPathValidationError, zQueryValidationError } from "./RaidHubErrors"
 import {
     IRaidHubRoute,
@@ -23,9 +23,13 @@ export class RaidHubRoute<
         { [x: string]: any },
         { [x: string]: any }
     > = ZodObject<any>,
-    Query extends
-        | ZodObject<any, any, any, { [x: string]: any }, { [x: string]: any }>
-        | ZodDiscriminatedUnion<any, any> = ZodObject<any>,
+    Query extends ZodObject<
+        any,
+        any,
+        any,
+        { [x: string]: any },
+        { [x: string]: any }
+    > = ZodObject<any>,
     Body extends ZodType = ZodUnknown,
     ErrorType extends ErrorCode = never
 > implements IRaidHubRoute
@@ -53,7 +57,7 @@ export class RaidHubRoute<
     >
     readonly responseSchema: ResponseBody
     readonly errors: [
-        400 | 401 | 403 | 404 | 503,
+        400 | 401 | 403 | 404 | 501 | 503,
         type: ErrorType,
         schema: ErrorResponseBody[number]
     ][]
@@ -82,7 +86,7 @@ export class RaidHubRoute<
                 schema: ResponseBody
             }
             errors?: {
-                statusCode: 400 | 401 | 403 | 404 | 503
+                statusCode: 400 | 401 | 403 | 404 | 501 | 503
                 type: ErrorType
                 schema: ErrorResponseBody[number]
             }[]
@@ -124,6 +128,7 @@ export class RaidHubRoute<
                 success: false,
                 message: "Invalid path params",
                 error: {
+                    type: ErrorCode.PathValidationError,
                     issues: parsed.error.issues
                 }
             }
@@ -150,6 +155,7 @@ export class RaidHubRoute<
                 success: false,
                 message: "Invalid query params",
                 error: {
+                    type: ErrorCode.QueryValidationError,
                     issues: parsed.error.issues
                 }
             }
@@ -173,6 +179,7 @@ export class RaidHubRoute<
                 success: false,
                 message: "Invalid JSON body",
                 error: {
+                    type: ErrorCode.BodyValidationError,
                     issues: parsed.error.issues
                 }
             }

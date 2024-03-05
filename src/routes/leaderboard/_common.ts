@@ -4,7 +4,7 @@ import { ListedRaid } from "../../data/raids"
 import { prisma } from "../../services/prisma"
 
 export const IndividualBoardPositionKeys = {
-    clears: {
+    total: {
         rank: "clearsRank",
         position: "clearsPosition",
         value: "clears"
@@ -163,13 +163,22 @@ export async function getWorldFirstLeaderboardEntries(params: {
     }
 }
 
-export const GlobalBoardPositionKeys = {
-    clears: {
+type ValidKey = keyof GlobalLeaderboard & ("clears" | "fullClears" | "sherpas" | "speed")
+
+export const GlobalBoardPositionKeys: Record<
+    GlobalBoard,
+    {
+        rank: keyof GlobalLeaderboard & `${ValidKey}Rank`
+        position: keyof GlobalLeaderboard & `${ValidKey}Position`
+        value: ValidKey
+    }
+> = {
+    "total-clears": {
         rank: "clearsRank",
         position: "clearsPosition",
         value: "clears"
     },
-    fresh: {
+    "full-clears": {
         rank: "fullClearsRank",
         position: "fullClearsPosition",
         value: "fullClears"
@@ -179,19 +188,12 @@ export const GlobalBoardPositionKeys = {
         position: "sherpasPosition",
         value: "sherpas"
     },
-    speed: {
+    "cumulative-speedrun": {
         rank: "speedRank",
         position: "speedPosition",
         value: "speed"
     }
-} as const satisfies Record<
-    GlobalBoard,
-    {
-        rank: keyof GlobalLeaderboard
-        position: keyof GlobalLeaderboard
-        value: keyof GlobalLeaderboard
-    }
->
+}
 
 export async function getGlobalLeaderboardEntries(params: {
     category: GlobalBoard
@@ -206,7 +208,7 @@ export async function getGlobalLeaderboardEntries(params: {
                 gt: (params.page - 1) * params.count,
                 lte: params.page * params.count
             },
-            ...(params.category === "speed"
+            ...(params.category === "cumulative-speedrun"
                 ? {
                       speed: {
                           not: null

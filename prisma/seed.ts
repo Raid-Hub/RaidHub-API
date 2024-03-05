@@ -15,7 +15,12 @@ import * as dotenv from "dotenv"
 import { gzipSync } from "zlib"
 import { ZodError } from "zod"
 import { Difficulty, ListedRaids } from "../src/data/raids"
-import { pgcrSchema } from "../src/util/pgcr"
+import { zPgcrSchema } from "../src/schema/pgcr"
+
+// @ts-expect-error this is a hack to make BigInts work with JSON.stringify
+BigInt.prototype.toJSON = function () {
+    return this.toString()
+}
 
 const prisma = new PrismaClient()
 
@@ -31,7 +36,8 @@ const bungieClient: BungieClientProtocol = {
             if (res.ok) {
                 return data as T
             } else {
-                throw new Error(data.Message)
+                // @ts-expect-error data is unknown
+                throw new Error("Message" in data ? data.Message : "Unknown")
             }
         })
     }
@@ -174,7 +180,7 @@ async function seedPlayers(names: string[]) {
         characters.map(async char => {
             let page = 0
             let len = 0
-            while (len >= (THREADS / 20) * COUNT) {
+            do {
                 const activities = await Promise.all(
                     new Array(THREADS / 20).fill(undefined).map((_, i) =>
                         getActivityHistory(bungieClient, {
@@ -201,7 +207,7 @@ async function seedPlayers(names: string[]) {
 
                 page += THREADS / 20
                 len = activities.length
-            }
+            } while (len >= (THREADS / 20) * COUNT)
             return
         })
     )
@@ -319,9 +325,9 @@ async function seedPlayers(names: string[]) {
                                           destinyUserInfo.bungieGlobalDisplayName || null,
                                       bungieGlobalDisplayNameCode:
                                           destinyUserInfo.bungieGlobalDisplayNameCode
-                                              ? fixBungieCode(
+                                              ? String(
                                                     destinyUserInfo.bungieGlobalDisplayNameCode
-                                                )
+                                                ).padStart(4, "0")
                                               : null
                                   }
                                 : null)
@@ -329,7 +335,7 @@ async function seedPlayers(names: string[]) {
 
                         const statsCreate = {
                             clears: didFinish ? 1 : 0,
-                            fresh: didFinish && pgcr.fresh ? 1 : 0,
+                            fullClears: didFinish && pgcr.fresh ? 1 : 0,
                             trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
                             duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
                             solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
@@ -412,7 +418,7 @@ async function seedPlayers(names: string[]) {
             fetchedPGCRs.map(async report => {
                 try {
                     const compressed = gzipSync(
-                        Buffer.from(JSON.stringify(pgcrSchema.parse(report)), "utf-8")
+                        Buffer.from(JSON.stringify(zPgcrSchema.parse(report)), "utf-8")
                     )
                     await Promise.all([
                         prisma.pGCR.create({
@@ -423,7 +429,9 @@ async function seedPlayers(names: string[]) {
                         })
                     ]).catch(console.error)
                 } catch (e) {
-                    console.error((e as ZodError).errors)
+                    if (e instanceof ZodError) {
+                        console.error(e.errors)
+                    }
                     throw e
                 }
                 return report
@@ -533,10 +541,4 @@ function isFresh(pgcr: DestinyPostGameCarnageReportData): boolean | null {
     } else {
         return pgcr.activityWasStartedFromBeginning || (start < hauntedStart ? null : false)
     }
-}
-
-function fixBungieCode(code: number) {
-    const str = String(code)
-    const missingZeroes = 4 - str.length
-    return `${"0".repeat(missingZeroes)}${str}`
 }

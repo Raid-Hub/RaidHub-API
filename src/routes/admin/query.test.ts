@@ -1,21 +1,26 @@
 import { adminQueryRoute } from "./query"
 
 describe("admin query 200", () => {
-    const t = async (query: string) => {
-        const result = await adminQueryRoute.$mock({ body: { query } })
+    const t = async (query: string, type: string, ignoreCost?: boolean) => {
+        const result = await adminQueryRoute.$mock({ body: { query, type, ignoreCost } })
         expect(result.type).toBe("ok")
+        return result
     }
 
-    test("SELECT 1", () => t("SELECT 1"))
+    test("SELECT 1", () => t("SELECT 1", "SELECT"))
 
-    test("EXPLAIN", () => t("EXPLAIN SELECT * FROM activity;"))
+    test("EXPLAIN", () => t("SELECT * FROM activity;", "EXPLAIN"))
 
-    test("SELECT * ", () => t("SELECT * FROM player_activity LIMIT 10;"))
+    test("SELECT * ", () => t("SELECT * FROM player_activity LIMIT 10;", "SELECT"))
+
+    test("SELECT with ignore cost ", () =>
+        t("SELECT * FROM player_activity LIMIT 100000;", "SELECT", true))
 
     test(
         "Complex",
         () =>
-            t(`
+            t(
+                `
     SELECT 
         DENSE_RANK() OVER (ORDER BY date_completed ASC) AS rank,
         players_concatenated[1] AS player1,
@@ -41,21 +46,25 @@ describe("admin query 200", () => {
     ) AS subquery
     ORDER BY 
         date_completed ASC
-    LIMIT 3;`),
+    LIMIT 3;`,
+                "SELECT"
+            ),
         30000
     )
 })
 
-describe("admin query 500", () => {
-    const t = (query: string) => () => adminQueryRoute.$mock({ body: { query } })
+describe("admin query syntax error", () => {
+    const t = async (query: string, type: string, ignoreCost?: boolean) => {
+        const result = await adminQueryRoute.$mock({ body: { query, type, ignoreCost } })
+        expect(result.type).toBe("err")
+        return result
+    }
 
-    test("Bad table", () => {
-        const f = t("SELECT * from fasdhfahfuiasdf")
-        expect(f).rejects.toThrow()
-    })
+    test("Bad table", () => t("SELECT * from fasdhfahfuiasdf", "SELECT"))
 
-    test("Bad syntax", () => {
-        const f = t("SELECT * FROM activity LIMIT 10 WHERE 1 = 1;")
-        expect(f).rejects.toThrow()
-    })
+    test("Bad syntax", () => t("SELECT * FROM activity LIMIT 10 WHERE 1 = 1;", "EXPLAIN"))
+
+    test("Bad keywords", () => t("SELECTFRO FROM abc;", "SELECT"))
+
+    test("Bad keywords", () => t("", "SELECT"))
 })

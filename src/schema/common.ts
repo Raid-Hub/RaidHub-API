@@ -7,14 +7,20 @@ import { z, zBigIntString, zISODateString, zNumberEnum, zPositiveInt } from "./z
 export const registry = new OpenAPIRegistry()
 
 export enum ErrorCode {
+    Unknown = "Unknown",
     PlayerNotFoundError = "PlayerNotFoundError",
     ActivityNotFoundError = "ActivityNotFoundError",
     PGCRNotFoundError = "PGCRNotFoundError",
     LeaderboardNotFoundError = "LeaderboardNotFoundError",
-    InvalidClientSecretError = "InvalidClientSecretError"
+    InvalidClientSecretError = "InvalidClientSecretError",
+    InsufficientPermissionsError = "InsufficientPermissionsError",
+    PathValidationError = "PathValidationError",
+    QueryValidationError = "QueryValidationError",
+    BodyValidationError = "BodyValidationError",
+    InternalServerError = "InternalServerError",
+    ApiKeyError = "ApiKeyError",
+    AdminQuerySyntaxError = "AdminQuerySyntaxError"
 }
-
-registry.register("RaidHubErrorCode", z.nativeEnum(ErrorCode))
 
 export const zBungieMembershipType = registry.register(
     "BungieMembershipType",
@@ -54,7 +60,7 @@ export const zPlayerInfo = registry.register(
             }),
             bungieGlobalDisplayName: z.string().nullable(),
             bungieGlobalDisplayNameCode: z.string().nullable(),
-            lastSeen: zISODateString().nullable()
+            lastSeen: zISODateString()
         })
         .openapi({
             example: {

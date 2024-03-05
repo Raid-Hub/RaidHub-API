@@ -1,6 +1,7 @@
 import { RequestHandler } from "express"
 import jwt from "jsonwebtoken"
 import { zInsufficientPermissionsError } from "../RaidHubErrors"
+import { ErrorCode } from "../schema/common"
 
 export const adminProtected: RequestHandler = (req, res, next) => {
     const authHeader = req.headers["authorization"]
@@ -13,7 +14,8 @@ export const adminProtected: RequestHandler = (req, res, next) => {
                 minted: new Date(),
                 success: false,
                 error: {
-                    type: "InsufficientPermissionsError"
+                    message: "Forbidden",
+                    type: ErrorCode.InsufficientPermissionsError
                 }
             } satisfies (typeof zInsufficientPermissionsError)["_input"])
         }

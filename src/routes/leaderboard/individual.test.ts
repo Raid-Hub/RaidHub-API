@@ -22,7 +22,7 @@ describe("leaderboard individual 200", () => {
         }))
 
     test("wish clears", () =>
-        t("lastwish", "clears", {
+        t("lastwish", "total", {
             page: 7,
             count: 27
         }))

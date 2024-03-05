@@ -1,8 +1,8 @@
 import { activitySearchRoute } from "./search"
 
 describe("activity search 200", () => {
-    const t = async (query: unknown) => {
-        const result = await activitySearchRoute.$mock({ query })
+    const t = async (body: unknown) => {
+        const result = await activitySearchRoute.$mock({ body })
         expect(result.type).toBe("ok")
 
         return result

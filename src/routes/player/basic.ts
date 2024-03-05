@@ -9,7 +9,7 @@ import { playerRouterParams } from "./_schema"
 export const playerBasicRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    middlewares: [cacheControl(60)],
+    middlewares: [cacheControl(300)],
     async handler(req) {
         const member = await prisma.player.findUnique({
             where: {

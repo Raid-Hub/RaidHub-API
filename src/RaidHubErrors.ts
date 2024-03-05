@@ -1,11 +1,13 @@
 import { ZodIssueCode } from "zod"
-import { registry } from "./schema/common"
+import { ErrorCode, registry } from "./schema/common"
 import { z, zISODateString } from "./schema/zod"
 
 /**
  * The below errors are various errors that middleware can throw
  */
 //
+
+export const zRaidHubErrorCode = registry.register("RaidHubErrorCode", z.nativeEnum(ErrorCode))
 
 export const zRaidHubError = registry.register(
     "RaidHubError",
@@ -15,7 +17,7 @@ export const zRaidHubError = registry.register(
         success: z.literal(false),
         error: z
             .object({
-                type: z.string()
+                type: z.nativeEnum(ErrorCode)
             })
             .catchall(z.any())
     })
@@ -32,57 +34,63 @@ const zZodIssue = registry.register(
 )
 
 export const zPathValidationError = registry.register(
-    "PathValidationError",
+    ErrorCode.PathValidationError,
     zRaidHubError.extend({
         message: z.literal("Invalid path params"),
         error: z.object({
+            type: z.literal(ErrorCode.PathValidationError),
             issues: z.array(zZodIssue)
         })
     })
 )
 export const zQueryValidationError = registry.register(
-    "QueryValidationError",
+    ErrorCode.QueryValidationError,
     zRaidHubError.extend({
         message: z.literal("Invalid query params"),
         error: z.object({
+            type: z.literal(ErrorCode.QueryValidationError),
             issues: z.array(zZodIssue)
         })
     })
 )
 export const zBodyValidationError = registry.register(
-    "BodyValidationError",
+    ErrorCode.BodyValidationError,
     zRaidHubError.extend({
         message: z.literal("Invalid JSON body"),
         error: z.object({
+            type: z.literal(ErrorCode.BodyValidationError),
             issues: z.array(zZodIssue)
         })
     })
 )
 
 export const zServerError = registry.register(
-    "ServerError",
+    ErrorCode.InternalServerError,
     zRaidHubError.extend({
         message: z.literal("Something went wrong."),
         error: z.object({
-            type: z.string(),
+            type: z.literal(ErrorCode.InternalServerError),
             at: z.string().nullable()
         })
     })
 )
 
 export const zInsufficientPermissionsError = registry.register(
-    "InsufficientPermissionsError",
+    ErrorCode.InsufficientPermissionsError,
     zRaidHubError.extend({
-        message: z.literal("Forbidden")
+        error: z.object({
+            type: z.literal(ErrorCode.InsufficientPermissionsError),
+            message: z.literal("Forbidden")
+        })
     })
 )
 
 export const zApiKeyError = registry.register(
-    "ApiKeyError",
+    ErrorCode.ApiKeyError,
     zRaidHubError.extend({
         message: z.union([z.literal("Invalid API Key"), z.literal("Missing API Key")]),
         error: z.object({
-            type: z.literal("cors"),
+            type: z.literal(ErrorCode.ApiKeyError),
             apiKey: z.string().nullable(),
             origin: z.string().nullable()
         })

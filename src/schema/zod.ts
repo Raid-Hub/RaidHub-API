@@ -15,9 +15,13 @@ export const zDigitString = () =>
     z.coerce.string().regex(/^\d+n?$/) as ZodType<string, ZodStringDef, string | number | bigint>
 
 export const zBooleanString = () =>
-    (z.coerce.string() as ZodType<string, ZodStringDef, string | boolean>)
-        .transform(s => JSON.parse(s))
+    z
+        .union([z.boolean(), z.string()])
+        .transform(s => JSON.parse(String(s)))
         .pipe(z.boolean())
+        .openapi({
+            type: "boolean"
+        })
 
 export const zBigIntString = () => zDigitString().pipe(z.coerce.bigint())
 
@@ -26,12 +30,8 @@ export const zISODateString = () =>
         .date()
         .transform(d => d.toISOString())
         .openapi({
-            param: {
-                schema: {
-                    type: "string",
-                    format: "date-time"
-                }
-            }
+            type: "string",
+            format: "date-time"
         })
 
 type MapToStrings<N extends number> = Record<`${N}`, N> & EnumLike

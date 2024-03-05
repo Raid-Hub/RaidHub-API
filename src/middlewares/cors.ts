@@ -1,5 +1,6 @@
 import { RequestHandler } from "express"
 import { zApiKeyError } from "../RaidHubErrors"
+import { ErrorCode } from "../schema/common"
 import { includedIn } from "../util/helpers"
 
 const isValidOrigin = (origin: string) => /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.io$/.test(origin)
@@ -35,7 +36,7 @@ export const cors: RequestHandler = (req, res, next) => {
             minted: new Date(),
             success: false,
             error: {
-                type: "cors",
+                type: ErrorCode.ApiKeyError,
                 origin: req.headers.origin || null,
                 apiKey: req.headers["x-api-key"]?.toString() || null
             }

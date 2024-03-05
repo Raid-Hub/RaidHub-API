@@ -9,12 +9,12 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "types": ["node", "jest"],
     "lib": ["es6", "esnext"],
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "prisma/**/*.ts"],
   "exclude": ["scripts/*"]
 }

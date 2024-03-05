@@ -152,7 +152,7 @@ CREATE INDEX "idx_raid_definition_version_id" ON "raid_definition"("version_id")
 CREATE UNIQUE INDEX "leaderboard_raid_hash_type_key" ON "leaderboard"("raid_id", "type");
 
 -- CreateIndex
-CREATE INDEX "speedrun_index" ON "activity"("completed", "fresh", "duration" ASC);
+CREATE INDEX "speedrun_index" ON "activity"("raid_hash", "completed", "fresh", "duration" ASC);
 
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_raid_hash_fkey" FOREIGN KEY ("raid_hash") REFERENCES "raid_definition"("hash") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -165,12 +165,8 @@ ALTER TABLE "player_activity" ADD CONSTRAINT "player_activity_membership_id_fkey
 
 -- AddForeignKey
 ALTER TABLE "player_stats" ADD CONSTRAINT "raid_id_fkey" FOREIGN KEY ("raid_id") REFERENCES "raid"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
-
--- AddForeignKey
 ALTER TABLE "player_stats" ADD CONSTRAINT "player_membership_id_fkey" FOREIGN KEY ("membership_id") REFERENCES "player"("membership_id") ON DELETE RESTRICT ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "player_stats" ADD CONSTRAINT "player_fastest_clear_fkey" FOREIGN KEY ("fastest_instance_id") REFERENCES "activity"("instance_id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+ALTER TABLE "player_stats" ADD CONSTRAINT "player_stats_fastest_instance_id_fkey" FOREIGN KEY ("fastest_instance_id") REFERENCES "activity"("instance_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "activity_leaderboard_entry" ADD CONSTRAINT "activity_leaderboard_entry_instance_id_fkey" FOREIGN KEY ("instance_id") REFERENCES "activity"("instance_id") ON DELETE NO ACTION ON UPDATE NO ACTION;

@@ -12,16 +12,6 @@
   ],
   "components": {
     "schemas": {
-      "RaidHubErrorCode": {
-        "type": "string",
-        "enum": [
-          "PlayerNotFoundError",
-          "ActivityNotFoundError",
-          "PGCRNotFoundError",
-          "LeaderboardNotFoundError",
-          "InvalidClientSecretError"
-        ]
-      },
       "BungieMembershipType": {
         "type": "integer",
         "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1],
@@ -74,7 +64,7 @@
           },
           "lastSeen": {
             "type": "string",
-            "nullable": true
+            "format": "date-time"
           }
         },
         "required": [
@@ -125,10 +115,12 @@
             "exclusiveMinimum": true
           },
           "dateStarted": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "dateCompleted": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "duration": {
             "type": "integer",
@@ -271,11 +263,30 @@
           }
         ]
       },
+      "RaidHubErrorCode": {
+        "type": "string",
+        "enum": [
+          "Unknown",
+          "PlayerNotFoundError",
+          "ActivityNotFoundError",
+          "PGCRNotFoundError",
+          "LeaderboardNotFoundError",
+          "InvalidClientSecretError",
+          "InsufficientPermissionsError",
+          "PathValidationError",
+          "QueryValidationError",
+          "BodyValidationError",
+          "InternalServerError",
+          "ApiKeyError",
+          "AdminQuerySyntaxError"
+        ]
+      },
       "RaidHubError": {
         "type": "object",
         "properties": {
           "minted": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "message": {
             "type": "string"
@@ -288,7 +299,22 @@
             "type": "object",
             "properties": {
               "type": {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                  "Unknown",
+                  "PlayerNotFoundError",
+                  "ActivityNotFoundError",
+                  "PGCRNotFoundError",
+                  "LeaderboardNotFoundError",
+                  "InvalidClientSecretError",
+                  "InsufficientPermissionsError",
+                  "PathValidationError",
+                  "QueryValidationError",
+                  "BodyValidationError",
+                  "InternalServerError",
+                  "ApiKeyError",
+                  "AdminQuerySyntaxError"
+                ]
               }
             },
             "required": ["type"],
@@ -360,6 +386,10 @@
               "error": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["PathValidationError"]
+                  },
                   "issues": {
                     "type": "array",
                     "items": {
@@ -367,7 +397,7 @@
                     }
                   }
                 },
-                "required": ["issues"]
+                "required": ["type", "issues"]
               }
             }
           }
@@ -388,6 +418,10 @@
               "error": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["QueryValidationError"]
+                  },
                   "issues": {
                     "type": "array",
                     "items": {
@@ -395,7 +429,7 @@
                     }
                   }
                 },
-                "required": ["issues"]
+                "required": ["type", "issues"]
               }
             }
           }
@@ -416,6 +450,10 @@
               "error": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["BodyValidationError"]
+                  },
                   "issues": {
                     "type": "array",
                     "items": {
@@ -423,13 +461,13 @@
                     }
                   }
                 },
-                "required": ["issues"]
+                "required": ["type", "issues"]
               }
             }
           }
         ]
       },
-      "ServerError": {
+      "InternalServerError": {
         "allOf": [
           {
             "$ref": "#/components/schemas/RaidHubError"
@@ -445,7 +483,8 @@
                 "type": "object",
                 "properties": {
                   "type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": ["InternalServerError"]
                   },
                   "at": {
                     "type": "string",
@@ -466,9 +505,19 @@
           {
             "type": "object",
             "properties": {
-              "message": {
-                "type": "string",
-                "enum": ["Forbidden"]
+              "error": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["InsufficientPermissionsError"]
+                  },
+                  "message": {
+                    "type": "string",
+                    "enum": ["Forbidden"]
+                  }
+                },
+                "required": ["type", "message"]
               }
             }
           }
@@ -499,7 +548,7 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": ["cors"]
+                    "enum": ["ApiKeyError"]
                   },
                   "apiKey": {
                     "type": "string",
@@ -515,6 +564,104 @@
             }
           }
         ]
+      },
+      "ActivitySearchBody": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d+n?$"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\d+n?$"
+                }
+              }
+            ]
+          },
+          "minPlayers": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0
+          },
+          "maxPlayers": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0
+          },
+          "minDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "minSeason": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0
+          },
+          "maxSeason": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0
+          },
+          "fresh": {
+            "type": "boolean"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "flawless": {
+            "type": "boolean"
+          },
+          "raid": {
+            "$ref": "#/components/schemas/RaidEnum"
+          },
+          "platformType": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "reversed": {
+            "type": "boolean",
+            "nullable": true,
+            "default": false
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "default": 25
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "default": 1
+          }
+        },
+        "required": ["membershipId"]
+      },
+      "AdminQuerySyntaxError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "code", "message"]
       },
       "RaidPath": {
         "type": "string",
@@ -585,6 +732,79 @@
         },
         "required": ["position", "rank", "value", "activity", "players"],
         "additionalProperties": false
+      },
+      "LeaderboardSearchQuery": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["worldfirst"]
+              },
+              {
+                "type": "string",
+                "enum": ["individual"]
+              },
+              {
+                "type": "string",
+                "enum": ["global"]
+              }
+            ]
+          },
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 5,
+            "exclusiveMinimum": true,
+            "maximum": 100,
+            "default": 25
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["normal", "prestige", "challenge", "master"]
+              },
+              {
+                "type": "string",
+                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "total-clears",
+                  "sherpas",
+                  "full-clears",
+                  "cumulative-speedrun"
+                ]
+              }
+            ]
+          },
+          "raid": {
+            "type": "number"
+          }
+        },
+        "required": ["type", "membershipId", "category"]
+      },
+      "SunsetRaidEnum": {
+        "type": "integer",
+        "enum": [1, 2, 3, 5, 6]
+      },
+      "MasterRaidEnum": {
+        "type": "integer",
+        "enum": [9, 10, 11, 12, 13]
+      },
+      "PrestigeRaidEnum": {
+        "type": "integer",
+        "enum": [1, 2, 3]
+      },
+      "ContestRaidEnum": {
+        "type": "integer",
+        "enum": [6, 7, 8, 9, 10, 11, 12, 13]
       },
       "DestinyPostGameCarnageReport": {
         "type": "object",
@@ -843,78 +1063,101 @@
         },
         "required": ["value", "rank"]
       },
+      "PlayerProfileLeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "instanceId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "boardId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["Normal", "Challenge", "Prestige", "Master"]
+          },
+          "raidHash": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "dateCompleted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dayOne": {
+            "type": "boolean"
+          },
+          "contest": {
+            "type": "boolean"
+          },
+          "weekOne": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rank",
+          "instanceId",
+          "boardId",
+          "type",
+          "raidHash",
+          "dateCompleted",
+          "dayOne",
+          "contest",
+          "weekOne"
+        ]
+      },
       "ManifestResponse": {
         "type": "object",
         "properties": {
-          "raids": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "difficulties": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
           "hashes": {
             "type": "object",
             "additionalProperties": {
               "type": "object",
               "properties": {
                 "raid": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": true
+                  "$ref": "#/components/schemas/RaidEnum"
                 },
-                "difficulty": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": true
+                "version": {
+                  "$ref": "#/components/schemas/RaidVersionEnum"
                 }
               },
-              "required": ["raid", "difficulty"]
+              "required": ["raid", "version"]
             }
           },
           "listed": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
+              "$ref": "#/components/schemas/RaidEnum"
             }
           },
           "sunset": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
+              "$ref": "#/components/schemas/SunsetRaidEnum"
             }
           },
           "contest": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
+              "$ref": "#/components/schemas/ContestRaidEnum"
             }
           },
           "master": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
+              "$ref": "#/components/schemas/MasterRaidEnum"
             }
           },
           "prestige": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
+              "$ref": "#/components/schemas/PrestigeRaidEnum"
             }
           },
           "reprisedChallengePairings": {
@@ -923,18 +1166,46 @@
               "type": "object",
               "properties": {
                 "raid": {
-                  "type": "number"
+                  "$ref": "#/components/schemas/RaidEnum"
                 },
-                "difficulty": {
-                  "type": "number"
+                "version": {
+                  "$ref": "#/components/schemas/RaidVersionEnum"
+                },
+                "triumphName": {
+                  "type": "string"
                 }
               },
-              "required": ["raid", "difficulty"]
+              "required": ["raid", "version", "triumphName"]
             }
           },
           "leaderboards": {
             "type": "object",
             "properties": {
+              "global": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "total-clears",
+                        "sherpas",
+                        "full-clears",
+                        "cumulative-speedrun"
+                      ]
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string",
+                      "enum": ["number", "time"]
+                    }
+                  },
+                  "required": ["category", "displayName", "format"]
+                }
+              },
               "worldFirst": {
                 "type": "object",
                 "additionalProperties": {
@@ -945,42 +1216,76 @@
                       "id": {
                         "type": "string"
                       },
-                      "type": {
+                      "displayName": {
                         "type": "string"
                       },
+                      "category": {
+                        "type": "string",
+                        "enum": ["normal", "prestige", "challenge", "master"]
+                      },
                       "date": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "date-time"
                       }
                     },
-                    "required": ["id", "type", "date"]
+                    "required": ["id", "displayName", "category", "date"]
                   }
                 }
               },
               "individual": {
                 "type": "object",
-                "additionalProperties": {
-                  "type": "array",
-                  "items": {
+                "properties": {
+                  "clears": {
                     "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "category": {
-                        "type": "string"
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": ["fresh", "total", "trios", "duos", "solos"]
+                          }
+                        },
+                        "required": ["displayName", "category"]
                       }
-                    },
-                    "required": ["name", "category"]
+                    }
                   }
-                }
+                },
+                "required": ["clears"]
               }
             },
-            "required": ["worldFirst", "individual"]
+            "required": ["global", "worldFirst", "individual"]
+          },
+          "raidUrlPaths": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RaidPath"
+            }
+          },
+          "raidStrings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "difficultyStrings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "checkpointNames": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
-          "raids",
-          "difficulties",
           "hashes",
           "listed",
           "sunset",
@@ -988,7 +1293,11 @@
           "master",
           "prestige",
           "reprisedChallengePairings",
-          "leaderboards"
+          "leaderboards",
+          "raidUrlPaths",
+          "raidStrings",
+          "difficultyStrings",
+          "checkpointNames"
         ],
         "additionalProperties": false
       },
@@ -1056,6 +1365,10 @@
       "PlayerActivitiesResponse": {
         "type": "object",
         "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
           "activities": {
             "type": "array",
             "items": {
@@ -1066,20 +1379,20 @@
                 {
                   "type": "object",
                   "properties": {
-                    "raid": {
+                    "meta": {
                       "type": "object",
                       "properties": {
-                        "raidId": {
+                        "raid": {
                           "$ref": "#/components/schemas/RaidEnum"
                         },
-                        "versionId": {
+                        "version": {
                           "$ref": "#/components/schemas/RaidVersionEnum"
                         }
                       },
-                      "required": ["raidId", "versionId"]
+                      "required": ["raid", "version"]
                     }
                   },
-                  "required": ["raid"],
+                  "required": ["meta"],
                   "additionalProperties": false
                 }
               ]
@@ -1091,7 +1404,7 @@
             "pattern": "^\\d+n?$"
           }
         },
-        "required": ["activities", "nextCursor"],
+        "required": ["membershipId", "activities", "nextCursor"],
         "additionalProperties": false
       },
       "PlayerBasicResponse": {
@@ -1131,7 +1444,7 @@
           },
           "lastSeen": {
             "type": "string",
-            "nullable": true
+            "format": "date-time"
           }
         },
         "required": [
@@ -1241,44 +1554,9 @@
             "required": ["global", "byRaid"]
           },
           "worldFirstEntries": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "rank": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "exclusiveMinimum": true
-                  },
-                  "instanceId": {
-                    "type": "string",
-                    "pattern": "^\\d+n?$"
-                  },
-                  "raidHash": {
-                    "type": "string",
-                    "pattern": "^\\d+n?$"
-                  },
-                  "dayOne": {
-                    "type": "boolean"
-                  },
-                  "contest": {
-                    "type": "boolean"
-                  },
-                  "weekOne": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "rank",
-                  "instanceId",
-                  "raidHash",
-                  "dayOne",
-                  "contest",
-                  "weekOne"
-                ]
-              }
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlayerProfileLeaderboardEntry"
             }
           }
         },
@@ -1289,90 +1567,7 @@
         "type": "object",
         "properties": {
           "query": {
-            "type": "object",
-            "properties": {
-              "membershipId": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "pattern": "^\\d+n?$"
-                  },
-                  {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "pattern": "^\\d+n?$"
-                    }
-                  }
-                ]
-              },
-              "minPlayers": {
-                "type": "integer",
-                "nullable": true,
-                "minimum": 0
-              },
-              "maxPlayers": {
-                "type": "integer",
-                "nullable": true,
-                "minimum": 0
-              },
-              "minDate": {
-                "type": "string",
-                "nullable": true
-              },
-              "maxDate": {
-                "type": "string",
-                "nullable": true
-              },
-              "minSeason": {
-                "type": "integer",
-                "nullable": true,
-                "minimum": 0
-              },
-              "maxSeason": {
-                "type": "integer",
-                "nullable": true,
-                "minimum": 0
-              },
-              "fresh": {
-                "type": "string",
-                "nullable": true
-              },
-              "completed": {
-                "type": "string",
-                "nullable": true
-              },
-              "flawless": {
-                "type": "string",
-                "nullable": true
-              },
-              "raid": {
-                "$ref": "#/components/schemas/RaidEnum"
-              },
-              "platformType": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true
-              },
-              "reversed": {
-                "type": "boolean",
-                "nullable": true,
-                "default": false
-              },
-              "count": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 25
-              },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
-              }
-            },
-            "required": ["membershipId"]
+            "$ref": "#/components/schemas/ActivitySearchBody"
           },
           "results": {
             "type": "array",
@@ -1392,6 +1587,24 @@
           {
             "type": "object",
             "properties": {
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "raid": {
+                    "$ref": "#/components/schemas/RaidEnum"
+                  },
+                  "raidName": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "$ref": "#/components/schemas/RaidVersionEnum"
+                  },
+                  "versionName": {
+                    "type": "string"
+                  }
+                },
+                "required": ["raid", "raidName", "version", "versionName"]
+              },
               "leaderboardEntries": {
                 "type": "object",
                 "additionalProperties": {
@@ -1399,32 +1612,91 @@
                 }
               },
               "players": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "finishedRaid": {
-                      "type": "boolean"
-                    },
-                    "creditedSherpas": {
-                      "type": "number"
-                    },
-                    "isFirstClear": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "finishedRaid",
-                    "creditedSherpas",
-                    "isFirstClear"
-                  ]
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PlayerWithActivityData"
                 }
               }
             },
-            "required": ["leaderboardEntries", "players"],
+            "required": ["meta", "leaderboardEntries", "players"],
             "additionalProperties": false
           }
         ]
+      },
+      "LeaderboardSearchResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["individual"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["worldfirst"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["global"]
+                  }
+                ]
+              },
+              "category": {
+                "type": "string"
+              },
+              "raid": {
+                "$ref": "#/components/schemas/RaidEnum"
+              },
+              "membershipId": {
+                "type": "string",
+                "pattern": "^\\d+n?$"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 5,
+                "exclusiveMinimum": true,
+                "maximum": 100,
+                "default": 25
+              }
+            },
+            "required": ["type", "category", "membershipId"],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                },
+                {
+                  "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
+                }
+              ]
+            }
+          }
+        },
+        "required": ["params", "page", "rank", "position", "entries"],
+        "additionalProperties": false
       },
       "LeaderboardGlobalResponse": {
         "type": "object",
@@ -1434,7 +1706,12 @@
             "properties": {
               "category": {
                 "type": "string",
-                "enum": ["clears", "sherpas", "fresh", "speed"]
+                "enum": [
+                  "total-clears",
+                  "sherpas",
+                  "full-clears",
+                  "cumulative-speedrun"
+                ]
               },
               "count": {
                 "type": "integer",
@@ -1491,7 +1768,8 @@
             "additionalProperties": false
           },
           "date": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "entries": {
             "type": "array",
@@ -1514,7 +1792,7 @@
               },
               "category": {
                 "type": "string",
-                "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
+                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
               },
               "count": {
                 "type": "integer",
@@ -1576,10 +1854,12 @@
                   "pattern": "^\\d+n?$"
                 },
                 "dateStarted": {
-                  "type": "string"
+                  "type": "string",
+                  "format": "date-time"
                 },
                 "dateCompleted": {
-                  "type": "string"
+                  "type": "string",
+                  "format": "date-time"
                 },
                 "duration": {
                   "type": "integer",
@@ -1852,19 +2132,75 @@
         }
       },
       "AdminQueryResponse": {
-        "type": "array",
-        "items": {
-          "nullable": true
-        }
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["SELECT"]
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            },
+            "required": ["type", "data"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["HIGH COST"]
+              },
+              "data": {
+                "nullable": true
+              },
+              "cost": {
+                "type": "number"
+              },
+              "estimatedDuration": {
+                "type": "number"
+              }
+            },
+            "required": ["type", "data", "cost", "estimatedDuration"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["EXPLAIN"]
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["type", "data"]
+          }
+        ]
       },
       "AuthorizeResponse": {
         "type": "object",
         "properties": {
-          "token": {
+          "value": {
             "type": "string"
+          },
+          "expires": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "required": ["token"]
+        "required": ["value", "expires"]
       }
     },
     "parameters": {}
@@ -2132,164 +2468,16 @@
       }
     },
     "/activity/search": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^\\d+n?$"
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "pattern": "^\\d+n?$"
-                  }
-                }
-              ]
-            },
-            "required": true,
-            "name": "membershipId",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "minPlayers",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "maxPlayers",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "minDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "maxDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "minSeason",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "nullable": true,
-              "minimum": 0
-            },
-            "required": false,
-            "name": "maxSeason",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "fresh",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "completed",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "required": false,
-            "name": "flawless",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "$ref": "#/components/schemas/RaidEnum"
-            },
-            "required": false,
-            "name": "raid",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
-            },
-            "required": false,
-            "name": "platformType",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "boolean",
-              "nullable": true,
-              "default": false
-            },
-            "required": false,
-            "name": "reversed",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 25
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivitySearchBody"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Success",
@@ -2306,7 +2494,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "$ref": "#/components/schemas/BodyValidationError"
                 }
               }
             }
@@ -2369,13 +2557,242 @@
         }
       }
     },
+    "/leaderboard/search": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": ["worldfirst"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["individual"]
+                },
+                {
+                  "type": "string",
+                  "enum": ["global"]
+                }
+              ]
+            },
+            "required": true,
+            "name": "type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": true,
+            "name": "membershipId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 5,
+              "exclusiveMinimum": true,
+              "maximum": 100,
+              "default": 25
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": ["normal", "prestige", "challenge", "master"]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "fresh",
+                    "total",
+                    "sherpas",
+                    "trios",
+                    "duos",
+                    "solos"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "total-clears",
+                    "sherpas",
+                    "full-clears",
+                    "cumulative-speedrun"
+                  ]
+                }
+              ]
+            },
+            "required": true,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "required": false,
+            "name": "raid",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LeaderboardNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "params": {
+                          "type": "object",
+                          "properties": {
+                            "membershipId": {
+                              "type": "string",
+                              "pattern": "^\\d+n?$"
+                            },
+                            "count": {
+                              "type": "integer",
+                              "minimum": 5,
+                              "exclusiveMinimum": true,
+                              "maximum": 100,
+                              "default": 25
+                            },
+                            "type": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": ["individual"]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": ["worldfirst"]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": ["global"]
+                                }
+                              ]
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "raid": {
+                              "$ref": "#/components/schemas/RaidEnum"
+                            }
+                          },
+                          "required": ["membershipId", "type", "category"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["notFound", "params"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "notFound": {
+                          "type": "boolean",
+                          "enum": [true]
+                        },
+                        "params": {
+                          "type": "object",
+                          "properties": {
+                            "membershipId": {
+                              "type": "string",
+                              "pattern": "^\\d+n?$"
+                            },
+                            "count": {
+                              "type": "integer",
+                              "minimum": 5,
+                              "exclusiveMinimum": true,
+                              "maximum": 100,
+                              "default": 25
+                            },
+                            "type": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": ["individual"]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": ["worldfirst"]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": ["global"]
+                                }
+                              ]
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "raid": {
+                              "$ref": "#/components/schemas/RaidEnum"
+                            }
+                          },
+                          "required": ["membershipId", "type", "category"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["notFound", "params"],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/leaderboard/global/{category}": {
       "get": {
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "enum": ["clears", "sherpas", "fresh", "speed"]
+              "enum": [
+                "total-clears",
+                "sherpas",
+                "full-clears",
+                "cumulative-speedrun"
+              ]
             },
             "required": true,
             "name": "category",
@@ -2578,7 +2995,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["fresh", "clears", "sherpas", "trios", "duos", "solos"]
+              "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
             },
             "required": true,
             "name": "category",
@@ -2790,9 +3207,17 @@
                 "properties": {
                   "query": {
                     "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["SELECT", "EXPLAIN"]
+                  },
+                  "ignoreCost": {
+                    "type": "boolean",
+                    "default": false
                   }
                 },
-                "required": ["query"]
+                "required": ["query", "type"]
               }
             }
           }
@@ -2814,6 +3239,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "AdminQuerySyntaxError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminQuerySyntaxError"
                 }
               }
             }

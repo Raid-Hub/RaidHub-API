@@ -41,7 +41,7 @@ describe("leaderboard search 200", () => {
             page: 7,
             membershipId: "4611686018488107374",
             type: "global",
-            category: "speed"
+            category: "cumulative-speedrun"
         }))
 
     test("world first crota challenge", () =>
@@ -74,6 +74,15 @@ describe("leaderboard search 404", () => {
             raid: 1
         }))
 
+    test("individual missing raid", () =>
+        t({
+            count: 50,
+            page: 1,
+            membershipId: "4611686018488107374",
+            type: "individual",
+            category: "sherpas"
+        }))
+
     test("worldfirst vog normal", () =>
         t({
             count: 50,
@@ -82,6 +91,14 @@ describe("leaderboard search 404", () => {
             category: "normal",
             raid: 9,
             page: 3
+        }))
+
+    test("worldfirst missing raid", () =>
+        t({
+            page: 3,
+            membershipId: "4611686018488107374",
+            type: "worldfirst",
+            category: "normal"
         }))
 
     test("global sherpas", () =>
@@ -98,7 +115,7 @@ describe("leaderboard search 404", () => {
             count: 50,
             membershipId: "3611686018488107374",
             type: "global",
-            category: "speed"
+            category: "cumulative-speedrun"
         }))
 
     test("world first master leviathan", async () => {

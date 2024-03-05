@@ -1,7 +1,13 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { cacheControl } from "../../middlewares/cache-control"
-import { ErrorCode, zActivityExtended } from "../../schema/common"
+import {
+    ErrorCode,
+    zActivityExtended,
+    zPlayerWithActivityData,
+    zRaidEnum,
+    zRaidVersionEnum
+} from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
@@ -32,14 +38,14 @@ export const activityRootRoute = new RaidHubRoute({
             statusCode: 200,
             schema: zActivityExtended
                 .extend({
+                    meta: z.object({
+                        raid: zRaidEnum,
+                        raidName: z.string(),
+                        version: zRaidVersionEnum,
+                        versionName: z.string()
+                    }),
                     leaderboardEntries: z.record(z.number()),
-                    players: z.record(
-                        z.object({
-                            finishedRaid: z.boolean(),
-                            creditedSherpas: z.number(),
-                            isFirstClear: z.boolean()
-                        })
-                    )
+                    players: z.array(zPlayerWithActivityData)
                 })
                 .strict()
         },
@@ -64,16 +70,32 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         include: {
             raidDefinition: {
                 select: {
-                    raidId: true
+                    raid: true,
+                    version: true
                 }
             },
             playerActivity: {
-                select: {
-                    finishedRaid: true,
-                    membershipId: true,
-                    sherpas: true,
-                    isFirstClear: true
-                }
+                include: {
+                    player: {
+                        select: {
+                            membershipId: true,
+                            membershipType: true,
+                            displayName: true,
+                            bungieGlobalDisplayName: true,
+                            bungieGlobalDisplayNameCode: true,
+                            iconPath: true,
+                            lastSeen: true
+                        }
+                    }
+                },
+                orderBy: [
+                    {
+                        finishedRaid: "desc"
+                    },
+                    {
+                        kills: "desc"
+                    }
+                ]
             },
             activityLeaderboardEntry: {
                 select: {
@@ -92,9 +114,9 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
 
     const { activityLeaderboardEntry, playerActivity, raidDefinition, ...activity } = result
 
-    const dayOne = isDayOne(raidDefinition.raidId, activity.dateCompleted)
-    const contest = isContest(raidDefinition.raidId, activity.dateStarted)
-    const weekOne = isWeekOne(raidDefinition.raidId, activity.dateCompleted)
+    const dayOne = isDayOne(raidDefinition.raid.id, activity.dateCompleted)
+    const contest = isContest(raidDefinition.raid.id, activity.dateStarted)
+    const weekOne = isWeekOne(raidDefinition.raid.id, activity.dateCompleted)
 
     return {
         ...activity,
@@ -104,15 +126,16 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
         dayOne,
         contest,
         weekOne,
-        players: Object.fromEntries(
-            playerActivity.map(pa => [
-                pa.membershipId,
-                {
-                    finishedRaid: pa.finishedRaid,
-                    creditedSherpas: pa.sherpas,
-                    isFirstClear: pa.isFirstClear
-                }
-            ])
-        )
+        meta: {
+            raid: raidDefinition.raid.id,
+            raidName: raidDefinition.raid.name,
+            version: raidDefinition.version.id,
+            versionName: raidDefinition.version.name
+        },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        players: playerActivity.map(({ player, instanceId, membershipId, ...data }) => ({
+            ...player,
+            data
+        }))
     }
 }

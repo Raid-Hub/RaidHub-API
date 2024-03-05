@@ -20,7 +20,7 @@ export const leaderboardRaidWorldfirstRoute = new RaidHubRoute({
             raidId: UrlPathsToRaid[req.params.raid],
             page: req.query.page,
             count: req.query.count,
-            type: WorldFirstBoardsMap[req.params.category]
+            type: WorldFirstBoardsMap.find(([category]) => category === req.params.category)![1]
         })
 
         if (!leaderboard) {
