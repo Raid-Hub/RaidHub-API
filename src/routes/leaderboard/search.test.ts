@@ -41,7 +41,7 @@ describe("leaderboard search 200", () => {
             page: 7,
             membershipId: "4611686018488107374",
             type: "global",
-            category: "speed"
+            category: "cumulative-speedrun"
         }))
 
     test("world first crota challenge", () =>
@@ -98,7 +98,7 @@ describe("leaderboard search 404", () => {
             count: 50,
             membershipId: "3611686018488107374",
             type: "global",
-            category: "speed"
+            category: "cumulative-speedrun"
         }))
 
     test("world first master leviathan", async () => {

@@ -43,7 +43,6 @@ export const adminQueryRoute = new RaidHubRoute({
             const costString = explained[0]["QUERY PLAN"]
                 .split(" ")
                 .find(s => s.startsWith("(cost="))!
-            console.log(costString)
             const minCostString = costString.substring(
                 costString.indexOf("=") + 1,
                 costString.indexOf("..")

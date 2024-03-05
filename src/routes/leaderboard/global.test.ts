@@ -12,20 +12,20 @@ describe("leaderboard global 200", () => {
             count: 25
         }))
 
-    test("clears", () =>
-        t("clears", {
+    test("total-clears", () =>
+        t("total-clears", {
             page: 23,
             count: 77
         }))
 
-    test("fresh", () =>
-        t("fresh", {
+    test("full-clears", () =>
+        t("full-clears", {
             page: 4,
             count: 45
         }))
 
-    test("speed", () =>
-        t("speed", {
+    test("cumulative-speedrun", () =>
+        t("cumulative-speedrun", {
             page: 5,
             count: 45
         }))

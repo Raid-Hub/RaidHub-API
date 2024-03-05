@@ -259,7 +259,7 @@ describe("raidhub route unhandled error", () => {
         const res = await request(app).get("/test/fail").query({ fail: "prisma" })
 
         expect(res.body.error).toMatchObject({
-            type: "PrismaClientKnownRequestError",
+            type: "InternalServerError",
             at: "prisma.player.findUnique()"
         })
     })

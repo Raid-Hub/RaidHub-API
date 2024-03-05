@@ -1,21 +1,22 @@
 import { adminQueryRoute } from "./query"
 
 describe("admin query 200", () => {
-    const t = async (query: string) => {
-        const result = await adminQueryRoute.$mock({ body: { query } })
+    const t = async (query: string, type: string) => {
+        const result = await adminQueryRoute.$mock({ body: { query, type } })
         expect(result.type).toBe("ok")
     }
 
-    test("SELECT 1", () => t("SELECT 1"))
+    test("SELECT 1", () => t("SELECT 1", "SELECT"))
 
-    test("EXPLAIN", () => t("EXPLAIN SELECT * FROM activity;"))
+    test("EXPLAIN", () => t("SELECT * FROM activity;", "EXPLAIN"))
 
-    test("SELECT * ", () => t("SELECT * FROM player_activity LIMIT 10;"))
+    test("SELECT * ", () => t("SELECT * FROM player_activity LIMIT 10;", "SELECT"))
 
     test(
         "Complex",
         () =>
-            t(`
+            t(
+                `
     SELECT 
         DENSE_RANK() OVER (ORDER BY date_completed ASC) AS rank,
         players_concatenated[1] AS player1,
@@ -41,7 +42,9 @@ describe("admin query 200", () => {
     ) AS subquery
     ORDER BY 
         date_completed ASC
-    LIMIT 3;`),
+    LIMIT 3;`,
+                "SELECT"
+            ),
         30000
     )
 })

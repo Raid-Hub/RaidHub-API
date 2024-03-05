@@ -76,7 +76,17 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
             },
             playerActivity: {
                 include: {
-                    player: true
+                    player: {
+                        select: {
+                            membershipId: true,
+                            membershipType: true,
+                            displayName: true,
+                            bungieGlobalDisplayName: true,
+                            bungieGlobalDisplayNameCode: true,
+                            iconPath: true,
+                            lastSeen: true
+                        }
+                    }
                 },
                 orderBy: [
                     {

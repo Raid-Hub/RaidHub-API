@@ -97,7 +97,7 @@ export const leaderboardSearchRoute = new RaidHubRoute({
 
             case "worldfirst":
                 const wfCategory = z.enum(WorldFirstBoards).parse(req.query.category)
-                console.log({ wfCategory })
+
                 if (!req.query.raid) {
                     return fail(
                         { notFound: true, params: req.query },
