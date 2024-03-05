@@ -63,15 +63,13 @@ export const adminQueryRoute = new RaidHubRoute({
             const rows = await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(wrappedQuery)
 
             return ok({ data: rows, type: "SELECT" as const })
-        } catch (e) {
-            if (e instanceof PrismaClientKnownRequestError && e.code.startsWith("P2")) {
-                return fail(
-                    { name: e.name, code: e.code, message: e.meta?.message },
-                    ErrorCode.AdminQuerySyntaxError,
-                    "Query syntax error"
-                )
-            }
-            throw e
+        } catch (err) {
+            const e = err as PrismaClientKnownRequestError
+            return fail(
+                { name: e.name, code: e.code, message: e.meta?.message },
+                ErrorCode.AdminQuerySyntaxError,
+                "Query syntax error"
+            )
         }
     },
     response: {

@@ -1,9 +1,10 @@
 import { adminQueryRoute } from "./query"
 
 describe("admin query 200", () => {
-    const t = async (query: string, type: string) => {
-        const result = await adminQueryRoute.$mock({ body: { query, type } })
+    const t = async (query: string, type: string, ignoreCost?: boolean) => {
+        const result = await adminQueryRoute.$mock({ body: { query, type, ignoreCost } })
         expect(result.type).toBe("ok")
+        return result
     }
 
     test("SELECT 1", () => t("SELECT 1", "SELECT"))
@@ -11,6 +12,9 @@ describe("admin query 200", () => {
     test("EXPLAIN", () => t("SELECT * FROM activity;", "EXPLAIN"))
 
     test("SELECT * ", () => t("SELECT * FROM player_activity LIMIT 10;", "SELECT"))
+
+    test("SELECT with ignore cost ", () =>
+        t("SELECT * FROM player_activity LIMIT 100000;", "SELECT", true))
 
     test(
         "Complex",
@@ -49,16 +53,18 @@ describe("admin query 200", () => {
     )
 })
 
-describe("admin query 500", () => {
-    const t = (query: string) => () => adminQueryRoute.$mock({ body: { query } })
+describe("admin query syntax error", () => {
+    const t = async (query: string, type: string, ignoreCost?: boolean) => {
+        const result = await adminQueryRoute.$mock({ body: { query, type, ignoreCost } })
+        expect(result.type).toBe("err")
+        return result
+    }
 
-    test("Bad table", () => {
-        const f = t("SELECT * from fasdhfahfuiasdf")
-        expect(f).rejects.toThrow()
-    })
+    test("Bad table", () => t("SELECT * from fasdhfahfuiasdf", "SELECT"))
 
-    test("Bad syntax", () => {
-        const f = t("SELECT * FROM activity LIMIT 10 WHERE 1 = 1;")
-        expect(f).rejects.toThrow()
-    })
+    test("Bad syntax", () => t("SELECT * FROM activity LIMIT 10 WHERE 1 = 1;", "EXPLAIN"))
+
+    test("Bad keywords", () => t("SELECTFRO FROM abc;", "SELECT"))
+
+    test("Bad keywords", () => t("", "SELECT"))
 })

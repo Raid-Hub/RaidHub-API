@@ -204,8 +204,7 @@ async function listWFLeaderboards() {
         category: WorldFirstBoardsMap.find(([, type]) => type === b.type)![0],
         displayName:
             b.type === "Challenge"
-                ? ReprisedRaidDifficultyPairings.find(([raid]) => raid === b.raidId)?.[2] ??
-                  "Challenge"
+                ? ReprisedRaidDifficultyPairings.find(([raid]) => raid === b.raidId)![2]
                 : b.type
     }))
 
