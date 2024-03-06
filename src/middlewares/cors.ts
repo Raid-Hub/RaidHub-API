@@ -1,7 +1,6 @@
 import { RequestHandler } from "express"
 import { zApiKeyError } from "../RaidHubErrors"
 import { ErrorCode } from "../schema/common"
-import { includedIn } from "../util/helpers"
 
 const isValidOrigin = (origin: string) => /^https:\/\/(?:[a-zA-Z0-9-]+\.)?raidhub\.io$/.test(origin)
 
@@ -23,10 +22,7 @@ export const cors: RequestHandler = (req, res, next) => {
         next()
     } else if (
         "x-api-key" in req.headers &&
-        includedIn(
-            [process.env.PRIVATE_KEY_PREVIEW, process.env.PRIVATE_KEY_PROD],
-            req.headers["x-api-key"]
-        )
+        process.env.API_KEY === req.headers["x-api-key"]
         // api key required
     ) {
         next()

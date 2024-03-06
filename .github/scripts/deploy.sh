@@ -3,4 +3,4 @@ git pull origin main
 source ~/.nvm/nvm.sh
 nvm use 20
 
-yarn restart
+yarn restart $1
