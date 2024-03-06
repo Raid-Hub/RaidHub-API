@@ -15,6 +15,9 @@ jobs:
                   exit 1
                   fi
 
+            - name: Checkout
+              uses: actions/checkout@v4
+
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
 
