@@ -1,4 +1,4 @@
-name: Deploy to VPS on Push
+name: Deploy Staging API
 
 on:
     workflow_dispatch:
@@ -27,4 +27,5 @@ jobs:
                   TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
               run: |
-                  ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io "cd ../RaidHub/Staging-API && ./.github/scripts/deploy.sh \"raidhub-api-staging\""
+                  branch_name="${{ github.ref }}"
+                  ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io "cd ../RaidHub/Staging-API && git fetch && git checkout $branch_name && ./.github/scripts/deploy.sh \"raidhub-api-staging\""
