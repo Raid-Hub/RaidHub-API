@@ -14,7 +14,7 @@ import {
 import * as dotenv from "dotenv"
 import { gzipSync } from "zlib"
 import { ZodError } from "zod"
-import { Difficulty, ListedRaids } from "../src/data/raids"
+import { Difficulty, Raid } from "../src/data/raids"
 import { zPgcrSchema } from "../src/schema/pgcr"
 
 // @ts-expect-error this is a hack to make BigInts work with JSON.stringify
@@ -65,19 +65,9 @@ async function seed() {
         .deleteMany({})
         .then(c => console.log("Deleted", c.count, "entries"))
     await Promise.all(
-        ListedRaids.map(async raid => {
-            const types: [WorldFirstLeaderboardType, Difficulty[]][] = [
-                [WorldFirstLeaderboardType.Normal, [Difficulty.NORMAL]],
-                [WorldFirstLeaderboardType.Prestige, [Difficulty.PRESTIGE]],
-                [
-                    WorldFirstLeaderboardType.Challenge,
-                    [Difficulty.CHALLENGE_VOG, Difficulty.CHALLENGE_KF, Difficulty.CHALLENGE_CROTA]
-                ],
-                [WorldFirstLeaderboardType.Master, [Difficulty.MASTER]]
-            ]
-
-            await Promise.all(
-                types.map(async ([type, difficulty]) => {
+        getLeaderboards().map(({ raid, boards }) =>
+            Promise.all(
+                boards.map(async ({ type, difficulty, isWorldFirst }) => {
                     const entries = await prisma.activity.findMany({
                         select: {
                             instanceId: true,
@@ -93,9 +83,7 @@ async function seed() {
                             completed: true,
                             raidDefinition: {
                                 raidId: raid,
-                                versionId: {
-                                    in: difficulty
-                                }
+                                versionId: difficulty
                             }
                         },
                         orderBy: {
@@ -108,7 +96,7 @@ async function seed() {
                         return
                     }
 
-                    // temporary way to determine the date when the race started, not correct for all races (.e. crown)
+                    // temporary way to determine the date when the race started, not correct for all races (i.e. crown)
                     const date = entries[0].dateStarted
                     date.setUTCHours(date.getUTCHours() - 17)
                     date.setUTCHours(17, 0, 0)
@@ -117,6 +105,7 @@ async function seed() {
                         .create({
                             data: {
                                 id: `${entries[0].raidDefinition.raid.name}-${entries[0].raidDefinition.version.name}`,
+                                isWorldFirst,
                                 date: date,
                                 raid: {
                                     connect: {
@@ -142,16 +131,22 @@ async function seed() {
                         .then(r => console.log(`Seeded ${r.raid.name} ${type}`))
                 })
             )
-        })
+        )
     )
 
-    await prisma.$executeRaw`REFRESH MATERIALIZED VIEW individual_leaderboard WITH DATA`.then(() =>
-        console.log("Updated Individual Leaderboards")
-    )
+    await Promise.all([
+        prisma.$executeRaw`REFRESH MATERIALIZED VIEW individual_leaderboard WITH DATA`.then(() =>
+            console.log("Updated Individual Leaderboards")
+        ),
 
-    await prisma.$executeRaw`REFRESH MATERIALIZED VIEW global_leaderboard WITH DATA`.then(() =>
-        console.log("Updated Global Leaderboards")
-    )
+        prisma.$executeRaw`REFRESH MATERIALIZED VIEW global_leaderboard WITH DATA`.then(() =>
+            console.log("Updated Global Leaderboards")
+        ),
+
+        prisma.$executeRaw`REFRESH MATERIALIZED VIEW world_first_player_rankings WITH DATA`.then(
+            () => console.log("Updated World First Player Rankings")
+        )
+    ])
 }
 
 async function seedPlayers(names: string[]) {
@@ -541,4 +536,256 @@ function isFresh(pgcr: DestinyPostGameCarnageReportData): boolean | null {
     } else {
         return pgcr.activityWasStartedFromBeginning || (start < hauntedStart ? null : false)
     }
+}
+
+function getLeaderboards(): {
+    raid: Raid
+    boards: {
+        type: WorldFirstLeaderboardType
+        difficulty: Difficulty
+        isWorldFirst: boolean
+    }[]
+}[] {
+    return [
+        {
+            raid: Raid.LEVIATHAN,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.LEVIATHAN,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Prestige,
+                    difficulty: Difficulty.PRESTIGE,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.EATER_OF_WORLDS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.EATER_OF_WORLDS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Prestige,
+                    difficulty: Difficulty.PRESTIGE,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.SPIRE_OF_STARS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.SPIRE_OF_STARS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Prestige,
+                    difficulty: Difficulty.PRESTIGE,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.LAST_WISH,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.SCOURGE_OF_THE_PAST,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.CROWN_OF_SORROW,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.GARDEN_OF_SALVATION,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.DEEP_STONE_CRYPT,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.VAULT_OF_GLASS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.VAULT_OF_GLASS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Challenge,
+                    difficulty: Difficulty.CHALLENGE_VOG,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.VAULT_OF_GLASS,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: Difficulty.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.VOW_OF_THE_DISCIPLE,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.VOW_OF_THE_DISCIPLE,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: Difficulty.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.KINGS_FALL,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.KINGS_FALL,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Challenge,
+                    difficulty: Difficulty.CHALLENGE_VOG,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.KINGS_FALL,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: Difficulty.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.ROOT_OF_NIGHTMARES,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.ROOT_OF_NIGHTMARES,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: Difficulty.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.CROTAS_END,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: Difficulty.NORMAL,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Raid.CROTAS_END,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Challenge,
+                    difficulty: Difficulty.CHALLENGE_VOG,
+                    isWorldFirst: true
+                }
+            ]
+        },
+        {
+            raid: Raid.CROTAS_END,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: Difficulty.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        }
+    ]
 }

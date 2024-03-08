@@ -102,12 +102,13 @@ enum WorldFirstLeaderboardType {
 }
 
 model ActivityLeaderboard {
-  id      String                     @id
-  raidId  Int                        @map("raid_id")
-  date    DateTime                   @map("date")
-  type    WorldFirstLeaderboardType  @map("type")
-  raid    Raid                       @relation("leaderboards", fields: [raidId], references: [id], onDelete: Restrict)
-  entries ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
+  id           String                     @id
+  raidId       Int                        @map("raid_id")
+  date         DateTime                   @map("date")
+  isWorldFirst Boolean                    @map("is_world_first")
+  type         WorldFirstLeaderboardType  @map("type")
+  raid         Raid                       @relation("leaderboards", fields: [raidId], references: [id], onDelete: Restrict)
+  entries      ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
 
   @@unique([raidId, type], map: "leaderboard_raid_hash_type_key")
   @@map("leaderboard")
