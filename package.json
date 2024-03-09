@@ -16,14 +16,16 @@
     "db:reset": "prisma migrate reset --force",
     "db:migration": "prisma migrate dev --create-only",
     "test": "jest",
-    "lint": "eslint . --ext .ts,.json",
     "types": "tsc --noEmit",
-    "format": "prettier --write '**/*.{ts,json}'",
+    "lint": "eslint . --ext .ts,.json",
+    "format": "prettier '**/*.{ts,json}'",
     "docs": "ts-node open-api/generate.ts",
     "build": "tsc --build tsconfig.build.json",
-    "start": "pm2 start ./dist/src/index.js --name \"raidhub-api\"  --instances 8 --time",
+    "start": "pm2 start ./dist/src/index.js --name \"raidhub-api\" --instances 8 --time",
     "stop": "pm2 stop raidhub-api",
-    "restart": "yarn && prisma generate && yarn build && pm2 restart \"raidhub-api\" --update-env"
+    "start:staging": "pm2 start ./dist/src/index.js --name \"raidhub-api-staging\" --instances 2 --time",
+    "stop:staging": "pm2 stop raidhub-api-staging",
+    "restart": "yarn && prisma generate && yarn build && pm2 restart --update-env"
   },
   "lint-staged": {
     "*.{ts,json}": [
