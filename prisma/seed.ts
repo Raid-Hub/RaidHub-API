@@ -554,12 +554,7 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.LEVIATHAN,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Prestige,
                     difficulty: Difficulty.PRESTIGE,
@@ -574,12 +569,7 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.EATER_OF_WORLDS,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Prestige,
                     difficulty: Difficulty.PRESTIGE,
@@ -594,12 +584,7 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.SPIRE_OF_STARS,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Prestige,
                     difficulty: Difficulty.PRESTIGE,
@@ -664,22 +649,12 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: false
-                }
-            ]
-        },
-        {
-            raid: Raid.VAULT_OF_GLASS,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
                     difficulty: Difficulty.CHALLENGE_VOG,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.VAULT_OF_GLASS,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Master,
                     difficulty: Difficulty.MASTER,
@@ -694,12 +669,7 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.VOW_OF_THE_DISCIPLE,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Master,
                     difficulty: Difficulty.MASTER,
@@ -714,22 +684,12 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: false
-                }
-            ]
-        },
-        {
-            raid: Raid.KINGS_FALL,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
                     difficulty: Difficulty.CHALLENGE_VOG,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.KINGS_FALL,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Master,
                     difficulty: Difficulty.MASTER,
@@ -744,12 +704,7 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.ROOT_OF_NIGHTMARES,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Master,
                     difficulty: Difficulty.MASTER,
@@ -764,22 +719,12 @@ function getLeaderboards(): {
                     type: WorldFirstLeaderboardType.Normal,
                     difficulty: Difficulty.NORMAL,
                     isWorldFirst: false
-                }
-            ]
-        },
-        {
-            raid: Raid.CROTAS_END,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
                     difficulty: Difficulty.CHALLENGE_VOG,
                     isWorldFirst: true
-                }
-            ]
-        },
-        {
-            raid: Raid.CROTAS_END,
-            boards: [
+                },
                 {
                     type: WorldFirstLeaderboardType.Master,
                     difficulty: Difficulty.MASTER,
