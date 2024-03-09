@@ -1,4 +1,4 @@
-name: Manually Deploy API
+name: Deploy Staging API
 
 on:
     workflow_dispatch:
@@ -7,14 +7,6 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Check if user is a repo admin
-              working-directory: ./
-              run: |
-                  if [[ $(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/collaborators/${{ github.actor }}/permission" | jq -r '.permission') != "admin" ]]; then
-                  echo "Only repo admins can run this action."
-                  exit 1
-                  fi
-
             - name: Checkout
               uses: actions/checkout@v4
 
@@ -31,4 +23,7 @@ jobs:
               env:
                   TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
-              run: ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io "cd ../RaidHub/RaidHub-API && ./deploy.sh"
+              run: |
+                  branch_ref="${{ github.ref }}"
+                  branch_name="${branch_ref#refs/heads/}"
+                  ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io "cd ../RaidHub/Staging-API && git fetch && git reset --hard origin/$branch_name && ./.github/scripts/deploy.sh \"raidhub-api-staging\""
