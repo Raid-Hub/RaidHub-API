@@ -66,3 +66,57 @@ CREATE UNIQUE INDEX idx_global_leaderboard_clears ON global_leaderboard (clears_
 CREATE UNIQUE INDEX idx_global_leaderboard_fresh_clears ON global_leaderboard (fresh_clears_position ASC);
 CREATE UNIQUE INDEX idx_global_leaderboard_sherpas ON global_leaderboard (sherpas_position ASC);
 CREATE UNIQUE INDEX idx_global_leaderboard_speed ON global_leaderboard (speed_position ASC);
+
+CREATE MATERIALIZED VIEW world_first_player_rankings AS 
+WITH tmp AS (
+    SELECT
+        p.membership_id,
+        al.raid_id,
+        ale.rank,
+        ROW_NUMBER() OVER (PARTITION BY p.membership_id, al.raid_id ORDER BY ale.rank ASC) AS placement_num
+    FROM
+        player p
+    JOIN
+        player_activity pa ON p.membership_id = pa.membership_id
+    JOIN
+        activity_leaderboard_entry ale ON pa.instance_id = ale.instance_id
+    JOIN
+        leaderboard al ON ale.leaderboard_id = al.id
+    WHERE
+        ale.rank <= 500 AND (
+            (al.raid_id = 1 AND al.type = 'Normal')
+            OR (al.raid_id = 2 AND al.type = 'Normal')
+            OR (al.raid_id = 3 AND al.type = 'Normal')
+            OR (al.raid_id = 4 AND al.type = 'Normal')
+            OR (al.raid_id = 5 AND al.type = 'Normal')
+            OR (al.raid_id = 6 AND al.type = 'Normal')
+            OR (al.raid_id = 7 AND al.type = 'Normal')
+            OR (al.raid_id = 8 AND al.type = 'Normal')
+            OR (al.raid_id = 9 AND al.type = 'Challenge')
+            OR (al.raid_id = 10 AND al.type = 'Normal')
+            OR (al.raid_id = 11 AND al.type = 'Challenge')
+            OR (al.raid_id = 12 AND al.type = 'Normal')
+            OR (al.raid_id = 13 AND al.type = 'Challenge')
+        )
+)
+SELECT
+    membership_id,
+    SUM(
+        CASE 
+            WHEN placement_num = 1 
+            THEN (1 / SQRT(rank)) * POWER(1.25, raid_id - 1) 
+            ELSE  0 
+        END
+    ) AS score,
+    RANK() OVER (ORDER BY SUM(
+        CASE 
+            WHEN placement_num = 1 
+            THEN (1 / SQRT(rank)) * POWER(1.25, raid_id - 1) 
+            ELSE  0 
+        END
+    ) DESC) AS rank
+FROM tmp
+GROUP BY membership_id;
+
+CREATE UNIQUE INDEX idx_world_first_player_ranking_membership_id ON world_first_player_rankings (membership_id)
+CREATE INDEX idx_world_first_player_ranking_rank ON world_first_player_rankings (rank ASC);

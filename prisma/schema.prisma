@@ -228,3 +228,12 @@ view GlobalLeaderboard {
 
   @@map("global_leaderboard")
 }
+
+view WorldFirstPlayerRanking {
+  membershipId Int   @unique @map("membership_id")
+  score        Float
+  rank         Int
+
+  @@index([rank(Sort: Asc)], map: "idx_world_first_player_ranking_rank")
+  @@map("world_first_player_ranking")
+}
