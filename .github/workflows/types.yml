@@ -9,7 +9,7 @@ on:
         branches:
             - main
 jobs:
-    types:
+    tsc:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout

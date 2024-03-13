@@ -9,7 +9,7 @@ on:
         branches:
             - main
 jobs:
-    lint:
+    diff:
         runs-on: ubuntu-latest
         env:
             POSTGRES_DB: raidhub
@@ -27,7 +27,8 @@ jobs:
               run: docker-compose -f docker-compose.yml up -d
 
             - name: Calculate diff
-              run: yarn prisma migrate diff --exit-code \
-                  --shadow-database-url "postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public" \
-                  --from-schema-datamodel ./prisma/schema.prisma \
-                  --to-migrations ./prisma/migrations
+              run: |
+                  yarn prisma migrate diff --exit-code \
+                    --shadow-database-url "postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public" \
+                    --from-schema-datamodel ./prisma/schema.prisma \
+                    --to-migrations ./prisma/migrations
