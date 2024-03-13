@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    deploy:
+    start:
         runs-on: ubuntu-latest
         steps:
             - name: Check if user is a repo admin

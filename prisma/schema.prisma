@@ -105,7 +105,7 @@ model ActivityLeaderboard {
   id           String                     @id
   raidId       Int                        @map("raid_id")
   date         DateTime                   @map("date")
-  isWorldFirst Boolean                    @map("is_world_first")
+  isWorldFirst Boolean                    @default(false) @map("is_world_first")
   type         WorldFirstLeaderboardType  @map("type")
   raid         Raid                       @relation("leaderboards", fields: [raidId], references: [id], onDelete: Restrict)
   entries      ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
