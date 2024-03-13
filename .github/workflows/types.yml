@@ -5,12 +5,11 @@ concurrency:
     cancel-in-progress: true
 
 on:
-    push:
+    pull_request:
         branches:
-            - "*"
-            - "!main"
+            - main
 jobs:
-    types:
+    tsc:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout

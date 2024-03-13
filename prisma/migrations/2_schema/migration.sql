@@ -69,6 +69,7 @@ CREATE TABLE "leaderboard" (
     "id" TEXT NOT NULL,
     "raid_id" INTEGER NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
+    "is_world_first" BOOLEAN NOT NULL DEFAULT false,
     "type" "WorldFirstLeaderboardType" NOT NULL,
 
     CONSTRAINT "leaderboard_pkey" PRIMARY KEY ("id")
