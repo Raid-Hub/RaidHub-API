@@ -1,0 +1,42 @@
+name: Create migration file
+
+on:
+    push:
+        branches:
+            - "main"
+            - "ci"
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+        env:
+            POSTGRES_DB: raidhub
+            POSTGRES_USER: readonly
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install dependencies
+              run: yarn
+
+            - name: Connect to prod database
+              env:
+                  POSTGRES_PORT: 5433
+              run: yarn tunnel
+
+            - name: Spin up shadow database
+              env:
+                  POSTGRES_PORT: 5432
+              run: docker-compose -f docker-compose.yml up -d
+
+            - name: Calculate diff
+              run: yarn prisma migrate diff --script \
+                  --shadow-database-url "postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public" \
+                  --from-url postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5433/raidhub?schema=public \
+                  --to-migrations ./prisma/migrations > migration.sql
+
+            - name: Upload migration file
+              uses: actions/upload-artifact@v3
+              with:
+                  name: migration-sql
+                  path: migration.sql
