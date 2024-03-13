@@ -8,10 +8,6 @@ on:
 jobs:
     create:
         runs-on: ubuntu-latest
-        env:
-            POSTGRES_DB: raidhub
-            POSTGRES_USER: readonly
-            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -19,8 +15,14 @@ jobs:
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
 
+            - name: Load SSH Key
+              uses: shimataro/ssh-key-action@v2
+              with:
+                  key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+                  known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+
             - name: Install dependencies
-              run: yarn
+              run: yarn install
 
             - name: Connect to prod database
               env:
@@ -31,6 +33,9 @@ jobs:
 
             - name: Spin up shadow database
               env:
+                  POSTGRES_DB: raidhub
+                  POSTGRES_USER: readonly
+                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
                   POSTGRES_PORT: 5432
               run: docker-compose -f docker-compose.yml up -d
 

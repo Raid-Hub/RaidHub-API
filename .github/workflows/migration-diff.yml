@@ -11,11 +11,6 @@ on:
 jobs:
     diff:
         runs-on: ubuntu-latest
-        env:
-            POSTGRES_DB: raidhub
-            POSTGRES_PORT: 5432
-            POSTGRES_USER: readonly
-            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -24,7 +19,15 @@ jobs:
               run: yarn
 
             - name: Spin up shadow database
+              env:
+                  POSTGRES_DB: raidhub
+                  POSTGRES_PORT: 5432
+                  POSTGRES_USER: readonly
+                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
               run: docker-compose -f docker-compose.yml up -d
+
+            - name: Wait for database to initialize
+              run: sleep 15
 
             - name: Calculate diff
               run: |
