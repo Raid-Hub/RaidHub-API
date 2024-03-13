@@ -5,10 +5,9 @@ concurrency:
     cancel-in-progress: true
 
 on:
-    push:
+    pull_request:
         branches:
-            - "*"
-            - "!main"
+            - main
 jobs:
     types:
         runs-on: ubuntu-latest
