@@ -7,6 +7,18 @@ on:
 jobs:
     create:
         runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:13
+                env:
+                    POSTGRES_DB: raidhub
+                    POSTGRES_USER: username
+                    POSTGRES_PASSWORD: password
+                ports:
+                    - 5432:5432
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -30,18 +42,10 @@ jobs:
               run: |
                   ssh -N -L 5433:localhost:5432 -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io &
 
-            - name: Spin up shadow database
-              env:
-                  POSTGRES_DB: raidhub
-                  POSTGRES_USER: readonly
-                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
-                  POSTGRES_PORT: 5432
-              run: docker-compose -f docker-compose.yml up -d
-
             - name: Calculate diff
               run: |
                   yarn prisma migrate diff --script \
-                    --shadow-database-url "postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public" \
+                    --shadow-database-url "postgresql://username:password@localhost:5432/raidhub?schema=public" \
                     --from-url postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5433/raidhub?schema=public \
                     --to-migrations ./prisma/migrations > migration.sql
 
