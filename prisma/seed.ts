@@ -45,7 +45,6 @@ const bungieClient: BungieClientProtocol = {
 
 main()
     .catch(main)
-    .catch(main)
     .then(() => console.log("Seeding complete"))
     .then(() => process.exit(0))
 

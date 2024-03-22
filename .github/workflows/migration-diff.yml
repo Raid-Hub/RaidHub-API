@@ -11,6 +11,18 @@ on:
 jobs:
     diff:
         runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:13
+                env:
+                    POSTGRES_DB: raidhub
+                    POSTGRES_USER: username
+                    POSTGRES_PASSWORD: password
+                ports:
+                    - 5432:5432
+                options: --health-cmd "pg_isready -U username -d raidhub" --health-interval 10s --health-timeout 5s --health-retries 5
+
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -18,20 +30,9 @@ jobs:
             - name: Install dependencies
               run: yarn
 
-            - name: Spin up shadow database
-              env:
-                  POSTGRES_DB: raidhub
-                  POSTGRES_PORT: 5432
-                  POSTGRES_USER: readonly
-                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
-              run: docker-compose -f docker-compose.yml up -d
-
-            - name: Wait for database to initialize
-              run: sleep 15
-
             - name: Calculate diff
               run: |
                   yarn prisma migrate diff --exit-code \
-                    --shadow-database-url "postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public" \
+                    --shadow-database-url "postgresql://username:password@localhost:5432/raidhub?schema=public" \
                     --from-schema-datamodel ./prisma/schema.prisma \
                     --to-migrations ./prisma/migrations
