@@ -2,7 +2,7 @@ import compression from "compression"
 import dotenv from "dotenv"
 import express from "express"
 import path from "path"
-import { cors, options } from "./middlewares/cors"
+import { verifyApiKey } from "./middlewares/apiKeys"
 import { errorHandler } from "./middlewares/errorHandler"
 import { router } from "./routes"
 
@@ -43,13 +43,15 @@ app.use("*", (_, res, next) => {
 })
 
 // handle OPTIONS pre-flight requests before any other middleware
-app.options("*", options)
-
-// Apply CORS
-app.use(cors)
+app.options("*", (req, res, _) => {
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    res.header("Access-Control-Allow-Origin", (req.headers.origin || "*").toString())
+    res.header("Access-Control-Allow-Headers", "*")
+    res.sendStatus(204)
+})
 
 // parse incoming request body with json, apply the router, handle any uncaught errors
-app.use(express.json(), compression(), router.express, errorHandler)
+app.use(verifyApiKey, express.json(), compression(), router.express, errorHandler)
 
 // Start the server
 app.listen(port, () => {
