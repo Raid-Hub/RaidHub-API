@@ -20,7 +20,12 @@ const ApiKeys = (() => {
             .parse(JSON.parse(data))
         return Object.fromEntries(entries.map(entry => [entry.key, entry]))
     } catch (e) {
-        return {}
+        if (process.env.PROD) {
+            console.error("Failed to load API keys", e)
+            process.exit(1)
+        } else {
+            return {}
+        }
     }
 })()
 

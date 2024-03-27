@@ -15,11 +15,6 @@ BigInt.prototype.toJSON = function () {
 
 const port = Number(process.env.PORT || 8000)
 
-if (process.env.PROD && !process.env.API_KEY) {
-    console.error("Missing private API KEY")
-    process.exit(1)
-}
-
 const app = express()
 
 if (!process.env.PROD) {
