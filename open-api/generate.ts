@@ -30,10 +30,33 @@ const doc = new OpenApiGeneratorV3(registry.definitions).generateDocument({
     info: {
         title: "RaidHub API",
         description: "The Semi-public API for RaidHub",
-        version: "0.0.0"
+        version: "0.0.1",
+        contact: {
+            name: "RaidHub Admin",
+            email: "admin@raidhub.io"
+        }
     },
-    servers: [{ url: "https://api.raidhub.io" }]
+    servers: [{ url: "https://api.raidhub.io" }],
+    security: [
+        {
+            "API Key": []
+        }
+    ]
 })
+
+doc.components!.securitySchemes = {
+    "API Key": {
+        type: "apiKey",
+        name: "X-API-KEY",
+        in: "header"
+    },
+    "Administrator Token": {
+        type: "http",
+        name: "Authorization",
+        scheme: "bearer",
+        in: "header"
+    }
+}
 
 console.log("Writing OpenAPI docs...")
 writeFile("open-api/openapi.json", JSON.stringify(doc, null, 2), err => {

@@ -7,6 +7,7 @@ import { prisma } from "../../services/prisma"
 import { fail, ok } from "../../util/response"
 
 export const adminQueryRoute = new RaidHubRoute({
+    isAdministratorRoute: true,
     method: "post",
     body: z.object({
         query: z.string(),
