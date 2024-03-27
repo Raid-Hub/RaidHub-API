@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
 import { ZodObject, ZodType, ZodTypeAny, ZodUnknown } from "zod"
-import { zBodyValidationError, zPathValidationError, zQueryValidationError } from "./RaidHubErrors"
+import {
+    zApiKeyError,
+    zBodyValidationError,
+    zInsufficientPermissionsError,
+    zPathValidationError,
+    zQueryValidationError
+} from "./RaidHubErrors"
 import {
     IRaidHubRoute,
     RaidHubHandler,
@@ -41,6 +47,7 @@ export class RaidHubRoute<
     readonly paramsSchema: Params | null
     readonly querySchema: Query | null
     readonly bodySchema: Body | null
+    private readonly isAdministratorRoute: boolean = false
     private readonly middlewares: RequestHandler<
         z.infer<Params>,
         any,
@@ -71,6 +78,7 @@ export class RaidHubRoute<
         params?: Params
         query?: Query
         body?: Body
+        isAdministratorRoute?: boolean
         middlewares?: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>>[]
         handler: RaidHubHandler<
             Params,
@@ -102,6 +110,7 @@ export class RaidHubRoute<
         this.paramsSchema = args.params ?? null
         this.querySchema = args.query ?? null
         this.bodySchema = args.body ?? null
+        this.isAdministratorRoute = args.isAdministratorRoute ?? false
         this.middlewares = args.middlewares ?? []
         this.handler = args.handler
         this.responseSchema = args.response.success.schema
@@ -251,6 +260,8 @@ export class RaidHubRoute<
         const allResponses = [
             [this.successCode, "Success", this.responseSchema],
             ...this.errors,
+            [401, "Unauthorized", zApiKeyError],
+            this.isAdministratorRoute ? [403, "Forbidden", zInsufficientPermissionsError] : null,
             this.paramsSchema ? [404, "Not found", zPathValidationError] : null,
             this.querySchema ? [400, "Bad request", zQueryValidationError] : null,
             this.bodySchema ? [400, "Bad request", zBodyValidationError] : null
@@ -265,12 +276,21 @@ export class RaidHubRoute<
             }
         })
 
+        const security = this.isAdministratorRoute
+            ? [
+                  {
+                      "Administrator Token": []
+                  }
+              ]
+            : undefined
+
         return [
             {
                 path: "",
                 method: this.method,
                 description: this.description,
                 summary: this.summary,
+                security,
                 request: {
                     params: this.paramsSchema ?? undefined,
                     query: (this.querySchema as ZodObject<any>) ?? undefined,

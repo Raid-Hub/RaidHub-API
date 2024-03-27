@@ -3,11 +3,20 @@
   "info": {
     "title": "RaidHub API",
     "description": "The Semi-public API for RaidHub",
-    "version": "0.0.0"
+    "version": "0.0.1",
+    "contact": {
+      "name": "RaidHub Admin",
+      "email": "admin@raidhub.io"
+    }
   },
   "servers": [
     {
       "url": "https://api.raidhub.io"
+    }
+  ],
+  "security": [
+    {
+      "API Key": []
     }
   ],
   "components": {
@@ -2203,7 +2212,20 @@
         "required": ["value", "expires"]
       }
     },
-    "parameters": {}
+    "parameters": {},
+    "securitySchemes": {
+      "API Key": {
+        "type": "apiKey",
+        "name": "X-API-KEY",
+        "in": "header"
+      },
+      "Administrator Token": {
+        "type": "http",
+        "name": "Authorization",
+        "scheme": "bearer",
+        "in": "header"
+      }
+    }
   },
   "paths": {
     "/manifest": {
@@ -2215,6 +2237,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ManifestResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
@@ -2264,6 +2296,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
@@ -2326,6 +2368,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2381,6 +2433,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2432,6 +2494,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PlayerProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
@@ -2498,6 +2570,16 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
           }
         }
       }
@@ -2522,6 +2604,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ActivityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
@@ -2661,6 +2753,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
@@ -2843,6 +2945,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2917,6 +3029,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
@@ -3046,6 +3168,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -3129,6 +3261,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -3166,6 +3308,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -3199,6 +3351,11 @@
     },
     "/admin/query": {
       "post": {
+        "security": [
+          {
+            "Administrator Token": []
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3239,6 +3396,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsufficientPermissionsError"
                 }
               }
             }
@@ -3290,6 +3467,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }
