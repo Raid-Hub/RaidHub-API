@@ -2,6 +2,7 @@ node_modules/
 
 dist/
 
+api-keys.json
 .env
 
 raidhub-api-db
@@ -25,3 +26,4 @@ test.js
 
 /open-api/*.html
 coverage/*
+

@@ -15,6 +15,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "include": ["src/**/*.ts", "prisma/**/*.ts", "api-keys.json"],
   "exclude": ["scripts/*"]
 }

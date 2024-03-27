@@ -160,6 +160,7 @@
     "rules": {
       "no-unused-vars": "off",
       "no-case-declarations": "off",
+      "no-prototype-builtins": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
