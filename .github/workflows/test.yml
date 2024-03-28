@@ -16,6 +16,7 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v1
 
             - name: Download code coverage report
               uses: dawidd6/action-download-artifact@v3

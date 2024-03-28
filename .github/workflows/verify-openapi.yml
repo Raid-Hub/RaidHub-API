@@ -13,13 +13,16 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+
             - name: Install dependencies
-              run: yarn
+              run: bun install
 
             - name: Generate File
               run: |
                   cp ./open-api/openapi.json .
-                  yarn docs
+                  bun run docs
 
             - name: Verify File
               run: |
