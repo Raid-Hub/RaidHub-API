@@ -137,8 +137,8 @@
     },
     "extends": [
       "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:prettier/recommended"
+      "prettier",
+      "plugin:@typescript-eslint/recommended"
     ],
     "parserOptions": {
       "ecmaVersion": "latest",
