@@ -5,7 +5,7 @@
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
 
-    "types": ["bun-types"],
+    "types": ["bun-types", "jest"],
     "lib": ["ES6", "ESNext"],
 
     "strict": true,
