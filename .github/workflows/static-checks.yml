@@ -16,7 +16,9 @@ jobs:
             - uses: oven-sh/setup-bun@v1
 
             - name: Bun Install
-              run: bun install --frozen-lockfile
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
 
             - name: Types
               run: bun types
@@ -27,7 +29,9 @@ jobs:
             - uses: oven-sh/setup-bun@v1
 
             - name: Bun Install
-              run: bun install --frozen-lockfile
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
 
             - name: Lint
               run: bun lint
@@ -39,7 +43,9 @@ jobs:
             - uses: oven-sh/setup-bun@v1
 
             - name: Bun Install
-              run: bun install --frozen-lockfile
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
 
             - name: Generate File
               run: |

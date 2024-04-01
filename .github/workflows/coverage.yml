@@ -18,7 +18,9 @@ jobs:
             - uses: oven-sh/setup-bun@v1
 
             - name: Bun Install
-              run: bun install --frozen-lockfile
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
 
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
