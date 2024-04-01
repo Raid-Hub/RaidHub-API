@@ -27,6 +27,6 @@ jobs:
             - name: Verify File
               run: |
                   if ! diff -q ./open-api/openapi.json ./openapi.json; then
-                    echo "The openapi.json file is not up to date. Please run 'yarn docs' and commit the changes."
+                    echo "The openapi.json file is not up to date. Please run 'bun docs' and commit the changes."
                     exit 1
                   fi

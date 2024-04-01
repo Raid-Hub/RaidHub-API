@@ -1,4 +1,2 @@
-source ~/.nvm/nvm.sh
-nvm use 20
-
-yarn restart $1
+bun rebuild $1
+sudo systemctl restart $1

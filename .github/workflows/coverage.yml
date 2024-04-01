@@ -14,9 +14,11 @@ jobs:
     coverage:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
             - uses: oven-sh/setup-bun@v1
+
+            - name: Bun Install
+              run: bun install --frozen-lockfile
 
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
@@ -39,9 +41,7 @@ jobs:
                   ADMIN_CLIENT_SECRET: "secret-token"
                   JWT_SECRET: "jwt-secret"
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
-              run: |
-                  yarn && yarn prisma generate
-                  yarn test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false --testTimeout=30000
+              run: bun test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false --testTimeout=30000
               continue-on-error: true
 
             - name: Upload coverage reports
