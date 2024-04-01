@@ -4,21 +4,21 @@ export const prisma = new PrismaClient({
     log: process.env.PROD
         ? ["error"]
         : process.env.TS_JEST
-        ? []
-        : [
-              {
-                  level: "query",
-                  emit: "event"
-              },
-              {
-                  level: "warn",
-                  emit: "stdout"
-              },
-              {
-                  level: "error",
-                  emit: "stdout"
-              }
-          ]
+          ? []
+          : [
+                {
+                    level: "query",
+                    emit: "event"
+                },
+                {
+                    level: "warn",
+                    emit: "stdout"
+                },
+                {
+                    level: "error",
+                    emit: "stdout"
+                }
+            ]
 })
 
 if (!process.env.PROD && !process.env.TS_JEST) {

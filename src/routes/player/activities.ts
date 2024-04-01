@@ -178,10 +178,10 @@ async function getPlayerActivities({
         countFound === count + 1
             ? activities[countFound - 1].instanceId
             : countFound > 0
-            ? cursor
-                ? null
-                : activities[countFound - 1].instanceId
-            : null
+              ? cursor
+                  ? null
+                  : activities[countFound - 1].instanceId
+              : null
 
     return {
         membershipId,

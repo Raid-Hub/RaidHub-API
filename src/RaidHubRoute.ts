@@ -352,12 +352,12 @@ export class RaidHubRoute<
                 this.errors.length === 0
                     ? z.never()
                     : this.errors.length > 1
-                    ? z.union(
-                          this.errors.map(([_, type, schema]) =>
-                              schema.extend({ type: z.literal(type) })
-                          ) as unknown as readonly [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]
-                      )
-                    : this.errors[0][2].extend({ type: z.literal(this.errors[0][1]) })
+                      ? z.union(
+                            this.errors.map(([_, type, schema]) =>
+                                schema.extend({ type: z.literal(type) })
+                            ) as unknown as readonly [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]
+                        )
+                      : this.errors[0][2].extend({ type: z.literal(this.errors[0][1]) })
             return {
                 type: "err",
                 parsed: schema.parse(res.error)

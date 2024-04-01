@@ -47,7 +47,7 @@ jobs:
                   yarn prisma migrate diff --script \
                     --shadow-database-url "postgresql://username:password@localhost:5432/raidhub?schema=public" \
                     --from-url postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5433/raidhub?schema=public \
-                    --to-migrations ./prisma/migrations > migration.sql
+                    --to-schema-datamodel ./prisma/schema.prisma > migration.sql
 
             - name: Upload migration file
               uses: actions/upload-artifact@v3
