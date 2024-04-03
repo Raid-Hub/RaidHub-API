@@ -4,33 +4,7 @@
   "description": "",
   "license": "UNLICENSED",
   "main": "index.js",
-  "scripts": {
-    "prepare": "husky",
-    "generate": "prisma generate",
-    "dev": "tsnd --project tsconfig.build.json --respawn src/index.ts",
-    "db:seed": "ts-node ./prisma/seed.ts",
-    "db:push": "prisma db push",
-    "db:reset": "prisma migrate reset",
-    "db:migrate": "prisma migrate dev",
-    "test": "jest",
-    "types": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.json",
-    "format": "prettier '**/*.{ts,json}'",
-    "docs": "ts-node open-api/generate.ts",
-    "build": "tsc --build tsconfig.build.json",
-    "start": "pm2 start ./dist/src/index.js --name \"raidhub-api\" --instances 8 --time",
-    "stop": "pm2 stop raidhub-api",
-    "start:staging": "pm2 start ./dist/src/index.js --name \"raidhub-api-staging\" --instances 2 --time",
-    "stop:staging": "pm2 stop raidhub-api-staging",
-    "restart": "yarn && prisma generate && yarn build && pm2 restart --update-env"
-  },
-  "lint-staged": {
-    "*.{ts,json}": [
-      "prettier --write",
-      "eslint --fix"
-    ],
-    "*.js": "eslint --cache --fix"
-  },
+  "homepage": "https://api-docs.raidhub.io",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Raid-Hub/RaidHub-API.git"
@@ -38,7 +12,27 @@
   "bugs": {
     "url": "https://github.com/Raid-Hub/RaidHub-API/issues"
   },
-  "homepage": "https://github.com/Raid-Hub/RaidHub-API#readme",
+  "scripts": {
+    "prepare": "husky",
+    "generate": "prisma generate",
+    "dev": "bun run ./src/index.ts --watch",
+    "db:seed": "bun run ./prisma/seed.ts",
+    "db:push": "prisma db push",
+    "db:reset": "prisma migrate reset",
+    "db:migrate": "prisma migrate dev",
+    "test": "jest",
+    "types": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.json",
+    "format": "prettier '**/*.{ts,json}'",
+    "docs": "bun run ./open-api/generate.ts",
+    "compile": "bun build --compile --sourcemap ./src/index.ts --outfile $1"
+  },
+  "lint-staged": {
+    "*.{ts,json}": [
+      "eslint --fix"
+    ],
+    "*.js": "eslint --cache --fix"
+  },
   "devDependencies": {
     "@asteasolutions/zod-to-openapi": "^6.3.1",
     "@types/compression": "^1.7.5",
@@ -46,10 +40,10 @@
     "@types/express": "^4.17.20",
     "@types/jest": "^29.5.6",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.8.8",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
+    "bun-types": "^1.0.35",
     "bungie-net-core": "^2.1.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
@@ -57,23 +51,17 @@
     "husky": "^9.0.6",
     "jest": "^29.7.0",
     "lint-staged": "^15.2.0",
-    "pm2": "^5.3.0",
     "prettier": "^3.0.3",
     "prettier-plugin-organize-imports": "^3.2.4",
     "prisma": "^5.10.2",
     "redoc-cli": "^0.13.21",
     "supertest": "^6.3.4",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "tsc-alias": "^1.8.8",
-    "tsconfig-paths": "^4.2.0",
+    "ts-jest": "^29.1.2",
     "typescript": "5.3"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
     "compression": "^1.7.4",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "zlib": "^1.0.5",
@@ -95,9 +83,6 @@
     ],
     "coveragePathIgnorePatterns": [
       "prisma.ts"
-    ],
-    "setupFiles": [
-      "dotenv/config"
     ],
     "coverageReporters": [
       "html"

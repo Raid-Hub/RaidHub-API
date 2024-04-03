@@ -22,6 +22,7 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v1
 
             - name: Install cloudflared
               run: ./.github/scripts/install-cloudflared.sh
@@ -33,7 +34,7 @@ jobs:
                   known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
 
             - name: Install dependencies
-              run: yarn install
+              run: bun install --frozen-lockfile
 
             - name: Connect to prod database
               env:
@@ -44,7 +45,7 @@ jobs:
 
             - name: Calculate diff
               run: |
-                  yarn prisma migrate diff --script \
+                  bun prisma migrate diff --script \
                     --shadow-database-url "postgresql://username:password@localhost:5432/raidhub?schema=public" \
                     --from-url postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5433/raidhub?schema=public \
                     --to-schema-datamodel ./prisma/schema.prisma > migration.sql

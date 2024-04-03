@@ -1,4 +1,0 @@
-source ~/.nvm/nvm.sh
-nvm use 20
-
-yarn restart $1

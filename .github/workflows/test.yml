@@ -1,4 +1,4 @@
-name: Run Tests
+name: Tests
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
@@ -16,6 +16,7 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v1
 
             - name: Download code coverage report
               uses: dawidd6/action-download-artifact@v3
@@ -35,7 +36,9 @@ jobs:
                   known_hosts: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
 
             - name: Install dependencies
-              run: yarn && yarn prisma generate
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
 
             - name: Tunnel to VPS
               env:
@@ -49,9 +52,7 @@ jobs:
                   ADMIN_CLIENT_SECRET: "secret-token"
                   JWT_SECRET: "jwt-secret"
                   DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
-              run: |
-                  yarn && yarn prisma generate
-                  yarn test --coverage --coverageReporters="lcov" --reporters="github-actions" --testTimeout=30000
+              run: bun run test --coverage --coverageReporters="lcov" --reporters="github-actions" --testTimeout=30000
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report

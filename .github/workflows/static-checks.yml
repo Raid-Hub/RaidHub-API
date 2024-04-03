@@ -1,0 +1,60 @@
+name: Static PR Checks
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+    cancel-in-progress: true
+
+on:
+    pull_request:
+        branches:
+            - main
+jobs:
+    tsc:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v1
+
+            - name: Bun Install
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
+
+            - name: Types
+              run: bun types
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v1
+
+            - name: Bun Install
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
+
+            - name: Lint
+              run: bun lint
+
+    verify-open-api-doc:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v1
+
+            - name: Bun Install
+              run: |
+                  bun install --frozen-lockfile
+                  bun prisma generate
+
+            - name: Generate File
+              run: |
+                  cp ./open-api/openapi.json ./openapi.old.json
+                  bun docs
+
+            - name: Verify File
+              run: |
+                  if ! diff -q ./open-api/openapi.json ./openapi.old.json; then
+                    echo "The openapi.json file is not up to date. Please run 'bun docs' and commit the changes."
+                    exit 1
+                  fi

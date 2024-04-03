@@ -1,19 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ES2021",
-    "allowJs": true,
-    "module": "commonjs",
-    "strict": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
-    "skipLibCheck": true,
+
+    "types": ["bun-types", "jest"],
+    "lib": ["ES6", "ESNext"],
+
+    "strict": true,
+    "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "outDir": "./dist",
-    "rootDir": ".",
-    "types": ["node", "jest"],
-    "lib": ["es6", "esnext"],
     "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "skipLibCheck": true,
+
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "prisma/**/*.ts", "api-keys.json"],
   "exclude": ["scripts/*"]
