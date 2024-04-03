@@ -1,11 +1,14 @@
 import { RouteConfig } from "@asteasolutions/zod-to-openapi"
 import { Router } from "express"
 import { ZodType } from "zod"
+import { RaidHubRouter } from "./RaidHubRouter"
 import { z } from "./schema/zod"
 
 export interface IRaidHubRoute {
     express: Router
     openApiRoutes(): RouteConfig[]
+    setParent(parent: RaidHubRouter | null): void
+    getParent(): RaidHubRouter | null
 }
 
 export type RaidHubResponse<T, E> = {
