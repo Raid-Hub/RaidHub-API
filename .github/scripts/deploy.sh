@@ -4,16 +4,16 @@ export PATH=$BUN_INSTALL/bin:$PATH
 
 nvm use 20
 
-git fetch
-git stash
-git checkout origin/$1 
+temp_dir=$(mktemp -d)
+
+git clone git@github.com:Raid-Hub/RaidHub-API.git "$temp_dir"
+cd $temp_dir
 
 bun install --frozen-lockfile
 bun prisma generate
 bun compile $2
 
-sudo systemctl restart $2
+mv $temp_dir/$2 ~/../RaidHub/API/$2
+rm -rf "$temp_dir"
 
-if [[ ! -z $3 ]]  ; then 
-    git switch -
-fi
+sudo systemctl restart $2
