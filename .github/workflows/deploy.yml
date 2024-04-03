@@ -27,4 +27,4 @@ jobs:
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
               run: |
                   ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io \
-                  "cd ../RaidHub/API && git pull && ./.github/scripts/deploy.sh main api"
+                  "/RaidHub/API-env/deploy.sh main api"
