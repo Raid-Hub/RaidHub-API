@@ -18,7 +18,7 @@ const apiKeys = readKeys()
         Object.fromEntries(
             z
                 .array(KeySchema)
-                .parse(JSON.parse(data))
+                .parse(data)
                 .map(k => [k.key, k])
         )
     )

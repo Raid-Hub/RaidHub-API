@@ -13,7 +13,7 @@ fi
 cd $temp_dir
 
 # Build the project
-cp /RaidHub/API-env/$2/* $temp_dir
+cp /RaidHub/API-env/$2/.env $temp_dir
 bun install --frozen-lockfile
 bun prisma generate
 bun run compile main
