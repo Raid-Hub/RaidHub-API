@@ -13,13 +13,13 @@ fi
 cd $temp_dir
 
 # Build the project
-cp ~/../RaidHub/API-env/$2/* $temp_dir
+cp /RaidHub/API-env/$2/* $temp_dir
 bun install --frozen-lockfile
 bun prisma generate
-bun run compile $2
+bun run compile main
 
 # Cleanup
-mv $temp_dir/$2 ~/../RaidHub/API/$2
+cp $temp_dir/main /RaidHub/API/$2
 if [ $? -ne 0 ]; then
     exit 1
 fi
