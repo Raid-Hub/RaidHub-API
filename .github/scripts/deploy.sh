@@ -16,4 +16,8 @@ bun compile $2
 mv $temp_dir/$2 ~/../RaidHub/API/$2
 rm -rf "$temp_dir"
 
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
 sudo systemctl restart $2
