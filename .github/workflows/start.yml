@@ -35,4 +35,4 @@ jobs:
                   branch_ref="${{ github.ref }}"
                   branch_name="${branch_ref#refs/heads/}"
                   ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io \
-                  "cd ../RaidHub/API && ./.github/scripts/deploy.sh $branch_name api reset"
+                  "cd ../RaidHub/API && ./.github/scripts/deploy.sh $branch_name api"
