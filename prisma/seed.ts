@@ -688,7 +688,7 @@ function getLeaderboards(): {
                 },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_VOG,
+                    difficulty: Difficulty.CHALLENGE_KF,
                     isWorldFirst: true
                 },
                 {
@@ -723,7 +723,7 @@ function getLeaderboards(): {
                 },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_VOG,
+                    difficulty: Difficulty.CHALLENGE_CROTA,
                     isWorldFirst: true
                 },
                 {
