@@ -11,7 +11,6 @@ import {
     DestinyPostGameCarnageReportData,
     DestinyPostGameCarnageReportEntry
 } from "bungie-net-core/models"
-import * as dotenv from "dotenv"
 import { gzipSync } from "zlib"
 import { ZodError } from "zod"
 import { Difficulty, Raid } from "../src/data/raids"
@@ -49,7 +48,6 @@ main()
     .then(() => process.exit(0))
 
 async function main() {
-    dotenv.config()
     const names = process.argv.slice(2)
     if (names.length) {
         console.log("Seeding players " + names.join(", "))

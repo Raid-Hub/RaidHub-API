@@ -62,7 +62,6 @@
   "dependencies": {
     "@prisma/client": "^5.10.2",
     "compression": "^1.7.4",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "zlib": "^1.0.5",
@@ -84,9 +83,6 @@
     ],
     "coveragePathIgnorePatterns": [
       "prisma.ts"
-    ],
-    "setupFiles": [
-      "dotenv/config"
     ],
     "coverageReporters": [
       "html"

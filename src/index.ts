@@ -1,12 +1,9 @@
 import compression from "compression"
-import dotenv from "dotenv"
 import express from "express"
 import path from "path"
 import { verifyApiKey } from "./middlewares/apiKeys"
 import { errorHandler } from "./middlewares/errorHandler"
 import { router } from "./routes"
-
-dotenv.config()
 
 // @ts-expect-error this is a hack to make BigInts work with JSON.stringify
 BigInt.prototype.toJSON = function () {
