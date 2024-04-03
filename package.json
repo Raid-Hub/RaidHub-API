@@ -25,8 +25,7 @@
     "lint": "eslint . --ext .ts,.json",
     "format": "prettier '**/*.{ts,json}'",
     "docs": "bun run ./open-api/generate.ts",
-    "compile": "bun build --compile --minify --sourcemap ./src/index.ts --outfile $1",
-    "rebuild": "prisma generate && bun compile $1"
+    "compile": "bun build --compile --minify --sourcemap ./src/index.ts --outfile $1"
   },
   "lint-staged": {
     "*.{ts,json}": [

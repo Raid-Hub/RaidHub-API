@@ -27,4 +27,4 @@ jobs:
                   branch_ref="${{ github.ref }}"
                   branch_name="${branch_ref#refs/heads/}"
                   ssh -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io \
-                  "cd ../RaidHub/API && git fetch && git stash && git reset --hard origin/$branch_name && ./.github/scripts/deploy.sh api2 && git checkout - && git stash apply"
+                  "cd ../RaidHub/API && ./.github/scripts/deploy.sh $branch_name api2 reset"
