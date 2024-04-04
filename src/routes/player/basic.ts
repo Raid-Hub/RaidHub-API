@@ -13,7 +13,7 @@ export const playerBasicRoute = new RaidHubRoute({
     async handler(req) {
         const member = await prisma.player.findUnique({
             where: {
-                membershipId: req.params.membershipId
+                membershipId: BigInt(req.params.membershipId)
             },
             select: {
                 membershipId: true,

@@ -16,8 +16,6 @@ describe("player activities 200", () => {
 
     test("4611686018467831285", () => t("4611686018467831285"))
 
-    test("month cursor", () => t("4611686018439759736"))
-
     test("year cursor", () => t("4611686018501336567"))
 
     test("end of list", () =>

@@ -1,6 +1,7 @@
 import compression from "compression"
 import express from "express"
 import path from "path"
+import { servePrometheus } from "./metrics/registry"
 import { verifyApiKey } from "./middlewares/apiKeys"
 import { errorHandler } from "./middlewares/errorHandler"
 import { router } from "./routes"
@@ -49,3 +50,5 @@ app.use(verifyApiKey, express.json(), compression(), router.express, errorHandle
 app.listen(port, () => {
     console.log("Express server started on port: " + port)
 })
+
+servePrometheus()

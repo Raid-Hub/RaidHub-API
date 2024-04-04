@@ -277,7 +277,7 @@ describe("test raidhub route openapi gen", () => {
         const openapi = testGetRoute.openApiRoutes()[0]
         expect(openapi.method).toBe("get")
         expect(openapi.description).toBe("test route")
-        expect(openapi.path).toBe("")
+        expect(openapi.path).toBe("/")
         expect(openapi.summary).toBe("do it.")
         expect(openapi.request.params).toBeDefined()
         expect(openapi.request.query).toBeDefined()
@@ -290,7 +290,7 @@ describe("test raidhub route openapi gen", () => {
     test("post schema", () => {
         const openapi = testPostRoute.openApiRoutes()[0]
         expect(openapi.method).toBe("post")
-        expect(openapi.path).toBe("")
+        expect(openapi.path).toBe("/")
         expect(openapi.request.params).toBeUndefined()
         expect(openapi.request.query).toBeDefined()
         expect(openapi.request.body).toBeDefined()
@@ -301,7 +301,7 @@ describe("test raidhub route openapi gen", () => {
     test("empty schema", () => {
         const openapi = testEmptyRoute.openApiRoutes()[0]
         expect(openapi.method).toBe("get")
-        expect(openapi.path).toBe("")
+        expect(openapi.path).toBe("/")
         expect(openapi.request.params).toBeUndefined()
         expect(openapi.request.query).toBeUndefined()
         expect(openapi.request.body).toBeUndefined()

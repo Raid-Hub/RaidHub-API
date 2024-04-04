@@ -16,6 +16,10 @@ import { ZodError } from "zod"
 import { Difficulty, Raid } from "../src/data/raids"
 import { zPgcrSchema } from "../src/schema/pgcr"
 
+const beyondLightStart = new Date("November 10, 2020 9:00:00 AM PST").getTime()
+const witchQueenStart = new Date("February 22, 2022 9:00:00 AM PST").getTime()
+const hauntedStart = new Date("May 24, 2022 10:00:00 AM PDT").getTime()
+
 // @ts-expect-error this is a hack to make BigInts work with JSON.stringify
 BigInt.prototype.toJSON = function () {
     return this.toString()
@@ -42,8 +46,11 @@ const bungieClient: BungieClientProtocol = {
     }
 }
 
-main()
-    .catch(main)
+await main()
+    .catch(e => {
+        console.error(e)
+        process.exit(1)
+    })
     .then(() => console.log("Seeding complete"))
     .then(() => process.exit(0))
 
@@ -517,9 +524,6 @@ function processCarnageReport(report: DestinyPostGameCarnageReportData) {
     }
 }
 
-const beyondLightStart = new Date("November 10, 2020 9:00:00 AM PST").getTime()
-const witchQueenStart = new Date("February 22, 2022 9:00:00 AM PST").getTime()
-const hauntedStart = new Date("May 24, 2022 10:00:00 AM PDT").getTime()
 /**
  * Pre beyond light, startingPhaseIndex is accurate. During beyond light, we don't know anything.
  * During risen, some fresh runs are marked as checkpoints due to wipes.
@@ -684,7 +688,7 @@ function getLeaderboards(): {
                 },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_VOG,
+                    difficulty: Difficulty.CHALLENGE_KF,
                     isWorldFirst: true
                 },
                 {
@@ -719,7 +723,7 @@ function getLeaderboards(): {
                 },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_VOG,
+                    difficulty: Difficulty.CHALLENGE_CROTA,
                     isWorldFirst: true
                 },
                 {

@@ -8,11 +8,15 @@ export type RaidHubPath = {
 }
 
 export class RaidHubRouter implements IRaidHubRoute {
+    private parent: RaidHubRouter | null = null
     readonly routes: RaidHubPath[]
     readonly middlewares: RequestHandler[]
     constructor(args: { middlewares?: RequestHandler[]; routes: RaidHubPath[] }) {
         this.middlewares = args.middlewares ?? []
         this.routes = args.routes
+        this.routes.forEach(({ route }) => {
+            route.setParent(this)
+        })
     }
 
     get express() {
@@ -26,13 +30,22 @@ export class RaidHubRouter implements IRaidHubRoute {
         return router
     }
 
+    getFullPath(child: IRaidHubRoute): string {
+        const path = this.routes.find(({ route }) => route === child)?.path
+        if (!path) throw new Error("Child not found")
+
+        return (this.parent ? this.parent.getFullPath(this) : "") + path
+    }
+
     openApiRoutes(): RouteConfig[] {
-        return this.routes.flatMap(({ path, route }) => {
-            const parentPath = path.replace(/\/:(\w+)/, "/{$1}")
-            return route.openApiRoutes().map(childRoute => ({
-                ...childRoute,
-                path: parentPath + childRoute.path
-            }))
-        })
+        return this.routes.flatMap(({ route }) => route.openApiRoutes())
+    }
+
+    setParent(parent: RaidHubRouter) {
+        this.parent = parent
+    }
+
+    getParent(): RaidHubRouter | null {
+        return this.parent
     }
 }
