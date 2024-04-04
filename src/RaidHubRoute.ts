@@ -8,12 +8,14 @@ import {
     zPathValidationError,
     zQueryValidationError
 } from "./RaidHubErrors"
+import { RaidHubRouter } from "./RaidHubRouter"
 import {
     IRaidHubRoute,
     RaidHubHandler,
     RaidHubHandlerReturn,
     RaidHubResponse
 } from "./RaidHubRouterTypes"
+import { measureDuration } from "./middlewares/metrics/duration"
 import { ErrorCode } from "./schema/common"
 import { z } from "./schema/zod"
 
@@ -40,6 +42,7 @@ export class RaidHubRoute<
     ErrorType extends ErrorCode = never
 > implements IRaidHubRoute
 {
+    private parent: RaidHubRouter | null = null
     private readonly router: Router
     readonly method: M
     readonly description?: string
@@ -196,6 +199,23 @@ export class RaidHubRoute<
         }
     }
 
+    // This is the express router that is returned and used to create the actual express route
+    get express() {
+        const args = [
+            // @ts-expect-error Generic hell
+            measureDuration(this),
+            ...this.middlewares,
+            this.validateParams,
+            this.validateQuery,
+            this.validateBody,
+            this.controller
+        ] as const
+
+        return this.method === "get"
+            ? this.router.get("/", ...args)
+            : this.router.post("/", ...args)
+    }
+
     // This is the actual controller that is passed to express as a handler
     private controller: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> =
         async (req, res, next) => {
@@ -213,6 +233,7 @@ export class RaidHubRoute<
                 next(e)
             }
         }
+
     private buildResponse(
         result: RaidHubHandlerReturn<
             ResponseBody["_input"],
@@ -241,19 +262,16 @@ export class RaidHubRoute<
         }
     }
 
-    // This is the express router that is returnedand used to create the actual express route
-    get express() {
-        const args = [
-            ...this.middlewares,
-            this.validateParams,
-            this.validateQuery,
-            this.validateBody,
-            this.controller
-        ] as const
+    setParent(parent: RaidHubRouter) {
+        this.parent = parent
+    }
 
-        return this.method === "get"
-            ? this.router.get("/", ...args)
-            : this.router.post("/", ...args)
+    getParent(): RaidHubRouter | null {
+        return this.parent
+    }
+
+    getFullPath(): string {
+        return this.parent ? this.parent.getFullPath(this) : "/"
     }
 
     openApiRoutes() {
@@ -284,9 +302,10 @@ export class RaidHubRoute<
               ]
             : undefined
 
+        const path = this.getFullPath().replace(/\/:(\w+)/g, "/{$1}")
         return [
             {
-                path: "",
+                path,
                 method: this.method,
                 description: this.description,
                 summary: this.summary,
