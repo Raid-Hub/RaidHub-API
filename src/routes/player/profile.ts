@@ -3,6 +3,7 @@ import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { ListedRaid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
+import { processPlayerAsync } from "../../middlewares/processPlayerAsync"
 import { ErrorCode, registry, zPlayerInfo } from "../../schema/common"
 import { z, zBigIntString, zISODateString, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
@@ -20,7 +21,7 @@ const zPlayerStatRanking = registry.register(
 export const playerProfileRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    middlewares: [cacheControl(30)],
+    middlewares: [cacheControl(30), processPlayerAsync],
     async handler(req) {
         const data = await getPlayer({ membershipId: req.params.membershipId })
         if (!data) {

@@ -1,5 +1,6 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
+import { processPlayerAsync } from "../../middlewares/processPlayerAsync"
 import { ErrorCode, zPlayerInfo } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
@@ -9,7 +10,7 @@ import { playerRouterParams } from "./_schema"
 export const playerBasicRoute = new RaidHubRoute({
     method: "get",
     params: playerRouterParams,
-    middlewares: [cacheControl(300)],
+    middlewares: [cacheControl(300), processPlayerAsync],
     async handler(req) {
         const member = await prisma.player.findUnique({
             where: {
