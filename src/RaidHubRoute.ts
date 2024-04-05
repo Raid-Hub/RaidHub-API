@@ -202,12 +202,12 @@ export class RaidHubRoute<
     // This is the express router that is returned and used to create the actual express route
     get express() {
         const args = [
-            // @ts-expect-error Generic hell
+            // @ts-expect-error Generic hell here
             measureDuration(this),
-            ...this.middlewares,
             this.validateParams,
             this.validateQuery,
             this.validateBody,
+            ...this.middlewares,
             this.controller
         ] as const
 
