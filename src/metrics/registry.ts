@@ -11,9 +11,10 @@ export const httpRequestTimer = new Histogram({
 })
 prometheusRegistry.registerMetric(httpRequestTimer)
 
+const port = process.env.METRICS_PORT || 8082
 export const servePrometheus = () => {
     Bun.serve({
-        port: Number(process.env.METRICS_PORT || 8082),
+        port: port,
         async fetch(req) {
             const url = new URL(req.url)
             if (url.pathname === "/metrics") {
@@ -30,5 +31,5 @@ export const servePrometheus = () => {
         }
     })
 
-    console.log("Metrics server started on port: 8082")
+    console.log(`Metrics server started on port: ${port}`)
 }
