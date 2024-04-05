@@ -1,5 +1,5 @@
 import { RequestHandler } from "express"
-import { sendAsyncPlayerRequest } from "../async"
+import { sendAsyncPlayerRequest } from "../async/player"
 
 export const processPlayerAsync: RequestHandler<{ membershipId: bigint }> = async (
     req,
