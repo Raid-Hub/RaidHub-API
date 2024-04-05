@@ -6,8 +6,6 @@ export const processPlayerAsync: RequestHandler<{ membershipId: bigint }> = asyn
     res,
     next
 ) => {
-    res.on("finish", async () => {
-        await sendAsyncPlayerRequest({ membershipId: req.params.membershipId })
-    })
+    res.on("finish", () => sendAsyncPlayerRequest({ membershipId: req.params.membershipId }))
     next()
 }
