@@ -6,24 +6,32 @@ interface PlayerRequest {
 
 const port = process.env.RABBITMQ_PORT ?? 5672
 
-const rabbitmq = await amqp
+const rabbitmq = amqp
     .connect(
         `amqp://${process.env.RABBITMQ_USER ?? "guest"}:${process.env.RABBITMQ_PASSWORD ?? "guest"}@localhost:${port}`
     )
     .catch(console.warn)
 
-const channel = await rabbitmq?.createChannel()
 const queueName = "player_requests"
 
-await channel
-    ?.assertQueue(queueName, {
-        durable: false
-    })
-    .then(() => {
-        console.log(`player_requests queue created on port ${port}`)
-    })
+const channel = rabbitmq.then(conn => conn?.createChannel())
 
 export async function sendAsyncPlayerRequest(request: PlayerRequest) {
-    const message = JSON.stringify(request)
-    return channel?.sendToQueue(queueName, Buffer.from(message))
+    const chan = await channel
+    if (!chan) {
+        return false
+    }
+
+    return chan
+        ?.assertQueue(queueName, {
+            durable: false
+        })
+        .then(() => {
+            const message = JSON.stringify(request)
+            return chan.sendToQueue(queueName, Buffer.from(message))
+        })
+        .catch(e => {
+            console.error(e)
+            return false
+        })
 }
