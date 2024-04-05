@@ -81,6 +81,9 @@ async function searchForPlayer(query: string, count: number) {
                     },
                     bungieGlobalDisplayNameCode: {
                         startsWith: globalDisplayNameCode.slice(0, 4)
+                    },
+                    lastSeen: {
+                        gt: new Date(0)
                     }
                 },
                 take: count
@@ -111,6 +114,9 @@ async function searchForPlayer(query: string, count: number) {
                     bungieGlobalDisplayName: {
                         startsWith: searchTerm,
                         mode: "insensitive"
+                    },
+                    lastSeen: {
+                        gt: new Date(0)
                     }
                 },
                 orderBy: {

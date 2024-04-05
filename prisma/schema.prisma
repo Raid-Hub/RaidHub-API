@@ -45,6 +45,7 @@ model Player {
   fullClears                  Int                     @default(0) @map("fresh_clears")
   sherpas                     Int                     @default(0) @map("sherpas")
   sumOfBestTimes              Int?                    @map("sum_of_best")
+  lastCrawled                 DateTime?               @map("last_crawled")
   playerActivities            PlayerActivity[]        @relation("player_activities")
   stats                       PlayerStats[]           @relation("player_stats_membership_id")
   individualRanks             IndividualLeaderboard[] @relation("individual_leaderboard")

@@ -16,11 +16,6 @@
 
     "rootDir": "."
   },
-  "include": [
-    "src/**/*.ts",
-    "prisma/seed.ts",
-    "api-keys.json",
-    "prisma/seed.ts"
-  ],
+  "include": ["src/**/*.ts", "prisma/seed.ts", "api-keys.json"],
   "exclude": ["scripts/*"]
 }
