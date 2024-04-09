@@ -50,11 +50,7 @@ model Player {
   stats                       PlayerStats[]           @relation("player_stats_membership_id")
   individualRanks             IndividualLeaderboard[] @relation("individual_leaderboard")
   globalRanks                 GlobalLeaderboard?      @relation("global_leaderboard")
-
-  @@index([displayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_both_display_names", type: Gin)
-  @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_display_name", type: Gin)
-  @@index([bungieGlobalDisplayName(ops: raw("gin_trgm_ops")), bungieGlobalDisplayNameCode(ops: raw("gin_trgm_ops"))], map: "trgm_idx_bungie_global_name_and_code", type: Gin)
-  @@index([displayName(ops: raw("gin_trgm_ops"))], map: "trgm_idx_display_name", type: Gin)
+  
   @@map("player")
 }
 

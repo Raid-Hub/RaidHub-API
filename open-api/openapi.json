@@ -1321,21 +1321,11 @@
                 "minimum": 0,
                 "exclusiveMinimum": true
               },
-              "term": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "nameWithCode": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                },
-                "required": ["name", "nameWithCode"]
+              "query": {
+                "type": "string"
               }
             },
-            "required": ["count", "term"]
+            "required": ["count", "query"]
           },
           "results": {
             "type": "array",
