@@ -136,7 +136,6 @@ model ActivityCharacter {
   characterId       BigInt   @map("character_id")
   classHash         BigInt?  @map("class_hash")
   completed         Boolean
-  completionReason  Int      @map("completion_reason")
   score             Int      @default(0)
   kills             Int      @default(0)
   assists           Int      @default(0)
