@@ -44,7 +44,7 @@ export const activitySearchRoute = new RaidHubRoute({
         const activities = await searchActivities(req.body)
         const results = activities.map(a => ({
             instanceId: a.instance_id,
-            raidHash: a.raid_hash,
+            hash: a.hash,
             fresh: a.fresh,
             completed: a.completed,
             flawless: a.flawless,
@@ -53,9 +53,11 @@ export const activitySearchRoute = new RaidHubRoute({
             dateCompleted: a.date_completed,
             platformType: a.platform_type as BungieMembershipType,
             duration: a.duration,
-            dayOne: isDayOne(a.raid_id, a.date_completed),
-            contest: isContest(a.raid_id, a.date_started),
-            weekOne: isContest(a.raid_id, a.date_completed)
+            score: a.score,
+            // TODO: this will throw errors
+            dayOne: isDayOne(a.activity_id, a.date_completed),
+            contest: isContest(a.activity_id, a.date_started),
+            weekOne: isContest(a.activity_id, a.date_completed)
         }))
 
         return ok({
@@ -78,8 +80,8 @@ export const activitySearchRoute = new RaidHubRoute({
 
 type ActivitySearchResult = {
     instance_id: string
-    raid_id: ListedRaid
-    raid_hash: string
+    activity_id: ListedRaid
+    hash: string
     fresh: boolean
     completed: boolean
     flawless: boolean
@@ -88,6 +90,7 @@ type ActivitySearchResult = {
     date_completed: Date
     platform_type: number
     duration: number
+    score: number
 }
 
 async function searchActivities({
@@ -119,7 +122,7 @@ async function searchActivities({
         WITH activities_union AS (
             SELECT
                 a.*,
-                rd.raid_id,
+                ah.activity_id,
                 COUNT(pa.membership_id)::int AS _match_count
             FROM
                 activity a
@@ -127,7 +130,7 @@ async function searchActivities({
                 player_activity pa ON a.instance_id = pa.instance_id
                 AND pa.membership_id IN (${Prisma.join(membershipIds)})
             JOIN
-                raid_definition rd ON a.raid_hash = rd.hash
+                activity_hash ah ON a.hash = ah.hash
             WHERE
                 ${
                     fresh !== undefined
@@ -160,11 +163,11 @@ async function searchActivities({
                 }::timestamp
             GROUP BY
                 a.instance_id, 
-                rd.raid_id
+                ah.activity_id
         )
         SELECT
             instance_id::text,
-            raid_hash::text,
+            hash,
             fresh,
             completed,
             flawless,
@@ -172,7 +175,8 @@ async function searchActivities({
             date_started,
             date_completed,
             duration,
-            platform_type
+            platform_type,
+            score
         FROM activities_union
         WHERE _match_count = ${new Set(membershipIds).size}::int
         ORDER BY

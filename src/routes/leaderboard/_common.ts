@@ -53,7 +53,7 @@ export async function getIndividualLeaderboardEntries(params: {
 
     const entries = await prisma.individualLeaderboard.findMany({
         where: {
-            raidId: params.raid,
+            activityId: params.raid,
             [key.position]: {
                 gt: (params.page - 1) * params.count,
                 lte: params.page * params.count
@@ -114,14 +114,9 @@ export async function getWorldFirstLeaderboardEntries(params: {
                 include: {
                     activity: {
                         include: {
-                            playerActivity: {
+                            activityPlayers: {
                                 select: {
-                                    finishedRaid: true,
-                                    kills: true,
-                                    assists: true,
-                                    deaths: true,
-                                    timePlayedSeconds: true,
-                                    classHash: true,
+                                    completed: true,
                                     sherpas: true,
                                     isFirstClear: true,
                                     player: {
@@ -149,14 +144,14 @@ export async function getWorldFirstLeaderboardEntries(params: {
     return {
         date: leaderboard.date,
         entries: leaderboard.entries.map(
-            ({ activity: { playerActivity, ...activity }, ...data }) => ({
+            ({ activity: { activityPlayers, ...activity }, ...data }) => ({
                 position: data.position,
                 rank: data.rank,
                 value: (activity.dateCompleted.getTime() - leaderboard.date.getTime()) / 1000,
                 activity: activity,
-                players: playerActivity.map(({ player, ...pa }) => ({
+                players: activityPlayers.map(({ player, ...ap }) => ({
                     ...player,
-                    data: pa
+                    data: ap
                 }))
             })
         )

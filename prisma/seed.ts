@@ -1,4 +1,4 @@
-import { PrismaClient, WorldFirstLeaderboardType } from "@prisma/client"
+import { Prisma, PrismaClient, WorldFirstLeaderboardType } from "@prisma/client"
 import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
 import {
     getActivityHistory,
@@ -76,17 +76,17 @@ async function seed() {
                         select: {
                             instanceId: true,
                             dateStarted: true,
-                            raidDefinition: {
+                            activityHash: {
                                 select: {
-                                    raid: true,
-                                    version: true
+                                    activityDefinition: true,
+                                    versionDefinition: true
                                 }
                             }
                         },
                         where: {
                             completed: true,
-                            raidDefinition: {
-                                raidId: raid,
+                            activityHash: {
+                                activityId: raid,
                                 versionId: difficulty
                             }
                         },
@@ -108,10 +108,10 @@ async function seed() {
                     await prisma.activityLeaderboard
                         .create({
                             data: {
-                                id: `${entries[0].raidDefinition.raid.name}-${entries[0].raidDefinition.version.name}`,
+                                id: `${entries[0].activityHash.activityDefinition.name}-${entries[0].activityHash.versionDefinition.name}`,
                                 isWorldFirst,
                                 date: date,
-                                raid: {
+                                activityDefintion: {
                                     connect: {
                                         id: raid
                                     }
@@ -129,10 +129,10 @@ async function seed() {
                                 type: type
                             },
                             select: {
-                                raid: true
+                                activityDefintion: true
                             }
                         })
-                        .then(r => console.log(`Seeded ${r.raid.name} ${type}`))
+                        .then(r => console.log(`Seeded ${r.activityDefintion.name} ${type}`))
                 })
             )
         )
@@ -160,7 +160,7 @@ async function seedPlayers(names: string[]) {
 
     const characters = await Promise.all(names.map(findCharacters)).then(c => c.flat())
 
-    const pgcrs = await prisma.playerActivity
+    const pgcrs = await prisma.activityPlayer
         .findMany({
             where: {
                 player: {
@@ -245,13 +245,13 @@ async function seedPlayers(names: string[]) {
 
         console.log(`Inserting ${fetchedPGCRs.length} activities & updating players`)
         for (const { players, ...pgcr } of fetchedPGCRs.map(processCarnageReport)) {
-            const { raidDefinition } = await prisma.activity
+            const { activityHash } = await prisma.activity
                 .create({
                     data: pgcr,
                     select: {
-                        raidDefinition: {
+                        activityHash: {
                             select: {
-                                raidId: true
+                                activityId: true
                             }
                         }
                     }
@@ -259,12 +259,12 @@ async function seedPlayers(names: string[]) {
                 .catch(async e => {
                     console.error(e)
                     return {
-                        raidDefinition: await prisma.raidDefinition.findUniqueOrThrow({
+                        activityHash: await prisma.activityHash.findUniqueOrThrow({
                             where: {
-                                raidHash: pgcr.raidHash
+                                hash: pgcr.activityHash.connect.hash
                             },
                             select: {
-                                raidId: true
+                                activityId: true
                             }
                         })
                     }
@@ -280,39 +280,42 @@ async function seedPlayers(names: string[]) {
                                 e.values.completed?.basic.value &&
                                 e.values.completionReason?.basic.value === 0
                         )
-                        const activityDuration =
-                            p[0].values.activityDurationSeconds?.basic.value ?? 0
-                        const maxActivityDuration =
-                            activityDuration === 32767 ? Infinity : activityDuration
-                        const { kills, deaths, assists, timePlayedSeconds } = p.reduce(
-                            (curr, nxt) => ({
-                                kills: curr.kills + (nxt.values.kills?.basic.value ?? 0),
-                                deaths: curr.deaths + (nxt.values.deaths?.basic.value ?? 0),
-                                assists: curr.assists + (nxt.values.assists?.basic.value ?? 0),
-                                timePlayedSeconds: Math.min(
-                                    curr.timePlayedSeconds +
-                                        (nxt.values.timePlayedSeconds?.basic.value ?? 0),
-                                    maxActivityDuration
-                                )
-                            }),
-                            {
-                                kills: 0,
-                                deaths: 0,
-                                assists: 0,
-                                timePlayedSeconds: 0
-                            }
-                        )
-                        const data = {
+                        const data: Prisma.PlayerCreateInput = {
+                            membershipId: BigInt(destinyUserInfo.membershipId),
                             lastSeen: pgcr.dateCompleted,
-                            playerActivities: {
+                            activityPlayer: {
                                 create: {
-                                    finishedRaid: didFinish,
-                                    kills,
-                                    deaths,
-                                    assists,
-                                    timePlayedSeconds,
+                                    completed: didFinish,
                                     instanceId: pgcr.instanceId,
-                                    classHash: BigInt(p[0].player.classHash)
+                                    timePlayedSeconds: p[0].values.timePlayedSeconds?.basic.value,
+                                    characters: {
+                                        createMany: {
+                                            data: p.map(e => ({
+                                                characterId: BigInt(e.characterId),
+                                                classHash: BigInt(e.player.classHash),
+                                                completed:
+                                                    !!e.values.completed?.basic.value &&
+                                                    e.values.completionReason?.basic.value === 0,
+                                                score: e.values.score?.basic.value,
+                                                kills: e.values.kills?.basic.value,
+                                                assists: e.values.assists?.basic.value,
+                                                deaths: e.values.deaths?.basic.value,
+                                                timePlayedSeconds:
+                                                    e.values.timePlayedSeconds?.basic.value,
+                                                startSeconds: e.values.startSeconds?.basic.value,
+                                                precisionKills:
+                                                    e.extended?.values.precisionKills?.basic.value,
+                                                superKills:
+                                                    e.extended?.values.weaponKillsSuper?.basic
+                                                        .value,
+                                                grenadeKills:
+                                                    e.extended?.values.weaponKillsGrenade?.basic
+                                                        .value,
+                                                meleeKills:
+                                                    e.extended?.values.weaponKillsMelee?.basic.value
+                                            }))
+                                        }
+                                    }
                                 }
                             },
                             ...(destinyUserInfo.membershipType !== 0
@@ -332,25 +335,24 @@ async function seedPlayers(names: string[]) {
                                 : null)
                         }
 
-                        const statsCreate = {
+                        const statsCreate: Prisma.PlayerStatsCreateWithoutPlayerInput = {
                             clears: didFinish ? 1 : 0,
                             fullClears: didFinish && pgcr.fresh ? 1 : 0,
                             trios: didFinish && pgcr.playerCount === 3 ? 1 : 0,
                             duos: didFinish && pgcr.playerCount === 2 ? 1 : 0,
                             solos: didFinish && pgcr.playerCount === 1 ? 1 : 0,
-                            raid: {
+                            activityDefinition: {
                                 connect: {
-                                    id: raidDefinition.raidId
+                                    id: activityHash.activityId
                                 }
                             }
                         }
 
-                        return prisma.player
+                        await prisma.player
                             .upsert({
                                 create: {
                                     ...data,
                                     clears: didFinish ? 1 : 0,
-                                    membershipId: BigInt(destinyUserInfo.membershipId),
                                     stats: {
                                         create: statsCreate
                                     }
@@ -393,11 +395,11 @@ async function seedPlayers(names: string[]) {
                                                 }
                                             },
                                             where: {
-                                                membershipId_raidId: {
+                                                membershipId_activityId: {
                                                     membershipId: BigInt(
                                                         destinyUserInfo.membershipId
                                                     ),
-                                                    raidId: raidDefinition.raidId
+                                                    activityId: activityHash.activityId
                                                 }
                                             }
                                         }
@@ -406,6 +408,26 @@ async function seedPlayers(names: string[]) {
                                 where: {
                                     membershipId: BigInt(destinyUserInfo.membershipId)
                                 }
+                            })
+                            .catch(console.error)
+
+                        return prisma.activityCharacterWeapon
+                            .createMany({
+                                data: p
+                                    .flatMap(e =>
+                                        e.extended?.weapons?.map(w => ({
+                                            instanceId: pgcr.instanceId,
+                                            membershipId: BigInt(
+                                                e.player.destinyUserInfo.membershipId
+                                            ),
+                                            characterId: BigInt(e.characterId),
+                                            weaponHash: BigInt(w.referenceId),
+                                            kills: w.values.uniqueWeaponKills?.basic.value,
+                                            precisionKills:
+                                                w.values.uniqueWeaponPrecisionKills?.basic.value
+                                        }))
+                                    )
+                                    .filter(Boolean)
                             })
                             .catch(console.error)
                     })
@@ -510,7 +532,11 @@ function processCarnageReport(report: DestinyPostGameCarnageReportData) {
 
     return {
         instanceId: BigInt(report.activityDetails.instanceId),
-        raidHash: BigInt(report.activityDetails.directorActivityHash),
+        activityHash: {
+            connect: {
+                hash: BigInt(report.activityDetails.directorActivityHash)
+            }
+        },
         completed: complete,
         flawless:
             complete && report.entries.every(e => e.values.deaths?.basic.value === 0) && fresh,
@@ -521,6 +547,8 @@ function processCarnageReport(report: DestinyPostGameCarnageReportData) {
         duration: (endDate.getTime() - startDate.getTime()) / 1000,
         platformType: report.activityDetails.membershipType,
         players
+    } satisfies Prisma.ActivityCreateInput & {
+        players: Map<string, DestinyPostGameCarnageReportEntry[]>
     }
 }
 

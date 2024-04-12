@@ -25,18 +25,17 @@ model Player {
   sumOfBestTimes              Int?                    @map("sum_of_best")
   lastCrawled                 DateTime?               @map("last_crawled")
   searchScore                 Decimal?                @default(dbgenerated("(sqrt(((clears + 1))::double precision) * power((2)::double precision, (GREATEST((0)::double precision, date_part('epoch'::text, (last_seen - '2017-08-27 00:00:00'::timestamp without time zone))) / (20000000)::double precision)))")) @map("_search_score") @db.Decimal
-  activityCharacter           ActivityCharacter[]
   activityPlayer              ActivityPlayer[]
   stats                       PlayerStats[]           @relation("player_stats_membership_id")
   individualLeaderboards      IndividualLeaderboard[] @relation("individual_leaderboard")
-  globalLeaderboard           GlobalLeaderboard?      @relation("global_leaderboard")
+  globalRanks                 GlobalLeaderboard?      @relation("global_leaderboard")
 
   @@map("player")
 }
 
 model PlayerStats {
   membershipId               BigInt             @map("membership_id")
-  activity_id                Int
+  activityId                 Int                @map("activity_id")
   clears                     Int                @default(0)
   fullClears                 Int                @default(0) @map("fresh_clears")
   sherpas                    Int                @default(0)
@@ -46,9 +45,9 @@ model PlayerStats {
   fastestFullClearInstanceId BigInt?            @map("fastest_instance_id")
   player                     Player             @relation("player_stats_membership_id", fields: [membershipId], references: [membershipId], onUpdate: NoAction, map: "player_membership_id_fkey")
   fastestClear               Activity?          @relation("fastest_raid_clear", fields: [fastestFullClearInstanceId], references: [instanceId])
-  activityDefinition         ActivityDefinition @relation(fields: [activity_id], references: [id], onUpdate: NoAction, map: "raid_id_fkey")
+  activityDefinition         ActivityDefinition @relation(fields: [activityId], references: [id], onUpdate: NoAction, map: "raid_id_fkey")
 
-  @@id([membershipId, activity_id])
+  @@id([membershipId, activityId])
   @@map("player_stats")
 }
 
@@ -102,8 +101,6 @@ model Activity {
   platformType               Int                        @map("platform_type")
   score                      Int                        @default(0)
   activityHash               ActivityHash               @relation(fields: [hash], references: [hash], onDelete: NoAction, onUpdate: NoAction, map: "activity_hash_fk")
-  activityCharacters         ActivityCharacter[]
-  activityCharacterWeapons   ActivityCharacterWeapon[]
   activityLeaderboardEntries ActivityLeaderboardEntry[]
   activityPlayers            ActivityPlayer[]
   fastestClears              PlayerStats[]              @relation("fastest_raid_clear")
@@ -115,15 +112,15 @@ model Activity {
 }
 
 model ActivityPlayer {
-  instanceId        BigInt   @map("instance_id")
-  membershipId      BigInt   @map("membership_id")
+  instanceId        BigInt              @map("instance_id")
+  membershipId      BigInt              @map("membership_id")
   completed         Boolean
-  timePlayedSeconds Int      @default(0) @map("time_played_seconds")
-  sherpas           Int      @default(0) @map("sherpas")
-  isFirstClear      Boolean  @default(false) @map("is_first_clear")
-  score             Int      @default(0)
-  activity          Activity @relation(fields: [instanceId], references: [instanceId], onUpdate: NoAction, map: "player_activity_instance_id_fkey")
-  player            Player   @relation(fields: [membershipId], references: [membershipId], onUpdate: NoAction, map: "player_activity_membership_id_fkey")
+  timePlayedSeconds Int                 @default(0) @map("time_played_seconds")
+  sherpas           Int                 @default(0) @map("sherpas")
+  isFirstClear      Boolean             @default(false) @map("is_first_clear")
+  activity          Activity            @relation(fields: [instanceId], references: [instanceId], onUpdate: NoAction, map: "player_activity_instance_id_fkey")
+  player            Player              @relation(fields: [membershipId], references: [membershipId], onUpdate: NoAction, map: "player_activity_membership_id_fkey")
+  characters        ActivityCharacter[]
 
   @@id([instanceId, membershipId], map: "player_activity_instance_id_membership_id_pkey")
   @@index([membershipId], map: "idx_membership_id")
@@ -131,50 +128,51 @@ model ActivityPlayer {
 }
 
 model ActivityCharacter {
-  instanceId        BigInt   @map("instance_id")
-  membershipId      BigInt   @map("membership_id")
-  characterId       BigInt   @map("character_id")
-  classHash         BigInt?  @map("class_hash")
+  instanceId        BigInt                    @map("instance_id")
+  membershipId      BigInt                    @map("membership_id")
+  characterId       BigInt                    @map("character_id")
+  classHash         BigInt?                   @map("class_hash")
   completed         Boolean
-  score             Int      @default(0)
-  kills             Int      @default(0)
-  assists           Int      @default(0)
-  deaths            Int      @default(0)
-  precisionKills    Int      @default(0) @map("precision_kills")
-  superKills        Int      @default(0) @map("super_kills")
-  grenadeKills      Int      @default(0) @map("grenade_kills")
-  meleeKills        Int      @default(0) @map("melee_kills")
-  timePlayedSeconds Int      @map("time_played_seconds")
-  startSeconds      Int      @map("start_seconds")
-  activity          Activity @relation(fields: [instanceId], references: [instanceId], onUpdate: NoAction)
-  player            Player   @relation(fields: [membershipId], references: [membershipId], onUpdate: NoAction)
+  score             Int                       @default(0)
+  kills             Int                       @default(0)
+  assists           Int                       @default(0)
+  deaths            Int                       @default(0)
+  precisionKills    Int                       @default(0) @map("precision_kills")
+  superKills        Int                       @default(0) @map("super_kills")
+  grenadeKills      Int                       @default(0) @map("grenade_kills")
+  meleeKills        Int                       @default(0) @map("melee_kills")
+  timePlayedSeconds Int                       @map("time_played_seconds")
+  startSeconds      Int                       @map("start_seconds")
+  activityPlayer    ActivityPlayer            @relation(fields: [instanceId, membershipId], references: [instanceId, membershipId], onUpdate: NoAction)
+  weapons           ActivityCharacterWeapon[]
 
-  @@id([instanceId, characterId])
+  @@id([instanceId, membershipId, characterId], map: "activity_character_pkey")
   @@index([membershipId], map: "activity_character_idx_membership_id")
   @@map("activity_character")
 }
 
 model ActivityCharacterWeapon {
-  instanceId     BigInt   @map("instance_id")
-  characterId    BigInt   @map("character_id")
-  weaponHash     BigInt   @map("weapon_hash")
-  kills          Int      @default(0) @map("kills")
-  precisionKills Int      @default(0) @map("precision_kills")
-  activity       Activity @relation(fields: [instanceId], references: [instanceId], onUpdate: NoAction)
+  instanceId     BigInt            @map("instance_id")
+  membershipId   BigInt            @map("membership_id")
+  characterId    BigInt            @map("character_id")
+  weaponHash     BigInt            @map("weapon_hash")
+  kills          Int               @default(0) @map("kills")
+  precisionKills Int               @default(0) @map("precision_kills")
+  character      ActivityCharacter @relation(fields: [instanceId, membershipId, characterId], references: [instanceId, membershipId, characterId], onUpdate: NoAction, map: "activity_character_weapon_fkey")
 
-  @@id([instanceId, characterId, weaponHash])
+  @@id([instanceId, membershipId, characterId, weaponHash], map: "activity_character_weapon_pkey")
   @@index([weaponHash], map: "activity_character_weapon_idx_weapon_hash")
   @@map("activity_character_weapon")
 }
 
 model ActivityLeaderboard {
-  id           String                     @id
-  raidId       Int                        @map("raid_id")
-  date         DateTime                   @map("date")
-  isWorldFirst Boolean                    @default(false) @map("is_world_first")
-  type         WorldFirstLeaderboardType  @map("type")
-  entries      ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
-  activity     ActivityDefinition         @relation("leaderboards", fields: [raidId], references: [id])
+  id                String                     @id
+  raidId            Int                        @map("raid_id")
+  date              DateTime                   @map("date")
+  isWorldFirst      Boolean                    @default(false) @map("is_world_first")
+  type              WorldFirstLeaderboardType  @map("type")
+  entries           ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
+  activityDefintion ActivityDefinition         @relation("leaderboards", fields: [raidId], references: [id])
 
   @@unique([raidId, type], map: "leaderboard_raid_hash_type_key")
   @@map("leaderboard")
@@ -195,17 +193,17 @@ model ActivityLeaderboardEntry {
 }
 
 model PGCR {
-  instanceId   BigInt    @id @map("instance_id")
-  data         Bytes
-  date_crawled DateTime? @default(now()) @db.Timestamp(6)
+  instanceId  BigInt    @id @map("instance_id")
+  data        Bytes
+  dateCrawled DateTime? @default(now()) @map("date_crawled") @db.Timestamp(6)
 
   @@map("pgcr")
 }
 
 model migrations {
-  id         Int       @id
-  name       String
-  applied_at DateTime? @default(now()) @db.Timestamp(6)
+  id        Int       @id
+  name      String
+  appliedAt DateTime? @default(now()) @map("applied_at") @db.Timestamp(6)
 
   @@map("_migrations")
 }
@@ -218,9 +216,9 @@ enum WorldFirstLeaderboardType {
 }
 
 view IndividualLeaderboard {
-  raidId       Int                @map("raid_id")
+  activityId   Int                @map("raid_id")
   membershipId BigInt             @map("membership_id")
-  activity     ActivityDefinition @relation("individual_leaderboard", fields: [raidId], references: [id])
+  activity     ActivityDefinition @relation("individual_leaderboard", fields: [activityId], references: [id])
   player       Player             @relation("individual_leaderboard", fields: [membershipId], references: [membershipId])
 
   clears             Int
@@ -242,13 +240,13 @@ view IndividualLeaderboard {
   solosPosition      Int @map("solos_position")
   solosRank          Int @map("solos_rank")
 
-  @@unique([raidId(sort: Desc), membershipId(sort: Asc)], name: "uniqueRaidMembershipId", map: "idx_individual_leaderboard_clears_membership_id")
-  @@unique([raidId(sort: Desc), clearsPosition(sort: Asc)], map: "idx_individual_leaderboard_clears")
-  @@unique([raidId(sort: Desc), fullClearsPosition(sort: Asc)], map: "idx_individual_leaderboard_fresh_clears")
-  @@unique([raidId(sort: Desc), sherpasPosition(sort: Asc)], map: "idx_individual_leaderboard_sherpas")
-  @@unique([raidId(sort: Desc), triosPosition(sort: Asc)], map: "idx_individual_leaderboard_trios")
-  @@unique([raidId(sort: Desc), duos(Positionsort: Asc)], map: "idx_individual_leaderboard_duos")
-  @@unique([raidId(sort: Desc), solosPosition(sort: Asc)], map: "idx_individual_leaderboard_solos")
+  @@unique([activityId(sort: Desc), membershipId(sort: Asc)], name: "uniqueRaidMembershipId", map: "idx_individual_leaderboard_clears_membership_id")
+  @@unique([activityId(sort: Desc), clearsPosition(sort: Asc)], map: "idx_individual_leaderboard_clears")
+  @@unique([activityId(sort: Desc), fullClearsPosition(sort: Asc)], map: "idx_individual_leaderboard_fresh_clears")
+  @@unique([activityId(sort: Desc), sherpasPosition(sort: Asc)], map: "idx_individual_leaderboard_sherpas")
+  @@unique([activityId(sort: Desc), triosPosition(sort: Asc)], map: "idx_individual_leaderboard_trios")
+  @@unique([activityId(sort: Desc), duos(Positionsort: Asc)], map: "idx_individual_leaderboard_duos")
+  @@unique([activityId(sort: Desc), solosPosition(sort: Asc)], map: "idx_individual_leaderboard_solos")
   @@map("individual_leaderboard")
 }
 

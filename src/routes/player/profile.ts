@@ -142,7 +142,7 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                         trios: true,
                         duos: true,
                         solos: true,
-                        raidId: true,
+                        activityId: true,
                         fastestClear: {
                             select: {
                                 instanceId: true,
@@ -202,8 +202,8 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 }
             },
             byRaid: Object.fromEntries(
-                stats.map(({ fastestClear, raidId, ...rest }) => [
-                    raidId,
+                stats.map(({ fastestClear, activityId, ...rest }) => [
+                    activityId,
                     {
                         ...rest,
                         fastestClear

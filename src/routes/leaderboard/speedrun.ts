@@ -53,8 +53,8 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
 
     const entries = await prisma.activity.findMany({
         where: {
-            raidDefinition: {
-                raidId: UrlPathsToRaid[raid]
+            activityHash: {
+                activityId: UrlPathsToRaid[raid]
             },
             completed: true,
             fresh: true
@@ -69,14 +69,9 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
             dateStarted: true,
             dateCompleted: true,
             duration: true,
-            playerActivity: {
+            activityPlayers: {
                 select: {
-                    finishedRaid: true,
-                    kills: true,
-                    assists: true,
-                    deaths: true,
-                    timePlayedSeconds: true,
-                    classHash: true,
+                    completed: true,
                     sherpas: true,
                     isFirstClear: true,
                     player: {
@@ -101,7 +96,7 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
         dateStarted: e.dateStarted,
         dateCompleted: e.dateCompleted,
         duration: e.duration,
-        players: e.playerActivity.map(({ player, ...activity }) => ({
+        players: e.activityPlayers.map(({ player, ...activity }) => ({
             ...player,
             data: activity
         }))

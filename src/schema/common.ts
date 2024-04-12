@@ -81,7 +81,7 @@ export const zActivity = registry.register(
     z
         .object({
             instanceId: zBigIntString(),
-            raidHash: zBigIntString(),
+            hash: zBigIntString(),
             completed: z.boolean(),
             flawless: z.boolean().nullable(),
             fresh: z.boolean().nullable(),
@@ -89,7 +89,8 @@ export const zActivity = registry.register(
             dateStarted: zISODateString(),
             dateCompleted: zISODateString(),
             duration: zPositiveInt(),
-            platformType: zBungieMembershipType.default(0)
+            platformType: zBungieMembershipType.default(0),
+            score: z.number().int().nonnegative()
         })
         .strict()
 )
@@ -109,12 +110,7 @@ export const zActivityPlayerData = registry.register(
     "ActivityPlayerData",
     z
         .object({
-            finishedRaid: z.boolean(),
-            kills: z.number().int().nonnegative(),
-            assists: z.number().int().nonnegative(),
-            deaths: z.number().int().nonnegative(),
-            timePlayedSeconds: z.number().int().nonnegative(),
-            classHash: zBigIntString().nullable(),
+            completed: z.boolean(),
             sherpas: z.number().int(),
             isFirstClear: z.boolean()
         })

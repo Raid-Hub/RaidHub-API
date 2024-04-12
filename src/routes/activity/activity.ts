@@ -39,9 +39,9 @@ export const activityRootRoute = new RaidHubRoute({
             schema: zActivityExtended
                 .extend({
                     meta: z.object({
-                        raid: zRaidEnum,
-                        raidName: z.string(),
-                        version: zRaidVersionEnum,
+                        activityId: zRaidEnum,
+                        activityName: z.string(),
+                        versionId: zRaidVersionEnum,
                         versionName: z.string()
                     }),
                     leaderboardEntries: z.record(z.number()),
@@ -68,13 +68,13 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
             instanceId: instanceId
         },
         include: {
-            raidDefinition: {
+            activityHash: {
                 select: {
-                    raid: true,
-                    version: true
+                    activityDefinition: true,
+                    versionDefinition: true
                 }
             },
-            playerActivity: {
+            activityPlayers: {
                 include: {
                     player: {
                         select: {
@@ -86,18 +86,46 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
                             iconPath: true,
                             lastSeen: true
                         }
+                    },
+                    characters: {
+                        select: {
+                            characterId: true,
+                            classHash: true,
+                            completed: true,
+                            timePlayedSeconds: true,
+                            startSeconds: true,
+                            score: true,
+                            kills: true,
+                            assists: true,
+                            deaths: true,
+                            precisionKills: true,
+                            superKills: true,
+                            grenadeKills: true,
+                            meleeKills: true
+                        },
+                        orderBy: [
+                            {
+                                completed: "desc"
+                            },
+                            {
+                                score: "desc"
+                            },
+                            {
+                                kills: "desc"
+                            }
+                        ]
                     }
                 },
                 orderBy: [
                     {
-                        finishedRaid: "desc"
+                        completed: "desc"
                     },
                     {
-                        kills: "desc"
+                        timePlayedSeconds: "desc"
                     }
                 ]
             },
-            activityLeaderboardEntry: {
+            activityLeaderboardEntries: {
                 select: {
                     leaderboard: {
                         select: {
@@ -112,28 +140,34 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
 
     if (!result) return false
 
-    const { activityLeaderboardEntry, playerActivity, raidDefinition, ...activity } = result
+    const { activityLeaderboardEntries, activityPlayers, activityHash, ...activity } = result
 
-    const dayOne = isDayOne(raidDefinition.raid.id, activity.dateCompleted)
-    const contest = isContest(raidDefinition.raid.id, activity.dateStarted)
-    const weekOne = isWeekOne(raidDefinition.raid.id, activity.dateCompleted)
+    const dayOne = activityHash.activityDefinition.isRaid
+        ? isDayOne(activityHash.activityDefinition.id, activity.dateCompleted)
+        : false
+    const contest = activityHash.activityDefinition.isRaid
+        ? isContest(activityHash.activityDefinition.id, activity.dateStarted)
+        : false
+    const weekOne = activityHash.activityDefinition.isRaid
+        ? isWeekOne(activityHash.activityDefinition.id, activity.dateCompleted)
+        : false
 
     return {
         ...activity,
         leaderboardEntries: Object.fromEntries(
-            activityLeaderboardEntry.map(e => [e.leaderboard.type.toLowerCase(), e.rank])
+            activityLeaderboardEntries.map(e => [e.leaderboard.type.toLowerCase(), e.rank])
         ),
         dayOne,
         contest,
         weekOne,
         meta: {
-            raid: raidDefinition.raid.id,
-            raidName: raidDefinition.raid.name,
-            version: raidDefinition.version.id,
-            versionName: raidDefinition.version.name
+            activityId: activityHash.activityDefinition.id,
+            activityName: activityHash.activityDefinition.name,
+            versionId: activityHash.versionDefinition.id,
+            versionName: activityHash.versionDefinition.name
         },
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        players: playerActivity.map(({ player, instanceId, membershipId, ...data }) => ({
+        players: activityPlayers.map(({ player, instanceId, membershipId, ...data }) => ({
             ...player,
             data
         }))
