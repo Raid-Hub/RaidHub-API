@@ -292,7 +292,7 @@ async function seedPlayers(names: string[]) {
                                         createMany: {
                                             data: p.map(e => ({
                                                 characterId: BigInt(e.characterId),
-                                                classHash: BigInt(e.player.classHash),
+                                                classHash: e.player.classHash,
                                                 emblemHash: e.player.emblemHash,
                                                 completed:
                                                     !!e.values.completed?.basic.value &&
