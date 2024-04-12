@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["relationJoins", "views"]
+  previewFeatures = ["views", "relationJoins"]
   binaryTargets   = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -25,9 +25,8 @@ model Activity {
   playerActivity           PlayerActivity[]           @relation("player_activities")
   fastestClears            PlayerStats[]              @relation("fastest_raid_clear")
 
-  @@index([raidHash, dateCompleted(Sort: Asc)], map: "idx_raidhash_date_completed")
-  @@index([dateCompleted(sort: Desc)], map: "date_index")
-  @@index([raidHash, completed, fresh, duration(sort: Asc)], map: "speedrun_index")
+  @@index([raidHash, dateCompleted], map: "idx_raidhash_date_completed")
+  @@index([raidHash, completed, fresh, duration], map: "speedrun_index")
   @@index([completed, playerCount, fresh, flawless], map: "tag_index")
   @@map("activity")
 }
@@ -40,17 +39,19 @@ model Player {
   displayName                 String?                 @map("display_name")
   bungieGlobalDisplayName     String?                 @map("bungie_global_display_name")
   bungieGlobalDisplayNameCode String?                 @map("bungie_global_display_name_code")
+  bungieName                  String?                 @default(dbgenerated("\nCASE\n    WHEN ((bungie_global_display_name IS NOT NULL) AND (bungie_global_display_name_code IS NOT NULL)) THEN ((bungie_global_display_name || '#'::text) || bungie_global_display_name_code)\n    ELSE display_name\nEND"))
   lastSeen                    DateTime                @map("last_seen")
   clears                      Int                     @default(0) @map("clears")
   fullClears                  Int                     @default(0) @map("fresh_clears")
   sherpas                     Int                     @default(0) @map("sherpas")
   sumOfBestTimes              Int?                    @map("sum_of_best")
   lastCrawled                 DateTime?               @map("last_crawled")
+  searchScore                 Decimal?                @default(dbgenerated("(sqrt(((clears + 1))::double precision) * power((2)::double precision, (GREATEST((0)::double precision, date_part('epoch'::text, (last_seen - '2017-08-27 00:00:00'::timestamp without time zone))) / (20000000)::double precision)))")) @map("_search_score") @db.Decimal
   playerActivities            PlayerActivity[]        @relation("player_activities")
   stats                       PlayerStats[]           @relation("player_stats_membership_id")
   individualRanks             IndividualLeaderboard[] @relation("individual_leaderboard")
   globalRanks                 GlobalLeaderboard?      @relation("global_leaderboard")
-  
+
   @@map("player")
 }
 
@@ -65,8 +66,8 @@ model PlayerActivity {
   classHash         BigInt?  @map("class_hash")
   sherpas           Int      @default(0)
   isFirstClear      Boolean  @default(false) @map("is_first_clear")
-  activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onDelete: Cascade, onUpdate: NoAction, map: "player_activity_instance_id_fkey")
-  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_activity_membership_id_fkey")
+  activity          Activity @relation("player_activities", fields: [instanceId], references: [instanceId], onUpdate: NoAction, map: "player_activity_instance_id_fkey")
+  player            Player   @relation("player_activities", fields: [membershipId], references: [membershipId], onUpdate: NoAction, map: "player_activity_membership_id_fkey")
 
   @@id([instanceId, membershipId], map: "player_activity_instance_id_membership_id_pkey")
   @@index([instanceId], map: "idx_instance_id")
@@ -84,19 +85,12 @@ model PlayerStats {
   duos                       Int       @default(0)
   solos                      Int       @default(0)
   fastestFullClearInstanceId BigInt?   @map("fastest_instance_id")
-  raid                       Raid      @relation("player_stats_raid", fields: [raidId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "raid_id_fkey")
-  player                     Player    @relation("player_stats_membership_id", fields: [membershipId], references: [membershipId], onDelete: Restrict, onUpdate: NoAction, map: "player_membership_id_fkey")
+  player                     Player    @relation("player_stats_membership_id", fields: [membershipId], references: [membershipId], onUpdate: NoAction, map: "player_membership_id_fkey")
   fastestClear               Activity? @relation("fastest_raid_clear", fields: [fastestFullClearInstanceId], references: [instanceId])
+  raid                       Raid      @relation("player_stats_raid", fields: [raidId], references: [id], onUpdate: NoAction, map: "raid_id_fkey")
 
-  @@id([membershipId, raidId], map: "player_stats_pkey")
+  @@id([membershipId, raidId])
   @@map("player_stats")
-}
-
-enum WorldFirstLeaderboardType {
-  Normal
-  Challenge
-  Prestige
-  Master
 }
 
 model ActivityLeaderboard {
@@ -105,8 +99,8 @@ model ActivityLeaderboard {
   date         DateTime                   @map("date")
   isWorldFirst Boolean                    @default(false) @map("is_world_first")
   type         WorldFirstLeaderboardType  @map("type")
-  raid         Raid                       @relation("leaderboards", fields: [raidId], references: [id], onDelete: Restrict)
   entries      ActivityLeaderboardEntry[] @relation("activity_leaderboard_entry_fk")
+  raid         Raid                       @relation("leaderboards", fields: [raidId], references: [id])
 
   @@unique([raidId, type], map: "leaderboard_raid_hash_type_key")
   @@map("leaderboard")
@@ -120,9 +114,9 @@ model ActivityLeaderboardEntry {
   activity      Activity            @relation(fields: [instanceId], references: [instanceId], onDelete: NoAction, onUpdate: NoAction)
   leaderboard   ActivityLeaderboard @relation("activity_leaderboard_entry_fk", fields: [leaderboardId], references: [id], onDelete: Cascade)
 
-  @@id([leaderboardId, instanceId], map: "activity_leaderboard_entry_pkey")
-  @@index([leaderboardId, position(sort: Asc)], map: "activity_leaderboard_position")
-  @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index", type: Hash)
+  @@id([leaderboardId, instanceId])
+  @@index([leaderboardId, position], map: "activity_leaderboard_position")
+  @@index([instanceId], map: "activity_leaderboard_entry_instance_id_index")
   @@map("activity_leaderboard_entry")
 }
 
@@ -130,24 +124,21 @@ model Raid {
   id                     Int                     @id
   name                   String
   isSunset               Boolean                 @default(false) @map("is_sunset")
-  playerStats            PlayerStats[]           @relation("player_stats_raid")
-  AssociatedRaidVersions RaidVersion[]           @relation("associated_raid_version")
-  RaidDefinition         RaidDefinition[]        @relation("raid_name_definition")
   leaderboards           ActivityLeaderboard[]   @relation("leaderboards")
+  playerStats            PlayerStats[]           @relation("player_stats_raid")
+  RaidDefinition         RaidDefinition[]        @relation("raid_name_definition")
+  AssociatedRaidVersions RaidVersion[]           @relation("associated_raid_version")
   individualleaderboards IndividualLeaderboard[] @relation("individual_leaderboard")
 
   @@map("raid")
 }
 
-// This model is used to associate a raid with a specific version of that raid. For example, Normal, Prestige, Master, and Regicide. 
-// Regicide might be associated exclusively with King's Fall. 
 model RaidVersion {
-  id               Int    @id
+  id               Int              @id
   name             String
-  associatedRaidId Int?   @map("associated_raid_id")
-  associatedRaid   Raid?  @relation("associated_raid_version", fields: [associatedRaidId], references: [id])
-
-  RaidDefinition RaidDefinition[] @relation("raid_version_definition")
+  associatedRaidId Int?             @map("associated_raid_id")
+  RaidDefinition   RaidDefinition[] @relation("raid_version_definition")
+  associatedRaid   Raid?            @relation("associated_raid_version", fields: [associatedRaidId], references: [id])
 
   @@map("raid_version")
 }
@@ -166,10 +157,26 @@ model RaidDefinition {
 }
 
 model PGCR {
-  instanceId BigInt @id @map("instance_id")
-  data       Bytes
+  instanceId   BigInt    @id @map("instance_id")
+  data         Bytes
+  date_crawled DateTime? @default(now()) @db.Timestamp(6)
 
   @@map("pgcr")
+}
+
+model migrations {
+  id         Int       @id
+  name       String
+  applied_at DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map("_migrations")
+}
+
+enum WorldFirstLeaderboardType {
+  Normal
+  Challenge
+  Prestige
+  Master
 }
 
 view IndividualLeaderboard {
