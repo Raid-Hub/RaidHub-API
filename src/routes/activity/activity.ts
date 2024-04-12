@@ -1,15 +1,17 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
+import { ListedRaids } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
 import {
     ErrorCode,
+    zActivityEnum,
     zActivityExtended,
-    zPlayerWithActivityData,
-    zRaidEnum,
-    zRaidVersionEnum
+    zPlayerWithExtendedActivityData,
+    zVersionEnum
 } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
 
 export const activityRootRoute = new RaidHubRoute({
@@ -39,13 +41,13 @@ export const activityRootRoute = new RaidHubRoute({
             schema: zActivityExtended
                 .extend({
                     meta: z.object({
-                        activityId: zRaidEnum,
+                        activityId: zActivityEnum,
                         activityName: z.string(),
-                        versionId: zRaidVersionEnum,
+                        versionId: zVersionEnum,
                         versionName: z.string()
                     }),
                     leaderboardEntries: z.record(z.number()),
-                    players: z.array(zPlayerWithActivityData)
+                    players: z.array(zPlayerWithExtendedActivityData)
                 })
                 .strict()
         },
@@ -101,7 +103,14 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
                             precisionKills: true,
                             superKills: true,
                             grenadeKills: true,
-                            meleeKills: true
+                            meleeKills: true,
+                            weapons: {
+                                select: {
+                                    weaponHash: true,
+                                    kills: true,
+                                    precisionKills: true
+                                }
+                            }
                         },
                         orderBy: [
                             {
@@ -142,15 +151,17 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
 
     const { activityLeaderboardEntries, activityPlayers, activityHash, ...activity } = result
 
-    const dayOne = activityHash.activityDefinition.isRaid
-        ? isDayOne(activityHash.activityDefinition.id, activity.dateCompleted)
-        : false
-    const contest = activityHash.activityDefinition.isRaid
-        ? isContest(activityHash.activityDefinition.id, activity.dateStarted)
-        : false
-    const weekOne = activityHash.activityDefinition.isRaid
-        ? isWeekOne(activityHash.activityDefinition.id, activity.dateCompleted)
-        : false
+    const dayOne =
+        includedIn(ListedRaids, activityHash.activityDefinition.id) &&
+        isDayOne(activityHash.activityDefinition.id, activity.dateCompleted)
+
+    const contest =
+        includedIn(ListedRaids, activityHash.activityDefinition.id) &&
+        isContest(activityHash.activityDefinition.id, activity.dateStarted)
+
+    const weekOne =
+        includedIn(ListedRaids, activityHash.activityDefinition.id) &&
+        isWeekOne(activityHash.activityDefinition.id, activity.dateCompleted)
 
     return {
         ...activity,
@@ -166,10 +177,18 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
             versionId: activityHash.versionDefinition.id,
             versionName: activityHash.versionDefinition.name
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        players: activityPlayers.map(({ player, instanceId, membershipId, ...data }) => ({
-            ...player,
-            data
-        }))
+        players: activityPlayers.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ({ player, instanceId, membershipId, characters, ...data }) => ({
+                player,
+                data: {
+                    ...data,
+                    characters: characters.map(({ weapons, ...character }) => ({
+                        ...character,
+                        weapons
+                    }))
+                }
+            })
+        )
     }
 }

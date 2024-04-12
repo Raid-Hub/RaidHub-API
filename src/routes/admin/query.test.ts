@@ -11,10 +11,10 @@ describe("admin query 200", () => {
 
     test("EXPLAIN", () => t("SELECT * FROM activity;", "EXPLAIN"))
 
-    test("SELECT * ", () => t("SELECT * FROM player_activity LIMIT 10;", "SELECT"))
+    test("SELECT * ", () => t("SELECT * FROM activity_player LIMIT 10;", "SELECT"))
 
     test("SELECT with ignore cost ", () =>
-        t("SELECT * FROM player_activity LIMIT 100000;", "SELECT", true))
+        t("SELECT * FROM activity_player LIMIT 100000;", "SELECT", true))
 
     test(
         "Complex",
@@ -34,13 +34,13 @@ describe("admin query 200", () => {
         FROM 
             activity a 
         JOIN 
-            player_activity pa ON a.instance_id = pa.instance_id
+            activity_player pa ON a.instance_id = pa.instance_id
         JOIN 
-            raid_definition rd ON rd.hash = a.raid_hash
+            activity_hash ah ON ah.hash = a.hash
         JOIN 
             player p ON p.membership_id = pa.membership_id
         WHERE 
-            a.player_count = 2 AND a.flawless AND rd.raid_id = 13 
+            a.player_count = 2 AND a.flawless AND ah.activity_id = 13 
         GROUP BY 
             a.instance_id, a.date_completed
     ) AS subquery

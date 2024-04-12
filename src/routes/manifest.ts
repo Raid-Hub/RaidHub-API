@@ -12,53 +12,25 @@ import {
     WorldFirstBoardsMap
 } from "../data/leaderboards"
 import {
-    AllRaidHashes,
     ContestRaids,
-    Difficulty,
     ListedRaid,
     ListedRaids,
     MasterRaids,
+    PantheonModes,
     PrestigeRaids,
     Raid,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
 } from "../data/raids"
 import { cacheControl } from "../middlewares/cache-control"
-import { registry, zRaidEnum, zRaidVersionEnum } from "../schema/common"
+import { registry, zActivityEnum, zRaidEnum, zVersionEnum } from "../schema/common"
 import { z, zISODateString, zNumberEnum } from "../schema/zod"
 import { prisma } from "../services/prisma"
 import { groupBy } from "../util/helpers"
 import { ok } from "../util/response"
 import { zRaidPath } from "./leaderboard/_schema"
 
-const raids: Record<Raid, string> = {
-    [Raid.NA]: "N/A",
-    [Raid.LEVIATHAN]: "Leviathan",
-    [Raid.EATER_OF_WORLDS]: "Eater of Worlds",
-    [Raid.SPIRE_OF_STARS]: "Spire of Stars",
-    [Raid.LAST_WISH]: "Last Wish",
-    [Raid.SCOURGE_OF_THE_PAST]: "Scourge of the Past",
-    [Raid.CROWN_OF_SORROW]: "Crown of Sorrow",
-    [Raid.GARDEN_OF_SALVATION]: "Garden of Salvation",
-    [Raid.DEEP_STONE_CRYPT]: "Deep Stone Crypt",
-    [Raid.VAULT_OF_GLASS]: "Vault of Glass",
-    [Raid.VOW_OF_THE_DISCIPLE]: "Vow of the Disciple",
-    [Raid.KINGS_FALL]: "King's Fall",
-    [Raid.ROOT_OF_NIGHTMARES]: "Root of Nightmares",
-    [Raid.CROTAS_END]: "Crota's End"
-}
-const difficulties: Record<Difficulty, string> = {
-    [Difficulty.NA]: "N/A",
-    [Difficulty.NORMAL]: "Normal",
-    [Difficulty.GUIDEDGAMES]: "Guided Games",
-    [Difficulty.PRESTIGE]: "Prestige",
-    [Difficulty.MASTER]: "Master",
-    [Difficulty.CHALLENGE_VOG]: "Challenge VOG",
-    [Difficulty.CHALLENGE_KF]: "Challenge KF",
-    [Difficulty.CHALLENGE_CROTA]: "Challenge Crota",
-    [Difficulty.CONTEST]: "Contest"
-}
-
+// todo: add to DB
 const checkpoints: Record<ListedRaid, string> = {
     [Raid.LEVIATHAN]: "Calus",
     [Raid.EATER_OF_WORLDS]: "Argos",
@@ -75,6 +47,7 @@ const checkpoints: Record<ListedRaid, string> = {
     [Raid.CROTAS_END]: "Crota"
 }
 
+const zPantheonEnum = registry.register("PantheonEnum", zNumberEnum(PantheonModes))
 const zSunsetRaidEnum = registry.register("SunsetRaidEnum", zNumberEnum(SunsetRaids))
 const zMasterRaidEnum = registry.register("MasterRaidEnum", zNumberEnum(MasterRaids))
 const zPrestigeRaidEnum = registry.register("PrestigeRaidEnum", zNumberEnum(PrestigeRaids))
@@ -83,11 +56,36 @@ const zContestRaidEnum = registry.register("ContestRaidEnum", zNumberEnum(Contes
 export const manifestRoute = new RaidHubRoute({
     method: "get",
     middlewares: [cacheControl(60)],
-    handler: async () =>
-        ok({
-            raidStrings: raids,
-            difficultyStrings: difficulties,
-            hashes: AllRaidHashes,
+    handler: async () => {
+        const [worldFirstLeaderboards, activities, versions, hashes] = await Promise.all([
+            listWFLeaderboards(),
+            prisma.activityDefinition.findMany({
+                select: {
+                    id: true,
+                    name: true
+                }
+            }),
+            prisma.versionDefinition.findMany({
+                select: {
+                    id: true,
+                    name: true
+                }
+            }),
+            prisma.activityHash.findMany({
+                select: {
+                    hash: true,
+                    versionId: true,
+                    activityId: true
+                }
+            })
+        ])
+        return ok({
+            activityStrings: Object.fromEntries(activities.map(a => [a.id, a.name])),
+            versionStrings: Object.fromEntries(versions.map(a => [a.id, a.name])),
+            hashes: Object.fromEntries(
+                hashes.map(h => [h.hash, { activityId: h.activityId, versionId: h.versionId }])
+            ),
+            pantheon: [...PantheonModes],
             listed: [...ListedRaids],
             sunset: [...SunsetRaids],
             contest: [...ContestRaids],
@@ -107,7 +105,7 @@ export const manifestRoute = new RaidHubRoute({
                 ])
             ),
             leaderboards: {
-                worldFirst: await listWFLeaderboards(),
+                worldFirst: worldFirstLeaderboards,
                 global: Object.entries(GlobalBoardNames).map(
                     ([category, { displayName, format }]) => ({
                         category: category as GlobalBoard,
@@ -132,7 +130,8 @@ export const manifestRoute = new RaidHubRoute({
                 }
             },
             checkpointNames: checkpoints
-        }),
+        })
+    },
     response: {
         success: {
             statusCode: 200,
@@ -140,11 +139,12 @@ export const manifestRoute = new RaidHubRoute({
                 .object({
                     hashes: z.record(
                         z.object({
-                            raid: zRaidEnum,
-                            version: zRaidVersionEnum
+                            activityId: zActivityEnum,
+                            versionId: zVersionEnum
                         })
                     ),
                     listed: z.array(zRaidEnum),
+                    pantheon: z.array(zPantheonEnum),
                     sunset: z.array(zSunsetRaidEnum),
                     contest: z.array(zContestRaidEnum),
                     master: z.array(zMasterRaidEnum),
@@ -152,7 +152,7 @@ export const manifestRoute = new RaidHubRoute({
                     reprisedChallengePairings: z.array(
                         z.object({
                             raid: zRaidEnum,
-                            version: zRaidVersionEnum,
+                            version: zVersionEnum,
                             triumphName: z.string()
                         })
                     ),
@@ -186,8 +186,8 @@ export const manifestRoute = new RaidHubRoute({
                         })
                     }),
                     raidUrlPaths: z.record(zRaidPath),
-                    raidStrings: z.record(z.string()),
-                    difficultyStrings: z.record(z.string()),
+                    activityStrings: z.record(z.string()),
+                    versionStrings: z.record(z.string()),
                     checkpointNames: z.record(z.string())
                 })
                 .strict()

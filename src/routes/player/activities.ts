@@ -1,14 +1,11 @@
 import { Prisma } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
-import {
-    ErrorCode,
-    zActivityWithPlayerData,
-    zRaidEnum,
-    zRaidVersionEnum
-} from "../../schema/common"
+import { ListedRaids } from "../../data/raids"
+import { ErrorCode, zActivityWithPlayerData, zRaidEnum, zVersionEnum } from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
 import { playerRouterParams } from "./_schema"
 
@@ -63,7 +60,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
                         zActivityWithPlayerData.extend({
                             meta: z.object({
                                 activityId: zRaidEnum,
-                                versionId: zRaidVersionEnum
+                                versionId: zVersionEnum
                             })
                         })
                     ),
@@ -99,12 +96,7 @@ const activityQuery = (membershipId: bigint, count: number) =>
         include: {
             activityHash: {
                 select: {
-                    activityDefinition: {
-                        select: {
-                            id: true,
-                            isRaid: true
-                        }
-                    },
+                    activityId: true,
                     versionId: true
                 }
             }
@@ -121,7 +113,8 @@ const playerActivityQuery = (membershipId: bigint, count: number) =>
         select: {
             completed: true,
             sherpas: true,
-            isFirstClear: true
+            isFirstClear: true,
+            timePlayedSeconds: true
         },
         take: count + 1,
         orderBy: {
@@ -190,19 +183,19 @@ async function getPlayerActivities({
         activities: activities.slice(0, count).map(({ activityHash, ...a }, i) => {
             return {
                 meta: {
-                    activityId: activityHash.activityDefinition.id,
+                    activityId: activityHash.activityId,
                     versionId: activityHash.versionId
                 },
                 ...a,
-                dayOne: activityHash.activityDefinition.isRaid
-                    ? isDayOne(activityHash.activityDefinition.id, a.dateCompleted)
-                    : false,
-                contest: activityHash.activityDefinition.isRaid
-                    ? isContest(activityHash.activityDefinition.id, a.dateStarted)
-                    : false,
-                weekOne: activityHash.activityDefinition.isRaid
-                    ? isWeekOne(activityHash.activityDefinition.id, a.dateCompleted)
-                    : false,
+                dayOne:
+                    includedIn(ListedRaids, activityHash.activityId) &&
+                    isDayOne(activityHash.activityId, a.dateCompleted),
+                contest:
+                    includedIn(ListedRaids, activityHash.activityId) &&
+                    isContest(activityHash.activityId, a.dateStarted),
+                weekOne:
+                    includedIn(ListedRaids, activityHash.activityId) &&
+                    isWeekOne(activityHash.activityId, a.dateCompleted),
                 player: playerActivities[i]
             }
         })

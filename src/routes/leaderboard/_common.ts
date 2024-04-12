@@ -119,6 +119,7 @@ export async function getWorldFirstLeaderboardEntries(params: {
                                     completed: true,
                                     sherpas: true,
                                     isFirstClear: true,
+                                    timePlayedSeconds: true,
                                     player: {
                                         select: {
                                             membershipId: true,
@@ -150,7 +151,7 @@ export async function getWorldFirstLeaderboardEntries(params: {
                 value: (activity.dateCompleted.getTime() - leaderboard.date.getTime()) / 1000,
                 activity: activity,
                 players: activityPlayers.map(({ player, ...ap }) => ({
-                    ...player,
+                    player,
                     data: ap
                 }))
             })

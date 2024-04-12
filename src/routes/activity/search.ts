@@ -2,12 +2,13 @@ import { Prisma } from "@prisma/client"
 import { BungieMembershipType } from "bungie-net-core/models"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne } from "../../data/raceDates"
-import { RaidHashes, type ListedRaid } from "../../data/raids"
+import { ListedRaids, Raid } from "../../data/raids"
 import { SeasonDates } from "../../data/seasonDates"
 import { cacheControl } from "../../middlewares/cache-control"
 import { registry, zActivityExtended, zRaidEnum } from "../../schema/common"
 import { z, zBigIntString, zBooleanString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
 import { ok } from "../../util/response"
 
 // Todo: add a query param for the difficulty
@@ -54,10 +55,12 @@ export const activitySearchRoute = new RaidHubRoute({
             platformType: a.platform_type as BungieMembershipType,
             duration: a.duration,
             score: a.score,
-            // TODO: this will throw errors
-            dayOne: isDayOne(a.activity_id, a.date_completed),
-            contest: isContest(a.activity_id, a.date_started),
-            weekOne: isContest(a.activity_id, a.date_completed)
+            dayOne:
+                includedIn(ListedRaids, a.activity_id) && isDayOne(a.activity_id, a.date_completed),
+            contest:
+                includedIn(ListedRaids, a.activity_id) && isContest(a.activity_id, a.date_started),
+            weekOne:
+                includedIn(ListedRaids, a.activity_id) && isContest(a.activity_id, a.date_completed)
         }))
 
         return ok({
@@ -80,7 +83,7 @@ export const activitySearchRoute = new RaidHubRoute({
 
 type ActivitySearchResult = {
     instance_id: string
-    activity_id: ListedRaid
+    activity_id: Raid
     hash: string
     fresh: boolean
     completed: boolean
@@ -110,8 +113,6 @@ async function searchActivities({
     count,
     page
 }: z.infer<typeof zActivitySearchBodySchema>) {
-    const hashes =
-        raid && RaidHashes[raid] ? (Object.values(RaidHashes[raid]).flat() as string[]) : []
     const minSeasonDate = minSeason ? SeasonDates[minSeason - 1] ?? SeasonDates[0] : SeasonDates[0]
     // do plus once because the season dates are the start dates
     const maxSeasonDate = maxSeason
@@ -127,11 +128,12 @@ async function searchActivities({
             FROM
                 activity a
             JOIN
-                player_activity pa ON a.instance_id = pa.instance_id
+                activity_player pa ON a.instance_id = pa.instance_id
                 AND pa.membership_id IN (${Prisma.join(membershipIds)})
             JOIN
                 activity_hash ah ON a.hash = ah.hash
             WHERE
+                ${raid !== undefined ? Prisma.sql`ah.activity_id = ${raid}::int AND` : Prisma.empty}
                 ${
                     fresh !== undefined
                         ? Prisma.sql`a.fresh = ${fresh}::boolean AND `
@@ -144,11 +146,6 @@ async function searchActivities({
                 ${
                     flawless !== undefined
                         ? Prisma.sql`a.flawless = ${flawless}::boolean AND`
-                        : Prisma.empty
-                }
-                ${
-                    hashes.length
-                        ? Prisma.sql`a.raid_hash IN (${Prisma.join(hashes.map(BigInt))}) AND`
                         : Prisma.empty
                 }
                 ${

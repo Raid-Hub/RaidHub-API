@@ -1,7 +1,7 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi"
 import { BungieMembershipType } from "bungie-net-core/enums"
 import { ZodNativeEnumDef, ZodType } from "zod"
-import { ListedRaids, RaidVersions } from "../data/raids"
+import { ListedRaids, PantheonModes, Versions } from "../data/raids"
 import { z, zBigIntString, zISODateString, zNumberEnum, zPositiveInt } from "./zod"
 
 export const registry = new OpenAPIRegistry()
@@ -37,8 +37,12 @@ export const zBungieMembershipType = registry.register(
     })
 )
 
+export const zActivityEnum = registry.register(
+    "ActivityEnum",
+    zNumberEnum([...ListedRaids, ...PantheonModes])
+)
 export const zRaidEnum = registry.register("RaidEnum", zNumberEnum(ListedRaids))
-export const zRaidVersionEnum = registry.register("RaidVersionEnum", zNumberEnum(RaidVersions))
+export const zVersionEnum = registry.register("RaidVersionEnum", zNumberEnum(Versions))
 
 export const zPlayerInfo = registry.register(
     "PlayerInfo",
@@ -111,19 +115,54 @@ export const zActivityPlayerData = registry.register(
     z
         .object({
             completed: z.boolean(),
-            sherpas: z.number().int(),
-            isFirstClear: z.boolean()
+            sherpas: z.number().int().nonnegative(),
+            isFirstClear: z.boolean(),
+            timePlayedSeconds: z.number().int().nonnegative()
         })
         .strict()
 )
 
-export const zPlayerWithActivityData = registry.register(
-    "PlayerWithActivityData",
-    zPlayerInfo
-        .extend({
-            data: zActivityPlayerData
+export const zActivityCharacterWeapon = registry.register(
+    "ActivityCharacterWeapon",
+    z.object({
+        weaponHash: zBigIntString(),
+        kills: z.number().int().nonnegative(),
+        precisionKills: z.number().int().nonnegative()
+    })
+)
+
+export const zActivityCharacter = registry.register(
+    "ActivityCharacter",
+    z.object({
+        characterId: zBigIntString(),
+        classHash: zBigIntString().nullable(),
+        completed: z.boolean(),
+        timePlayedSeconds: z.number().int().nonnegative(),
+        startSeconds: z.number().int().nonnegative(),
+        score: z.number().int().nonnegative(),
+        kills: z.number().int().nonnegative(),
+        deaths: z.number().int().nonnegative(),
+        assists: z.number().int().nonnegative(),
+        precisionKills: z.number().int().nonnegative(),
+        superKills: z.number().int().nonnegative(),
+        grenadeKills: z.number().int().nonnegative(),
+        meleeKills: z.number().int().nonnegative(),
+        weapons: z.array(zActivityCharacterWeapon)
+    })
+)
+
+export const zPlayerWithExtendedActivityData = registry.register(
+    "PlayerWithExtendedActivityData",
+    z.object({
+        player: zPlayerInfo,
+        data: z.object({
+            completed: z.boolean(),
+            sherpas: z.number().int().nonnegative(),
+            isFirstClear: z.boolean(),
+            timePlayedSeconds: z.number().int().nonnegative(),
+            characters: z.array(zActivityCharacter)
         })
-        .strict()
+    })
 )
 
 export const zActivityWithPlayerData = registry.register(

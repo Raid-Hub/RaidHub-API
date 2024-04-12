@@ -28,13 +28,17 @@
           "url": "https://bungie-net.github.io/#/components/schemas/BungieMembershipType"
         }
       },
+      "ActivityEnum": {
+        "type": "integer",
+        "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1, 101, 102, 103, 104]
+      },
       "RaidEnum": {
         "type": "integer",
         "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1]
       },
       "RaidVersionEnum": {
         "type": "integer",
-        "enum": [1, 2, 3, 4, 64, 65, 66]
+        "enum": [1, 2, 3, 4, 64, 65, 66, 128]
       },
       "PlayerInfo": {
         "type": "object",
@@ -103,7 +107,7 @@
             "type": "string",
             "pattern": "^\\d+n?$"
           },
-          "raidHash": {
+          "hash": {
             "type": "string",
             "pattern": "^\\d+n?$"
           },
@@ -145,18 +149,23 @@
                 "default": 0
               }
             ]
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0
           }
         },
         "required": [
           "instanceId",
-          "raidHash",
+          "hash",
           "completed",
           "flawless",
           "fresh",
           "playerCount",
           "dateStarted",
           "dateCompleted",
-          "duration"
+          "duration",
+          "score"
         ],
         "additionalProperties": false
       },
@@ -186,14 +195,75 @@
       "ActivityPlayerData": {
         "type": "object",
         "properties": {
-          "finishedRaid": {
+          "completed": {
             "type": "boolean"
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "isFirstClear": {
+            "type": "boolean"
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "completed",
+          "sherpas",
+          "isFirstClear",
+          "timePlayedSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "ActivityCharacterWeapon": {
+        "type": "object",
+        "properties": {
+          "weaponHash": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
           },
           "kills": {
             "type": "integer",
             "minimum": 0
           },
-          "assists": {
+          "precisionKills": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["weaponHash", "kills", "precisionKills"]
+      },
+      "ActivityCharacter": {
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "classHash": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+n?$"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "kills": {
             "type": "integer",
             "minimum": 0
           },
@@ -201,59 +271,90 @@
             "type": "integer",
             "minimum": 0
           },
-          "timePlayedSeconds": {
+          "assists": {
             "type": "integer",
             "minimum": 0
           },
-          "classHash": {
-            "type": "string",
-            "nullable": true,
-            "pattern": "^\\d+n?$"
+          "precisionKills": {
+            "type": "integer",
+            "minimum": 0
           },
-          "sherpas": {
-            "type": "integer"
+          "superKills": {
+            "type": "integer",
+            "minimum": 0
           },
-          "isFirstClear": {
-            "type": "boolean"
+          "grenadeKills": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "meleeKills": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "weapons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityCharacterWeapon"
+            }
           }
         },
         "required": [
-          "finishedRaid",
-          "kills",
-          "assists",
-          "deaths",
-          "timePlayedSeconds",
+          "characterId",
           "classHash",
-          "sherpas",
-          "isFirstClear"
-        ],
-        "additionalProperties": false
+          "completed",
+          "timePlayedSeconds",
+          "startSeconds",
+          "score",
+          "kills",
+          "deaths",
+          "assists",
+          "precisionKills",
+          "superKills",
+          "grenadeKills",
+          "meleeKills",
+          "weapons"
+        ]
       },
-      "PlayerWithActivityData": {
-        "allOf": [
-          {
+      "PlayerWithExtendedActivityData": {
+        "type": "object",
+        "properties": {
+          "player": {
             "$ref": "#/components/schemas/PlayerInfo"
           },
-          {
+          "data": {
             "type": "object",
             "properties": {
-              "data": {
-                "$ref": "#/components/schemas/ActivityPlayerData"
+              "completed": {
+                "type": "boolean"
+              },
+              "sherpas": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "isFirstClear": {
+                "type": "boolean"
+              },
+              "timePlayedSeconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "characters": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ActivityCharacter"
+                }
               }
             },
-            "required": ["data"],
-            "additionalProperties": false
+            "required": [
+              "completed",
+              "sherpas",
+              "isFirstClear",
+              "timePlayedSeconds",
+              "characters"
+            ]
           }
-        ],
-        "example": {
-          "bungieGlobalDisplayName": "Newo",
-          "bungieGlobalDisplayNameCode": "9010",
-          "membershipId": "4611686018488107374",
-          "displayName": "xx_newo_xx",
-          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
-          "membershipType": 3,
-          "lastSeen": "2021-05-01T00:00:00.000Z"
-        }
+        },
+        "required": ["player", "data"]
       },
       "ActivityWithPlayerData": {
         "allOf": [
@@ -735,7 +836,16 @@
           "players": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PlayerWithActivityData"
+              "type": "object",
+              "properties": {
+                "player": {
+                  "$ref": "#/components/schemas/PlayerInfo"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/ActivityPlayerData"
+                }
+              },
+              "required": ["player", "data"]
             }
           }
         },
@@ -798,6 +908,10 @@
           }
         },
         "required": ["type", "membershipId", "category"]
+      },
+      "PantheonEnum": {
+        "type": "integer",
+        "enum": [101, 102, 103, 104]
       },
       "SunsetRaidEnum": {
         "type": "integer",
@@ -1091,7 +1205,7 @@
             "type": "string",
             "enum": ["Normal", "Challenge", "Prestige", "Master"]
           },
-          "raidHash": {
+          "activityHash": {
             "type": "string",
             "pattern": "^\\d+n?$"
           },
@@ -1114,7 +1228,7 @@
           "instanceId",
           "boardId",
           "type",
-          "raidHash",
+          "activityHash",
           "dateCompleted",
           "dayOne",
           "contest",
@@ -1129,20 +1243,26 @@
             "additionalProperties": {
               "type": "object",
               "properties": {
-                "raid": {
-                  "$ref": "#/components/schemas/RaidEnum"
+                "activityId": {
+                  "$ref": "#/components/schemas/ActivityEnum"
                 },
-                "version": {
+                "versionId": {
                   "$ref": "#/components/schemas/RaidVersionEnum"
                 }
               },
-              "required": ["raid", "version"]
+              "required": ["activityId", "versionId"]
             }
           },
           "listed": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RaidEnum"
+            }
+          },
+          "pantheon": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PantheonEnum"
             }
           },
           "sunset": {
@@ -1275,13 +1395,13 @@
               "$ref": "#/components/schemas/RaidPath"
             }
           },
-          "raidStrings": {
+          "activityStrings": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
             }
           },
-          "difficultyStrings": {
+          "versionStrings": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
@@ -1297,6 +1417,7 @@
         "required": [
           "hashes",
           "listed",
+          "pantheon",
           "sunset",
           "contest",
           "master",
@@ -1304,8 +1425,8 @@
           "reprisedChallengePairings",
           "leaderboards",
           "raidUrlPaths",
-          "raidStrings",
-          "difficultyStrings",
+          "activityStrings",
+          "versionStrings",
           "checkpointNames"
         ],
         "additionalProperties": false
@@ -1381,14 +1502,14 @@
                     "meta": {
                       "type": "object",
                       "properties": {
-                        "raid": {
+                        "activityId": {
                           "$ref": "#/components/schemas/RaidEnum"
                         },
-                        "version": {
+                        "versionId": {
                           "$ref": "#/components/schemas/RaidVersionEnum"
                         }
                       },
-                      "required": ["raid", "version"]
+                      "required": ["activityId", "versionId"]
                     }
                   },
                   "required": ["meta"],
@@ -1589,20 +1710,25 @@
               "meta": {
                 "type": "object",
                 "properties": {
-                  "raid": {
-                    "$ref": "#/components/schemas/RaidEnum"
+                  "activityId": {
+                    "$ref": "#/components/schemas/ActivityEnum"
                   },
-                  "raidName": {
+                  "activityName": {
                     "type": "string"
                   },
-                  "version": {
+                  "versionId": {
                     "$ref": "#/components/schemas/RaidVersionEnum"
                   },
                   "versionName": {
                     "type": "string"
                   }
                 },
-                "required": ["raid", "raidName", "version", "versionName"]
+                "required": [
+                  "activityId",
+                  "activityName",
+                  "versionId",
+                  "versionName"
+                ]
               },
               "leaderboardEntries": {
                 "type": "object",
@@ -1613,7 +1739,7 @@
               "players": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/PlayerWithActivityData"
+                  "$ref": "#/components/schemas/PlayerWithExtendedActivityData"
                 }
               }
             },
@@ -1868,7 +1994,16 @@
                 "players": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/PlayerWithActivityData"
+                    "type": "object",
+                    "properties": {
+                      "player": {
+                        "$ref": "#/components/schemas/PlayerInfo"
+                      },
+                      "data": {
+                        "$ref": "#/components/schemas/ActivityPlayerData"
+                      }
+                    },
+                    "required": ["player", "data"]
                   }
                 }
               },

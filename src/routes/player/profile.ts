@@ -1,12 +1,13 @@
 import { WorldFirstLeaderboardType } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
-import { ListedRaid } from "../../data/raids"
+import { ListedRaids, Raid } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
 import { processPlayerAsync } from "../../middlewares/processPlayerAsync"
 import { ErrorCode, registry, zPlayerInfo } from "../../schema/common"
 import { z, zBigIntString, zISODateString, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
 import { playerRouterParams } from "./_schema"
 
@@ -73,7 +74,7 @@ export const playerProfileRoute = new RaidHubRoute({
                                 instanceId: zBigIntString(),
                                 boardId: z.string(),
                                 type: z.nativeEnum(WorldFirstLeaderboardType),
-                                raidHash: zBigIntString(),
+                                activityHash: zBigIntString(),
                                 dateCompleted: zISODateString(),
                                 dayOne: z.boolean(),
                                 contest: z.boolean(),
@@ -102,8 +103,8 @@ type PrismaRawLeaderboardEntry = {
     leaderboard_id: string
     leaderboard_type: WorldFirstLeaderboardType
     instance_id: bigint
-    raid_hash: bigint
-    raid_id: ListedRaid
+    hash: bigint
+    activity_id: Raid
     date_completed: Date
     date_started: Date
 }
@@ -159,17 +160,17 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 lb.id AS leaderboard_id,
                 lb.type as leaderboard_type,
                 a.instance_id,
-                a.raid_hash,
+                a.hash,
                 a.date_started,
                 a.date_completed,
-                rd.raid_id
+                ah.activity_id
             FROM 
                 activity_leaderboard_entry ale
-            JOIN player_activity pa ON pa.instance_id = ale.instance_id 
+            JOIN activity_player pa ON pa.instance_id = ale.instance_id 
                 AND pa.membership_id = ${membershipId}::bigint 
-                AND pa.finished_raid
+                AND pa.completed
             JOIN activity a ON pa.instance_id = a.instance_id
-            JOIN raid_definition rd ON a.raid_hash = rd.hash
+            JOIN activity_hash ah ON ah.hash = a.hash
             JOIN leaderboard lb ON ale.leaderboard_id = lb.id;
             `
     ])
@@ -217,11 +218,17 @@ async function getPlayer({ membershipId }: { membershipId: bigint }) {
                 type: entry.leaderboard_type,
                 rank: entry.rank,
                 instanceId: entry.instance_id,
-                raidHash: entry.raid_hash,
+                activityHash: entry.hash,
                 dateCompleted: entry.date_completed,
-                dayOne: isDayOne(entry.raid_id, entry.date_completed),
-                contest: isContest(entry.raid_id, entry.date_started),
-                weekOne: isWeekOne(entry.raid_id, entry.date_completed)
+                dayOne:
+                    includedIn(ListedRaids, entry.activity_id) &&
+                    isDayOne(entry.activity_id, entry.date_completed),
+                contest:
+                    includedIn(ListedRaids, entry.activity_id) &&
+                    isContest(entry.activity_id, entry.date_started),
+                weekOne:
+                    includedIn(ListedRaids, entry.activity_id) &&
+                    isWeekOne(entry.activity_id, entry.date_completed)
             }
         })
     }

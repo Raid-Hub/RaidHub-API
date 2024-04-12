@@ -1,4 +1,4 @@
-import { registry, zActivity, zPlayerInfo, zPlayerWithActivityData } from "../../schema/common"
+import { registry, zActivity, zActivityPlayerData, zPlayerInfo } from "../../schema/common"
 import { z, zCount, zPage, zPositiveInt } from "../../schema/zod"
 
 export const zLeaderboardQueryPagination = z.object({
@@ -47,7 +47,12 @@ export const zWorldFirstLeaderboardEntry = registry.register(
             rank: zPositiveInt(),
             value: z.number(),
             activity: zActivity,
-            players: z.array(zPlayerWithActivityData)
+            players: z.array(
+                z.object({
+                    player: zPlayerInfo,
+                    data: zActivityPlayerData
+                })
+            )
         })
         .strict()
 )
