@@ -293,6 +293,7 @@ async function seedPlayers(names: string[]) {
                                             data: p.map(e => ({
                                                 characterId: BigInt(e.characterId),
                                                 classHash: BigInt(e.player.classHash),
+                                                emblemHash: e.player.emblemHash,
                                                 completed:
                                                     !!e.values.completed?.basic.value &&
                                                     e.values.completionReason?.basic.value === 0,

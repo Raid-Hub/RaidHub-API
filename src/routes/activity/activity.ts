@@ -93,6 +93,7 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
                         select: {
                             characterId: true,
                             classHash: true,
+                            emblemHash: true,
                             completed: true,
                             timePlayedSeconds: true,
                             startSeconds: true,

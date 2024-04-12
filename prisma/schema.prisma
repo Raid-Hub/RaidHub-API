@@ -132,6 +132,7 @@ model ActivityCharacter {
   membershipId      BigInt                    @map("membership_id")
   characterId       BigInt                    @map("character_id")
   classHash         BigInt?                   @map("class_hash")
+  emblemHash        BigInt?                   @map("emblem_hash")
   completed         Boolean
   score             Int                       @default(0)
   kills             Int                       @default(0)

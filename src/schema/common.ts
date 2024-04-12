@@ -136,6 +136,7 @@ export const zActivityCharacter = registry.register(
     z.object({
         characterId: zBigIntString(),
         classHash: zBigIntString().nullable(),
+        emblemHash: zBigIntString().nullable(),
         completed: z.boolean(),
         timePlayedSeconds: z.number().int().nonnegative(),
         startSeconds: z.number().int().nonnegative(),

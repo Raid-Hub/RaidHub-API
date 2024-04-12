@@ -248,6 +248,11 @@
             "nullable": true,
             "pattern": "^\\d+n?$"
           },
+          "emblemHash": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+n?$"
+          },
           "completed": {
             "type": "boolean"
           },
@@ -301,6 +306,7 @@
         "required": [
           "characterId",
           "classHash",
+          "emblemHash",
           "completed",
           "timePlayedSeconds",
           "startSeconds",
