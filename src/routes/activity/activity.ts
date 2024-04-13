@@ -1,15 +1,17 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
+import { ListedRaids } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
 import {
     ErrorCode,
+    zActivityEnum,
     zActivityExtended,
-    zPlayerWithActivityData,
-    zRaidEnum,
-    zRaidVersionEnum
+    zPlayerWithExtendedActivityData,
+    zVersionEnum
 } from "../../schema/common"
 import { z, zBigIntString } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
 
 export const activityRootRoute = new RaidHubRoute({
@@ -39,13 +41,13 @@ export const activityRootRoute = new RaidHubRoute({
             schema: zActivityExtended
                 .extend({
                     meta: z.object({
-                        raid: zRaidEnum,
-                        raidName: z.string(),
-                        version: zRaidVersionEnum,
+                        activityId: zActivityEnum,
+                        activityName: z.string(),
+                        versionId: zVersionEnum,
                         versionName: z.string()
                     }),
                     leaderboardEntries: z.record(z.number()),
-                    players: z.array(zPlayerWithActivityData)
+                    players: z.array(zPlayerWithExtendedActivityData)
                 })
                 .strict()
         },
@@ -68,13 +70,13 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
             instanceId: instanceId
         },
         include: {
-            raidDefinition: {
+            activityHash: {
                 select: {
-                    raid: true,
-                    version: true
+                    activityDefinition: true,
+                    versionDefinition: true
                 }
             },
-            playerActivity: {
+            activityPlayers: {
                 include: {
                     player: {
                         select: {
@@ -86,18 +88,54 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
                             iconPath: true,
                             lastSeen: true
                         }
+                    },
+                    characters: {
+                        select: {
+                            characterId: true,
+                            classHash: true,
+                            emblemHash: true,
+                            completed: true,
+                            timePlayedSeconds: true,
+                            startSeconds: true,
+                            score: true,
+                            kills: true,
+                            assists: true,
+                            deaths: true,
+                            precisionKills: true,
+                            superKills: true,
+                            grenadeKills: true,
+                            meleeKills: true,
+                            weapons: {
+                                select: {
+                                    weaponHash: true,
+                                    kills: true,
+                                    precisionKills: true
+                                }
+                            }
+                        },
+                        orderBy: [
+                            {
+                                completed: "desc"
+                            },
+                            {
+                                score: "desc"
+                            },
+                            {
+                                kills: "desc"
+                            }
+                        ]
                     }
                 },
                 orderBy: [
                     {
-                        finishedRaid: "desc"
+                        completed: "desc"
                     },
                     {
-                        kills: "desc"
+                        timePlayedSeconds: "desc"
                     }
                 ]
             },
-            activityLeaderboardEntry: {
+            activityLeaderboardEntries: {
                 select: {
                     leaderboard: {
                         select: {
@@ -112,30 +150,46 @@ async function getActivity({ instanceId }: { instanceId: bigint }) {
 
     if (!result) return false
 
-    const { activityLeaderboardEntry, playerActivity, raidDefinition, ...activity } = result
+    const { activityLeaderboardEntries, activityPlayers, activityHash, ...activity } = result
 
-    const dayOne = isDayOne(raidDefinition.raid.id, activity.dateCompleted)
-    const contest = isContest(raidDefinition.raid.id, activity.dateStarted)
-    const weekOne = isWeekOne(raidDefinition.raid.id, activity.dateCompleted)
+    const dayOne =
+        includedIn(ListedRaids, activityHash.activityDefinition.id) &&
+        isDayOne(activityHash.activityDefinition.id, activity.dateCompleted)
+
+    const contest =
+        includedIn(ListedRaids, activityHash.activityDefinition.id) &&
+        isContest(activityHash.activityDefinition.id, activity.dateStarted)
+
+    const weekOne =
+        includedIn(ListedRaids, activityHash.activityDefinition.id) &&
+        isWeekOne(activityHash.activityDefinition.id, activity.dateCompleted)
 
     return {
         ...activity,
         leaderboardEntries: Object.fromEntries(
-            activityLeaderboardEntry.map(e => [e.leaderboard.type.toLowerCase(), e.rank])
+            activityLeaderboardEntries.map(e => [e.leaderboard.type.toLowerCase(), e.rank])
         ),
         dayOne,
         contest,
         weekOne,
         meta: {
-            raid: raidDefinition.raid.id,
-            raidName: raidDefinition.raid.name,
-            version: raidDefinition.version.id,
-            versionName: raidDefinition.version.name
+            activityId: activityHash.activityDefinition.id,
+            activityName: activityHash.activityDefinition.name,
+            versionId: activityHash.versionDefinition.id,
+            versionName: activityHash.versionDefinition.name
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        players: playerActivity.map(({ player, instanceId, membershipId, ...data }) => ({
-            ...player,
-            data
-        }))
+        players: activityPlayers.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ({ player, instanceId, membershipId, characters, ...data }) => ({
+                player,
+                data: {
+                    ...data,
+                    characters: characters.map(({ weapons, ...character }) => ({
+                        ...character,
+                        weapons
+                    }))
+                }
+            })
+        )
     }
 }

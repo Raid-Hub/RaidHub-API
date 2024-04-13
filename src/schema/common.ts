@@ -1,7 +1,7 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi"
 import { BungieMembershipType } from "bungie-net-core/enums"
 import { ZodNativeEnumDef, ZodType } from "zod"
-import { ListedRaids, RaidVersions } from "../data/raids"
+import { ListedRaids, PantheonModes, Versions } from "../data/raids"
 import { z, zBigIntString, zISODateString, zNumberEnum, zPositiveInt } from "./zod"
 
 export const registry = new OpenAPIRegistry()
@@ -37,8 +37,12 @@ export const zBungieMembershipType = registry.register(
     })
 )
 
+export const zActivityEnum = registry.register(
+    "ActivityEnum",
+    zNumberEnum([...ListedRaids, ...PantheonModes])
+)
 export const zRaidEnum = registry.register("RaidEnum", zNumberEnum(ListedRaids))
-export const zRaidVersionEnum = registry.register("RaidVersionEnum", zNumberEnum(RaidVersions))
+export const zVersionEnum = registry.register("RaidVersionEnum", zNumberEnum(Versions))
 
 export const zPlayerInfo = registry.register(
     "PlayerInfo",
@@ -81,7 +85,7 @@ export const zActivity = registry.register(
     z
         .object({
             instanceId: zBigIntString(),
-            raidHash: zBigIntString(),
+            hash: zBigIntString(),
             completed: z.boolean(),
             flawless: z.boolean().nullable(),
             fresh: z.boolean().nullable(),
@@ -89,7 +93,8 @@ export const zActivity = registry.register(
             dateStarted: zISODateString(),
             dateCompleted: zISODateString(),
             duration: zPositiveInt(),
-            platformType: zBungieMembershipType.default(0)
+            platformType: zBungieMembershipType.default(0),
+            score: z.number().int().nonnegative()
         })
         .strict()
 )
@@ -109,25 +114,56 @@ export const zActivityPlayerData = registry.register(
     "ActivityPlayerData",
     z
         .object({
-            finishedRaid: z.boolean(),
-            kills: z.number().int().nonnegative(),
-            assists: z.number().int().nonnegative(),
-            deaths: z.number().int().nonnegative(),
-            timePlayedSeconds: z.number().int().nonnegative(),
-            classHash: zBigIntString().nullable(),
-            sherpas: z.number().int(),
-            isFirstClear: z.boolean()
+            completed: z.boolean(),
+            sherpas: z.number().int().nonnegative(),
+            isFirstClear: z.boolean(),
+            timePlayedSeconds: z.number().int().nonnegative()
         })
         .strict()
 )
 
-export const zPlayerWithActivityData = registry.register(
-    "PlayerWithActivityData",
-    zPlayerInfo
-        .extend({
-            data: zActivityPlayerData
+export const zActivityCharacterWeapon = registry.register(
+    "ActivityCharacterWeapon",
+    z.object({
+        weaponHash: zBigIntString(),
+        kills: z.number().int().nonnegative(),
+        precisionKills: z.number().int().nonnegative()
+    })
+)
+
+export const zActivityCharacter = registry.register(
+    "ActivityCharacter",
+    z.object({
+        characterId: zBigIntString(),
+        classHash: zBigIntString().nullable(),
+        emblemHash: zBigIntString().nullable(),
+        completed: z.boolean(),
+        timePlayedSeconds: z.number().int().nonnegative(),
+        startSeconds: z.number().int().nonnegative(),
+        score: z.number().int().nonnegative(),
+        kills: z.number().int().nonnegative(),
+        deaths: z.number().int().nonnegative(),
+        assists: z.number().int().nonnegative(),
+        precisionKills: z.number().int().nonnegative(),
+        superKills: z.number().int().nonnegative(),
+        grenadeKills: z.number().int().nonnegative(),
+        meleeKills: z.number().int().nonnegative(),
+        weapons: z.array(zActivityCharacterWeapon)
+    })
+)
+
+export const zPlayerWithExtendedActivityData = registry.register(
+    "PlayerWithExtendedActivityData",
+    z.object({
+        player: zPlayerInfo,
+        data: z.object({
+            completed: z.boolean(),
+            sherpas: z.number().int().nonnegative(),
+            isFirstClear: z.boolean(),
+            timePlayedSeconds: z.number().int().nonnegative(),
+            characters: z.array(zActivityCharacter)
         })
-        .strict()
+    })
 )
 
 export const zActivityWithPlayerData = registry.register(

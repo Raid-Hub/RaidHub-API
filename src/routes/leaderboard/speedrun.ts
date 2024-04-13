@@ -1,7 +1,7 @@
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { UrlPathsToRaid } from "../../data/leaderboards"
 import { cacheControl } from "../../middlewares/cache-control"
-import { zPlayerWithActivityData } from "../../schema/common"
+import { zActivityPlayerData, zPlayerInfo } from "../../schema/common"
 import { z, zDigitString, zISODateString, zPage, zPositiveInt } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { ok } from "../../util/response"
@@ -39,7 +39,12 @@ export const leaderboardSpeedrunRoute = new RaidHubRoute({
                             dateStarted: zISODateString(),
                             dateCompleted: zISODateString(),
                             duration: zPositiveInt(),
-                            players: z.array(zPlayerWithActivityData)
+                            players: z.array(
+                                z.object({
+                                    player: zPlayerInfo,
+                                    data: zActivityPlayerData
+                                })
+                            )
                         })
                     )
                 })
@@ -53,8 +58,8 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
 
     const entries = await prisma.activity.findMany({
         where: {
-            raidDefinition: {
-                raidId: UrlPathsToRaid[raid]
+            activityHash: {
+                activityId: UrlPathsToRaid[raid]
             },
             completed: true,
             fresh: true
@@ -69,16 +74,12 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
             dateStarted: true,
             dateCompleted: true,
             duration: true,
-            playerActivity: {
+            activityPlayers: {
                 select: {
-                    finishedRaid: true,
-                    kills: true,
-                    assists: true,
-                    deaths: true,
-                    timePlayedSeconds: true,
-                    classHash: true,
+                    completed: true,
                     sherpas: true,
                     isFirstClear: true,
+                    timePlayedSeconds: true,
                     player: {
                         select: {
                             membershipId: true,
@@ -101,8 +102,8 @@ async function getSpeedrunLeaderboard(raid: RaidPath, opts: { page: number; coun
         dateStarted: e.dateStarted,
         dateCompleted: e.dateCompleted,
         duration: e.duration,
-        players: e.playerActivity.map(({ player, ...activity }) => ({
-            ...player,
+        players: e.activityPlayers.map(({ player, ...activity }) => ({
+            player,
             data: activity
         }))
     }))

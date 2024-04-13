@@ -1,13 +1,11 @@
+import { Prisma } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
-import {
-    ErrorCode,
-    zActivityWithPlayerData,
-    zRaidEnum,
-    zRaidVersionEnum
-} from "../../schema/common"
+import { ListedRaids } from "../../data/raids"
+import { ErrorCode, zActivityWithPlayerData, zRaidEnum, zVersionEnum } from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
+import { includedIn } from "../../util/helpers"
 import { fail, ok } from "../../util/response"
 import { playerRouterParams } from "./_schema"
 
@@ -61,8 +59,8 @@ export const playerActivitiesRoute = new RaidHubRoute({
                     activities: z.array(
                         zActivityWithPlayerData.extend({
                             meta: z.object({
-                                raid: zRaidEnum,
-                                version: zRaidVersionEnum
+                                activityId: zRaidEnum,
+                                versionId: zVersionEnum
                             })
                         })
                     ),
@@ -86,7 +84,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
 const activityQuery = (membershipId: bigint, count: number) =>
     ({
         where: {
-            playerActivity: {
+            activityPlayers: {
                 some: {
                     membershipId: membershipId
                 }
@@ -96,16 +94,16 @@ const activityQuery = (membershipId: bigint, count: number) =>
             dateCompleted: "desc"
         },
         include: {
-            raidDefinition: {
+            activityHash: {
                 select: {
-                    raidId: true,
+                    activityId: true,
                     versionId: true
                 }
             }
         },
 
         take: count + 1
-    }) as const
+    }) satisfies Prisma.ActivityFindManyArgs
 
 const playerActivityQuery = (membershipId: bigint, count: number) =>
     ({
@@ -113,14 +111,10 @@ const playerActivityQuery = (membershipId: bigint, count: number) =>
             membershipId: membershipId
         },
         select: {
-            finishedRaid: true,
-            kills: true,
-            assists: true,
-            deaths: true,
-            timePlayedSeconds: true,
-            classHash: true,
+            completed: true,
             sherpas: true,
-            isFirstClear: true
+            isFirstClear: true,
+            timePlayedSeconds: true
         },
         take: count + 1,
         orderBy: {
@@ -128,7 +122,7 @@ const playerActivityQuery = (membershipId: bigint, count: number) =>
                 dateCompleted: "desc"
             }
         }
-    }) as const
+    }) satisfies Prisma.ActivityPlayerFindManyArgs
 
 async function getPlayerActivities({
     membershipId,
@@ -151,7 +145,7 @@ async function getPlayerActivities({
                           },
                           ...activityQuery(membershipId, count)
                       }),
-                      prisma.playerActivity.findMany({
+                      prisma.activityPlayer.findMany({
                           ...playerActivityQuery(membershipId, count),
                           cursor: {
                               instanceId_membershipId: {
@@ -186,16 +180,22 @@ async function getPlayerActivities({
     return {
         membershipId,
         nextCursor: nextCursor ? String(nextCursor) : null,
-        activities: activities.slice(0, count).map(({ raidDefinition, ...a }, i) => {
+        activities: activities.slice(0, count).map(({ activityHash, ...a }, i) => {
             return {
                 meta: {
-                    raid: raidDefinition.raidId,
-                    version: raidDefinition.versionId
+                    activityId: activityHash.activityId,
+                    versionId: activityHash.versionId
                 },
                 ...a,
-                dayOne: isDayOne(raidDefinition.raidId, a.dateCompleted),
-                contest: isContest(raidDefinition.raidId, a.dateStarted),
-                weekOne: isWeekOne(raidDefinition.raidId, a.dateCompleted),
+                dayOne:
+                    includedIn(ListedRaids, activityHash.activityId) &&
+                    isDayOne(activityHash.activityId, a.dateCompleted),
+                contest:
+                    includedIn(ListedRaids, activityHash.activityId) &&
+                    isContest(activityHash.activityId, a.dateStarted),
+                weekOne:
+                    includedIn(ListedRaids, activityHash.activityId) &&
+                    isWeekOne(activityHash.activityId, a.dateCompleted),
                 player: playerActivities[i]
             }
         })
@@ -208,30 +208,33 @@ async function getFirstPageOfActivities(membershipId: bigint, count: number) {
     const today = new Date()
     today.setUTCHours(10, 0, 0, 0)
 
-    const { where: where1, ...query1 } = activityQuery(membershipId, count)
-    const { where: where2, ...query2 } = playerActivityQuery(membershipId, count)
+    const { where: whereActivity, ...queryActivity } = activityQuery(membershipId, count)
+    const { where: whereActivityPlayer, ...queryActivityPlayer } = playerActivityQuery(
+        membershipId,
+        count
+    )
 
     const getActivites = (cutoff: Date) =>
         Promise.all([
             prisma.activity.findMany({
-                ...query1,
+                ...queryActivity,
                 where: {
                     dateCompleted: {
                         gte: cutoff
                     },
-                    ...where1
+                    ...whereActivity
                 }
             }),
-            prisma.playerActivity.findMany({
+            prisma.activityPlayer.findMany({
                 where: {
-                    ...where2,
+                    ...whereActivityPlayer,
                     activity: {
                         dateCompleted: {
                             gte: cutoff
                         }
                     }
                 },
-                ...query2
+                ...queryActivityPlayer
             })
         ])
 

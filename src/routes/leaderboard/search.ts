@@ -211,7 +211,7 @@ async function searchIndividualLeaderboard(query: {
         where: {
             uniqueRaidMembershipId: {
                 membershipId: query.membershipId,
-                raidId: query.raid
+                activityId: query.raid
             }
         }
     })
@@ -242,11 +242,11 @@ async function searchWorldFirstLeaderboard(query: {
 }) {
     const type = WorldFirstBoardsMap.find(([board]) => board === query.category)![1]
 
-    const memberPlacements = await prisma.playerActivity.findMany({
+    const memberPlacements = await prisma.activityPlayer.findMany({
         where: {
             membershipId: query.membershipId,
             activity: {
-                activityLeaderboardEntry: {
+                activityLeaderboardEntries: {
                     some: {
                         leaderboard: {
                             type: type,
@@ -259,16 +259,16 @@ async function searchWorldFirstLeaderboard(query: {
         select: {
             activity: {
                 select: {
-                    activityLeaderboardEntry: {
+                    activityLeaderboardEntries: {
                         orderBy: {
                             rank: "asc"
                         },
                         take: 1
                     },
-                    playerActivity: {
+                    activityPlayers: {
                         select: {
                             membershipId: true,
-                            finishedRaid: true
+                            completed: true
                         }
                     }
                 }
@@ -281,10 +281,10 @@ async function searchWorldFirstLeaderboard(query: {
     const placements = memberPlacements
         .filter(
             ({ activity }) =>
-                !!activity.playerActivity.find(p => p.membershipId === query.membershipId)
-                    ?.finishedRaid
+                !!activity.activityPlayers.find(p => p.membershipId === query.membershipId)
+                    ?.completed
         )
-        .map(({ activity }) => activity.activityLeaderboardEntry[0])
+        .map(({ activity }) => activity.activityLeaderboardEntries[0])
         .sort((a, b) => a.rank - b.rank)
 
     const leaderboard = (await getWorldFirstLeaderboardEntries({
