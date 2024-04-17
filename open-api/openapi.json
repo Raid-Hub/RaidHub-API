@@ -30,15 +30,15 @@
       },
       "ActivityEnum": {
         "type": "integer",
-        "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1, 101, 102, 103, 104]
+        "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1, 101]
       },
       "RaidEnum": {
         "type": "integer",
         "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1]
       },
-      "RaidVersionEnum": {
+      "ActivityVersionEnum": {
         "type": "integer",
-        "enum": [1, 2, 3, 4, 64, 65, 66, 128]
+        "enum": [1, 2, 3, 4, 64, 65, 66, 128, 129, 130, 131]
       },
       "PlayerInfo": {
         "type": "object",
@@ -917,7 +917,7 @@
       },
       "PantheonEnum": {
         "type": "integer",
-        "enum": [101, 102, 103, 104]
+        "enum": [128, 129, 130, 131]
       },
       "SunsetRaidEnum": {
         "type": "integer",
@@ -1253,7 +1253,7 @@
                   "$ref": "#/components/schemas/ActivityEnum"
                 },
                 "versionId": {
-                  "$ref": "#/components/schemas/RaidVersionEnum"
+                  "$ref": "#/components/schemas/ActivityVersionEnum"
                 }
               },
               "required": ["activityId", "versionId"]
@@ -1304,7 +1304,7 @@
                   "$ref": "#/components/schemas/RaidEnum"
                 },
                 "version": {
-                  "$ref": "#/components/schemas/RaidVersionEnum"
+                  "$ref": "#/components/schemas/ActivityVersionEnum"
                 },
                 "triumphName": {
                   "type": "string"
@@ -1512,7 +1512,7 @@
                           "$ref": "#/components/schemas/RaidEnum"
                         },
                         "versionId": {
-                          "$ref": "#/components/schemas/RaidVersionEnum"
+                          "$ref": "#/components/schemas/ActivityVersionEnum"
                         }
                       },
                       "required": ["activityId", "versionId"]
@@ -1723,7 +1723,7 @@
                     "type": "string"
                   },
                   "versionId": {
-                    "$ref": "#/components/schemas/RaidVersionEnum"
+                    "$ref": "#/components/schemas/ActivityVersionEnum"
                   },
                   "versionName": {
                     "type": "string"

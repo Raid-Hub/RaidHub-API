@@ -13,7 +13,7 @@ import {
 } from "bungie-net-core/models"
 import { gzipSync } from "zlib"
 import { ZodError } from "zod"
-import { Difficulty, Raid } from "../src/data/raids"
+import { Activity, ActivityVersion } from "../src/data/raids"
 import { zPgcrSchema } from "../src/schema/pgcr"
 
 const beyondLightStart = new Date("November 10, 2020 9:00:00 AM PST").getTime()
@@ -569,195 +569,195 @@ function isFresh(pgcr: DestinyPostGameCarnageReportData): boolean | null {
 }
 
 function getLeaderboards(): {
-    raid: Raid
+    raid: Activity
     boards: {
         type: WorldFirstLeaderboardType
-        difficulty: Difficulty
+        difficulty: ActivityVersion
         isWorldFirst: boolean
     }[]
 }[] {
     return [
         {
-            raid: Raid.LEVIATHAN,
+            raid: Activity.LEVIATHAN,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 },
                 {
                     type: WorldFirstLeaderboardType.Prestige,
-                    difficulty: Difficulty.PRESTIGE,
+                    difficulty: ActivityVersion.PRESTIGE,
                     isWorldFirst: false
                 }
             ]
         },
         {
-            raid: Raid.EATER_OF_WORLDS,
+            raid: Activity.EATER_OF_WORLDS,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 },
                 {
                     type: WorldFirstLeaderboardType.Prestige,
-                    difficulty: Difficulty.PRESTIGE,
+                    difficulty: ActivityVersion.PRESTIGE,
                     isWorldFirst: false
                 }
             ]
         },
         {
-            raid: Raid.SPIRE_OF_STARS,
+            raid: Activity.SPIRE_OF_STARS,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 },
                 {
                     type: WorldFirstLeaderboardType.Prestige,
-                    difficulty: Difficulty.PRESTIGE,
+                    difficulty: ActivityVersion.PRESTIGE,
                     isWorldFirst: false
                 }
             ]
         },
         {
-            raid: Raid.LAST_WISH,
+            raid: Activity.LAST_WISH,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 }
             ]
         },
         {
-            raid: Raid.SCOURGE_OF_THE_PAST,
+            raid: Activity.SCOURGE_OF_THE_PAST,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 }
             ]
         },
         {
-            raid: Raid.CROWN_OF_SORROW,
+            raid: Activity.CROWN_OF_SORROW,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 }
             ]
         },
         {
-            raid: Raid.GARDEN_OF_SALVATION,
+            raid: Activity.GARDEN_OF_SALVATION,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 }
             ]
         },
         {
-            raid: Raid.DEEP_STONE_CRYPT,
+            raid: Activity.DEEP_STONE_CRYPT,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 }
             ]
         },
         {
-            raid: Raid.VAULT_OF_GLASS,
+            raid: Activity.VAULT_OF_GLASS,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
-                    isWorldFirst: false
-                },
-                {
-                    type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_VOG,
-                    isWorldFirst: true
-                },
-                {
-                    type: WorldFirstLeaderboardType.Master,
-                    difficulty: Difficulty.MASTER,
-                    isWorldFirst: false
-                }
-            ]
-        },
-        {
-            raid: Raid.VOW_OF_THE_DISCIPLE,
-            boards: [
-                {
-                    type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
-                    isWorldFirst: true
-                },
-                {
-                    type: WorldFirstLeaderboardType.Master,
-                    difficulty: Difficulty.MASTER,
-                    isWorldFirst: false
-                }
-            ]
-        },
-        {
-            raid: Raid.KINGS_FALL,
-            boards: [
-                {
-                    type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: false
                 },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_KF,
+                    difficulty: ActivityVersion.CHALLENGE_VOG,
                     isWorldFirst: true
                 },
                 {
                     type: WorldFirstLeaderboardType.Master,
-                    difficulty: Difficulty.MASTER,
+                    difficulty: ActivityVersion.MASTER,
                     isWorldFirst: false
                 }
             ]
         },
         {
-            raid: Raid.ROOT_OF_NIGHTMARES,
+            raid: Activity.VOW_OF_THE_DISCIPLE,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: true
                 },
                 {
                     type: WorldFirstLeaderboardType.Master,
-                    difficulty: Difficulty.MASTER,
+                    difficulty: ActivityVersion.MASTER,
                     isWorldFirst: false
                 }
             ]
         },
         {
-            raid: Raid.CROTAS_END,
+            raid: Activity.KINGS_FALL,
             boards: [
                 {
                     type: WorldFirstLeaderboardType.Normal,
-                    difficulty: Difficulty.NORMAL,
+                    difficulty: ActivityVersion.NORMAL,
                     isWorldFirst: false
                 },
                 {
                     type: WorldFirstLeaderboardType.Challenge,
-                    difficulty: Difficulty.CHALLENGE_CROTA,
+                    difficulty: ActivityVersion.CHALLENGE_KF,
                     isWorldFirst: true
                 },
                 {
                     type: WorldFirstLeaderboardType.Master,
-                    difficulty: Difficulty.MASTER,
+                    difficulty: ActivityVersion.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Activity.ROOT_OF_NIGHTMARES,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: ActivityVersion.NORMAL,
+                    isWorldFirst: true
+                },
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: ActivityVersion.MASTER,
+                    isWorldFirst: false
+                }
+            ]
+        },
+        {
+            raid: Activity.CROTAS_END,
+            boards: [
+                {
+                    type: WorldFirstLeaderboardType.Normal,
+                    difficulty: ActivityVersion.NORMAL,
+                    isWorldFirst: false
+                },
+                {
+                    type: WorldFirstLeaderboardType.Challenge,
+                    difficulty: ActivityVersion.CHALLENGE_CROTA,
+                    isWorldFirst: true
+                },
+                {
+                    type: WorldFirstLeaderboardType.Master,
+                    difficulty: ActivityVersion.MASTER,
                     isWorldFirst: false
                 }
             ]

@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client"
 import { BungieMembershipType } from "bungie-net-core/models"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne } from "../../data/raceDates"
-import { ListedRaids, Raid } from "../../data/raids"
+import { Activity, ListedRaids } from "../../data/raids"
 import { SeasonDates } from "../../data/seasonDates"
 import { cacheControl } from "../../middlewares/cache-control"
 import { registry, zActivityExtended, zRaidEnum } from "../../schema/common"
@@ -83,7 +83,7 @@ export const activitySearchRoute = new RaidHubRoute({
 
 type ActivitySearchResult = {
     instance_id: string
-    activity_id: Raid
+    activity_id: Activity
     hash: string
     fresh: boolean
     completed: boolean
