@@ -1,7 +1,7 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi"
 import { BungieMembershipType } from "bungie-net-core/enums"
 import { ZodNativeEnumDef, ZodType } from "zod"
-import { ListedRaids, PantheonModes, Versions } from "../data/raids"
+import { Activity, ListedRaids, PantheonModes, RaidVersions } from "../data/raids"
 import { z, zBigIntString, zISODateString, zNumberEnum, zPositiveInt } from "./zod"
 
 export const registry = new OpenAPIRegistry()
@@ -39,10 +39,13 @@ export const zBungieMembershipType = registry.register(
 
 export const zActivityEnum = registry.register(
     "ActivityEnum",
-    zNumberEnum([...ListedRaids, ...PantheonModes])
+    zNumberEnum([...ListedRaids, Activity.THE_PANTHEON])
 )
 export const zRaidEnum = registry.register("RaidEnum", zNumberEnum(ListedRaids))
-export const zVersionEnum = registry.register("RaidVersionEnum", zNumberEnum(Versions))
+export const zVersionEnum = registry.register(
+    "ActivityVersionEnum",
+    zNumberEnum([...RaidVersions, ...PantheonModes])
+)
 
 export const zPlayerInfo = registry.register(
     "PlayerInfo",

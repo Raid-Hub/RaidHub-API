@@ -1,7 +1,7 @@
 import { WorldFirstLeaderboardType } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
-import { ListedRaids, Raid } from "../../data/raids"
+import { Activity, ListedRaids } from "../../data/raids"
 import { cacheControl } from "../../middlewares/cache-control"
 import { processPlayerAsync } from "../../middlewares/processPlayerAsync"
 import { ErrorCode, registry, zPlayerInfo } from "../../schema/common"
@@ -104,7 +104,7 @@ type PrismaRawLeaderboardEntry = {
     leaderboard_type: WorldFirstLeaderboardType
     instance_id: bigint
     hash: bigint
-    activity_id: Raid
+    activity_id: Activity
     date_completed: Date
     date_started: Date
 }

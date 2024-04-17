@@ -1,5 +1,5 @@
 import { WorldFirstLeaderboardType } from "@prisma/client"
-import { ListedRaid, Raid } from "./raids"
+import { Activity, ListedRaid } from "./raids"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
 export type WorldFirstBoard = (typeof WorldFirstBoards)[number]
@@ -29,123 +29,123 @@ export const GlobalBoards = [
 export type GlobalBoard = (typeof GlobalBoards)[number]
 
 export const UrlPathsToRaid = {
-    leviathan: Raid.LEVIATHAN,
-    eaterofworlds: Raid.EATER_OF_WORLDS,
-    spireofstars: Raid.SPIRE_OF_STARS,
-    lastwish: Raid.LAST_WISH,
-    scourgeofthepast: Raid.SCOURGE_OF_THE_PAST,
-    crownofsorrow: Raid.CROWN_OF_SORROW,
-    gardenofsalvation: Raid.GARDEN_OF_SALVATION,
-    deepstonecrypt: Raid.DEEP_STONE_CRYPT,
-    vaultofglass: Raid.VAULT_OF_GLASS,
-    vowofthedisciple: Raid.VOW_OF_THE_DISCIPLE,
-    kingsfall: Raid.KINGS_FALL,
-    rootofnightmares: Raid.ROOT_OF_NIGHTMARES,
-    crotasend: Raid.CROTAS_END
+    leviathan: Activity.LEVIATHAN,
+    eaterofworlds: Activity.EATER_OF_WORLDS,
+    spireofstars: Activity.SPIRE_OF_STARS,
+    lastwish: Activity.LAST_WISH,
+    scourgeofthepast: Activity.SCOURGE_OF_THE_PAST,
+    crownofsorrow: Activity.CROWN_OF_SORROW,
+    gardenofsalvation: Activity.GARDEN_OF_SALVATION,
+    deepstonecrypt: Activity.DEEP_STONE_CRYPT,
+    vaultofglass: Activity.VAULT_OF_GLASS,
+    vowofthedisciple: Activity.VOW_OF_THE_DISCIPLE,
+    kingsfall: Activity.KINGS_FALL,
+    rootofnightmares: Activity.ROOT_OF_NIGHTMARES,
+    crotasend: Activity.CROTAS_END
 } satisfies Record<string, ListedRaid>
 
 export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, WorldFirstLeaderboardType> = {
-    [Raid.LEVIATHAN]: WorldFirstLeaderboardType.Normal,
-    [Raid.EATER_OF_WORLDS]: WorldFirstLeaderboardType.Normal,
-    [Raid.SPIRE_OF_STARS]: WorldFirstLeaderboardType.Normal,
-    [Raid.LAST_WISH]: WorldFirstLeaderboardType.Normal,
-    [Raid.SCOURGE_OF_THE_PAST]: WorldFirstLeaderboardType.Normal,
-    [Raid.CROWN_OF_SORROW]: WorldFirstLeaderboardType.Normal,
-    [Raid.GARDEN_OF_SALVATION]: WorldFirstLeaderboardType.Normal,
-    [Raid.DEEP_STONE_CRYPT]: WorldFirstLeaderboardType.Normal,
-    [Raid.VAULT_OF_GLASS]: WorldFirstLeaderboardType.Challenge,
-    [Raid.VOW_OF_THE_DISCIPLE]: WorldFirstLeaderboardType.Normal,
-    [Raid.KINGS_FALL]: WorldFirstLeaderboardType.Challenge,
-    [Raid.ROOT_OF_NIGHTMARES]: WorldFirstLeaderboardType.Normal,
-    [Raid.CROTAS_END]: WorldFirstLeaderboardType.Challenge
+    [Activity.LEVIATHAN]: WorldFirstLeaderboardType.Normal,
+    [Activity.EATER_OF_WORLDS]: WorldFirstLeaderboardType.Normal,
+    [Activity.SPIRE_OF_STARS]: WorldFirstLeaderboardType.Normal,
+    [Activity.LAST_WISH]: WorldFirstLeaderboardType.Normal,
+    [Activity.SCOURGE_OF_THE_PAST]: WorldFirstLeaderboardType.Normal,
+    [Activity.CROWN_OF_SORROW]: WorldFirstLeaderboardType.Normal,
+    [Activity.GARDEN_OF_SALVATION]: WorldFirstLeaderboardType.Normal,
+    [Activity.DEEP_STONE_CRYPT]: WorldFirstLeaderboardType.Normal,
+    [Activity.VAULT_OF_GLASS]: WorldFirstLeaderboardType.Challenge,
+    [Activity.VOW_OF_THE_DISCIPLE]: WorldFirstLeaderboardType.Normal,
+    [Activity.KINGS_FALL]: WorldFirstLeaderboardType.Challenge,
+    [Activity.ROOT_OF_NIGHTMARES]: WorldFirstLeaderboardType.Normal,
+    [Activity.CROTAS_END]: WorldFirstLeaderboardType.Challenge
 }
 
 export const IndividualClearsLeaderboardsForRaid = {
-    [Raid.LEVIATHAN]: {
+    [Activity.LEVIATHAN]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: false
     },
-    [Raid.EATER_OF_WORLDS]: {
+    [Activity.EATER_OF_WORLDS]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: true
     },
-    [Raid.SPIRE_OF_STARS]: {
+    [Activity.SPIRE_OF_STARS]: {
         fresh: true,
         total: true,
         trios: false,
         duos: false,
         solos: false
     },
-    [Raid.LAST_WISH]: {
+    [Activity.LAST_WISH]: {
         fresh: false,
         total: true,
         trios: true,
         duos: true,
         solos: true
     },
-    [Raid.SCOURGE_OF_THE_PAST]: {
+    [Activity.SCOURGE_OF_THE_PAST]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: false
     },
-    [Raid.CROWN_OF_SORROW]: {
+    [Activity.CROWN_OF_SORROW]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: false
     },
-    [Raid.GARDEN_OF_SALVATION]: {
+    [Activity.GARDEN_OF_SALVATION]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: true
     },
-    [Raid.DEEP_STONE_CRYPT]: {
+    [Activity.DEEP_STONE_CRYPT]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: false
     },
-    [Raid.VAULT_OF_GLASS]: {
+    [Activity.VAULT_OF_GLASS]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: true
     },
-    [Raid.VOW_OF_THE_DISCIPLE]: {
+    [Activity.VOW_OF_THE_DISCIPLE]: {
         fresh: true,
         total: true,
         trios: true,
         duos: false,
         solos: false
     },
-    [Raid.KINGS_FALL]: {
+    [Activity.KINGS_FALL]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: false
     },
-    [Raid.ROOT_OF_NIGHTMARES]: {
+    [Activity.ROOT_OF_NIGHTMARES]: {
         fresh: true,
         total: true,
         trios: true,
         duos: true,
         solos: true
     },
-    [Raid.CROTAS_END]: {
+    [Activity.CROTAS_END]: {
         fresh: true,
         total: true,
         trios: true,

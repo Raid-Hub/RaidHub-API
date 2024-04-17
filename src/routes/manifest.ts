@@ -12,13 +12,13 @@ import {
     WorldFirstBoardsMap
 } from "../data/leaderboards"
 import {
+    Activity,
     ContestRaids,
     ListedRaid,
     ListedRaids,
     MasterRaids,
     PantheonModes,
     PrestigeRaids,
-    Raid,
     ReprisedRaidDifficultyPairings,
     SunsetRaids
 } from "../data/raids"
@@ -32,19 +32,19 @@ import { zRaidPath } from "./leaderboard/_schema"
 
 // todo: add to DB
 const checkpoints: Record<ListedRaid, string> = {
-    [Raid.LEVIATHAN]: "Calus",
-    [Raid.EATER_OF_WORLDS]: "Argos",
-    [Raid.SPIRE_OF_STARS]: "Val Ca'uor",
-    [Raid.LAST_WISH]: "Queenswalk",
-    [Raid.SCOURGE_OF_THE_PAST]: "Insurrection Prime",
-    [Raid.CROWN_OF_SORROW]: "Gahlran",
-    [Raid.GARDEN_OF_SALVATION]: "Sanctified Mind",
-    [Raid.DEEP_STONE_CRYPT]: "Taniks",
-    [Raid.VAULT_OF_GLASS]: "Atheon",
-    [Raid.VOW_OF_THE_DISCIPLE]: "Rhulk",
-    [Raid.KINGS_FALL]: "Oryx",
-    [Raid.ROOT_OF_NIGHTMARES]: "Nezarec",
-    [Raid.CROTAS_END]: "Crota"
+    [Activity.LEVIATHAN]: "Calus",
+    [Activity.EATER_OF_WORLDS]: "Argos",
+    [Activity.SPIRE_OF_STARS]: "Val Ca'uor",
+    [Activity.LAST_WISH]: "Queenswalk",
+    [Activity.SCOURGE_OF_THE_PAST]: "Insurrection Prime",
+    [Activity.CROWN_OF_SORROW]: "Gahlran",
+    [Activity.GARDEN_OF_SALVATION]: "Sanctified Mind",
+    [Activity.DEEP_STONE_CRYPT]: "Taniks",
+    [Activity.VAULT_OF_GLASS]: "Atheon",
+    [Activity.VOW_OF_THE_DISCIPLE]: "Rhulk",
+    [Activity.KINGS_FALL]: "Oryx",
+    [Activity.ROOT_OF_NIGHTMARES]: "Nezarec",
+    [Activity.CROTAS_END]: "Crota"
 }
 
 const zPantheonEnum = registry.register("PantheonEnum", zNumberEnum(PantheonModes))

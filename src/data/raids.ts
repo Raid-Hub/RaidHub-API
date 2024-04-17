@@ -1,4 +1,4 @@
-export const enum Raid {
+export const enum Activity {
     NA = 0,
     LEVIATHAN,
     EATER_OF_WORLDS,
@@ -13,96 +13,99 @@ export const enum Raid {
     KINGS_FALL,
     ROOT_OF_NIGHTMARES,
     CROTAS_END,
-    PANTHEON_ATRAKS_SOVEREIGN = 101,
+    THE_PANTHEON = 101
+}
+
+export const enum ActivityVersion {
+    NA = 0,
+    NORMAL = 1,
+    GUIDEDGAMES,
+    PRESTIGE,
+    MASTER,
+    CHALLENGE_VOG = 64,
+    CHALLENGE_KF,
+    CHALLENGE_CROTA,
+    PANTHEON_ATRAKS_SOVEREIGN = 128,
     PANTHEON_ORYX_EXALTED,
     PANTHEON_RHULK_INDOMITABLE,
     PANTHEON_NEZAREC_SUBLIME
 }
 
-export const enum Difficulty {
-    NA = 0,
-    NORMAL = 1,
-    GUIDEDGAMES = 2,
-    PRESTIGE = 3,
-    MASTER = 4,
-    CHALLENGE_VOG = 64,
-    CHALLENGE_KF = 65,
-    CHALLENGE_CROTA = 66,
-    PANTHEON = 128
-}
-
 export const ListedRaids = [
-    Raid.CROTAS_END,
-    Raid.ROOT_OF_NIGHTMARES,
-    Raid.KINGS_FALL,
-    Raid.VOW_OF_THE_DISCIPLE,
-    Raid.VAULT_OF_GLASS,
-    Raid.DEEP_STONE_CRYPT,
-    Raid.GARDEN_OF_SALVATION,
-    Raid.LAST_WISH,
-    Raid.CROWN_OF_SORROW,
-    Raid.SCOURGE_OF_THE_PAST,
-    Raid.SPIRE_OF_STARS,
-    Raid.EATER_OF_WORLDS,
-    Raid.LEVIATHAN
+    Activity.CROTAS_END,
+    Activity.ROOT_OF_NIGHTMARES,
+    Activity.KINGS_FALL,
+    Activity.VOW_OF_THE_DISCIPLE,
+    Activity.VAULT_OF_GLASS,
+    Activity.DEEP_STONE_CRYPT,
+    Activity.GARDEN_OF_SALVATION,
+    Activity.LAST_WISH,
+    Activity.CROWN_OF_SORROW,
+    Activity.SCOURGE_OF_THE_PAST,
+    Activity.SPIRE_OF_STARS,
+    Activity.EATER_OF_WORLDS,
+    Activity.LEVIATHAN
 ] as const
 export type ListedRaid = (typeof ListedRaids)[number]
 
-export const Versions = [
-    Difficulty.NORMAL,
-    Difficulty.GUIDEDGAMES,
-    Difficulty.PRESTIGE,
-    Difficulty.MASTER,
-    Difficulty.CHALLENGE_VOG,
-    Difficulty.CHALLENGE_KF,
-    Difficulty.CHALLENGE_CROTA,
-    Difficulty.PANTHEON
+export const RaidVersions = [
+    ActivityVersion.NORMAL,
+    ActivityVersion.GUIDEDGAMES,
+    ActivityVersion.PRESTIGE,
+    ActivityVersion.MASTER,
+    ActivityVersion.CHALLENGE_VOG,
+    ActivityVersion.CHALLENGE_KF,
+    ActivityVersion.CHALLENGE_CROTA
 ] as const
-export type RaidVersion = (typeof Versions)[number]
+export type RaidVersion = (typeof RaidVersions)[number]
 
 export const PantheonModes = [
-    Raid.PANTHEON_ATRAKS_SOVEREIGN,
-    Raid.PANTHEON_ORYX_EXALTED,
-    Raid.PANTHEON_RHULK_INDOMITABLE,
-    Raid.PANTHEON_NEZAREC_SUBLIME
+    ActivityVersion.PANTHEON_ATRAKS_SOVEREIGN,
+    ActivityVersion.PANTHEON_ORYX_EXALTED,
+    ActivityVersion.PANTHEON_RHULK_INDOMITABLE,
+    ActivityVersion.PANTHEON_NEZAREC_SUBLIME
 ] as const
 export type PantheonMode = (typeof PantheonModes)[number]
 
 export const SunsetRaids = [
-    Raid.LEVIATHAN,
-    Raid.EATER_OF_WORLDS,
-    Raid.SPIRE_OF_STARS,
-    Raid.SCOURGE_OF_THE_PAST,
-    Raid.CROWN_OF_SORROW
+    Activity.LEVIATHAN,
+    Activity.EATER_OF_WORLDS,
+    Activity.SPIRE_OF_STARS,
+    Activity.SCOURGE_OF_THE_PAST,
+    Activity.CROWN_OF_SORROW
 ] as const
 export type SunsetRaid = (typeof SunsetRaids)[number]
 
 export const MasterRaids = [
-    Raid.VAULT_OF_GLASS,
-    Raid.VOW_OF_THE_DISCIPLE,
-    Raid.KINGS_FALL,
-    Raid.ROOT_OF_NIGHTMARES,
-    Raid.CROTAS_END
+    Activity.VAULT_OF_GLASS,
+    Activity.VOW_OF_THE_DISCIPLE,
+    Activity.KINGS_FALL,
+    Activity.ROOT_OF_NIGHTMARES,
+    Activity.CROTAS_END
 ] as const
 export type MasterRaid = (typeof MasterRaids)[number]
 
-export const PrestigeRaids = [Raid.LEVIATHAN, Raid.EATER_OF_WORLDS, Raid.SPIRE_OF_STARS] as const
+export const PrestigeRaids = [
+    Activity.LEVIATHAN,
+    Activity.EATER_OF_WORLDS,
+    Activity.SPIRE_OF_STARS
+] as const
 export type PrestigeRaid = (typeof PrestigeRaids)[number]
 
 export const ContestRaids = [
-    Raid.CROWN_OF_SORROW,
-    Raid.GARDEN_OF_SALVATION,
-    Raid.DEEP_STONE_CRYPT,
-    Raid.VAULT_OF_GLASS,
-    Raid.VOW_OF_THE_DISCIPLE,
-    Raid.KINGS_FALL,
-    Raid.ROOT_OF_NIGHTMARES,
-    Raid.CROTAS_END
+    Activity.CROWN_OF_SORROW,
+    Activity.GARDEN_OF_SALVATION,
+    Activity.DEEP_STONE_CRYPT,
+    Activity.VAULT_OF_GLASS,
+    Activity.VOW_OF_THE_DISCIPLE,
+    Activity.KINGS_FALL,
+    Activity.ROOT_OF_NIGHTMARES,
+    Activity.CROTAS_END
 ] as const
 export type ContestRaid = (typeof ContestRaids)[number]
 
 export const ReprisedRaidDifficultyPairings = [
-    [Raid.VAULT_OF_GLASS, Difficulty.CHALLENGE_VOG, "Tempo's Edge"],
-    [Raid.KINGS_FALL, Difficulty.CHALLENGE_KF, "Regicide"],
-    [Raid.CROTAS_END, Difficulty.CHALLENGE_CROTA, "Superior Swordplay"]
+    [Activity.VAULT_OF_GLASS, ActivityVersion.CHALLENGE_VOG, "Tempo's Edge"],
+    [Activity.KINGS_FALL, ActivityVersion.CHALLENGE_KF, "Regicide"],
+    [Activity.CROTAS_END, ActivityVersion.CHALLENGE_CROTA, "Superior Swordplay"]
 ] as const
