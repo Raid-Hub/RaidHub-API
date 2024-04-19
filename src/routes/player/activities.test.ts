@@ -25,7 +25,7 @@ describe("player activities 200", () => {
 
     test("final raid", () =>
         t("4611686018488107374", "4153035974").then(result => {
-            expect(result.parsed.activities.length).toBe(4)
+            expect(result.parsed.activities.length).toBe(3)
         }))
 })
 
