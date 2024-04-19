@@ -81,48 +81,67 @@ export const playerActivitiesRoute = new RaidHubRoute({
     }
 })
 
-const activityQuery = (membershipId: bigint, count: number) =>
-    ({
-        where: {
-            activityPlayers: {
-                some: {
-                    membershipId: membershipId
-                }
-            }
-        },
-        orderBy: {
-            dateCompleted: "desc"
-        },
-        include: {
-            activityHash: {
-                select: {
-                    activityId: true,
-                    versionId: true
-                }
-            }
-        },
+interface ActivityResult {
+    instanceId: bigint
+    hash: bigint
+    playerCount: number
+    completed: boolean
+    fresh: boolean | null
+    flawless: boolean | null
+    dateStarted: Date
+    dateCompleted: Date
+    duration: number
+    platformType: number
+    score: number
+    player: {
+        completed: boolean
+        sherpas: number
+        isFirstClear: boolean
+        timePlayedSeconds: number
+    }
+    meta: {
+        activityId: number
+        versionId: number
+    }
+}
 
-        take: count + 1
-    }) satisfies Prisma.ActivityFindManyArgs
-
-const playerActivityQuery = (membershipId: bigint, count: number) =>
-    ({
-        where: {
-            membershipId: membershipId
-        },
-        select: {
-            completed: true,
-            sherpas: true,
-            isFirstClear: true,
-            timePlayedSeconds: true
-        },
-        take: count + 1,
-        orderBy: {
-            activity: {
-                dateCompleted: "desc"
-            }
-        }
-    }) satisfies Prisma.ActivityPlayerFindManyArgs
+const generateActivityQuery = (
+    membershipId: bigint,
+    count: number,
+    cursor?: bigint,
+    cutoff?: Date
+) =>
+    Prisma.sql`SELECT 
+            activity.instance_id AS "instanceId",
+            activity.hash,
+            activity.player_count AS "playerCount",
+            activity.completed,
+            activity.fresh,
+            activity.flawless,
+            activity.date_started AS "dateStarted",
+            activity.date_completed AS "dateCompleted",
+            activity.duration,
+            activity.platform_type as "platformType",
+            activity.score,
+            JSONB_BUILD_OBJECT(
+                'completed', activity_player.completed, 
+                'sherpas', activity_player.sherpas,
+                'isFirstClear', activity_player.is_first_clear,
+                'timePlayedSeconds', activity_player.time_played_seconds
+            ) as player,
+            JSONB_BUILD_OBJECT(
+                'activityId', activity_hash.activity_id, 
+                'versionId', activity_hash.version_id
+            ) as meta
+        FROM activity
+        JOIN activity_player ON activity_player.instance_id = activity.instance_id
+        JOIN activity_hash ON activity.hash = activity_hash.hash
+        WHERE activity_player.membership_id = ${membershipId}
+        ${cursor ? Prisma.sql`AND activity.instance_id < ${cursor}` : Prisma.empty}
+        ${cutoff ? Prisma.sql`AND activity.date_completed > ${cutoff}` : Prisma.empty}
+        ORDER BY 
+            activity.date_completed DESC
+        LIMIT ${count};`
 
 async function getPlayerActivities({
     membershipId,
@@ -133,70 +152,43 @@ async function getPlayerActivities({
     cursor?: bigint
     count: number
 }) {
-    const [player, [activities, playerActivities]] = await Promise.all([
+    const [player, activities] = await Promise.all([
         prisma.player.findUnique({ select: { membershipId: true }, where: { membershipId } }),
         // If a cursor is provided
-        Promise.all(
-            cursor
-                ? [
-                      prisma.activity.findMany({
-                          cursor: {
-                              instanceId: cursor
-                          },
-                          ...activityQuery(membershipId, count)
-                      }),
-                      prisma.activityPlayer.findMany({
-                          ...playerActivityQuery(membershipId, count),
-                          cursor: {
-                              instanceId_membershipId: {
-                                  instanceId: cursor,
-                                  membershipId: membershipId
-                              }
-                          }
-                      })
-                  ]
-                : await getFirstPageOfActivities(membershipId, count)
-        )
+
+        cursor
+            ? prisma.$queryRaw<ActivityResult[]>(generateActivityQuery(membershipId, count, cursor))
+            : await getFirstPageOfActivities(membershipId, count)
     ])
 
     if (!player) return null
 
     const countFound = activities.length
 
-    /* either the "bonus" activity we found, or if we did not find a bonus:
-    / - if it was cursor based, we've reached the end
-    / - if it was not cursor based, aka first req, return 1 less than the current instance
-    / - if there were 0 entries, we've reached the end
-    */
+    // If we found the max number of activities, we need to check if there are more
+    // Or if this was a "first page" request, we need to check if there are more
     const nextCursor =
-        countFound === count + 1
+        countFound === count || (!cursor && countFound > 0)
             ? activities[countFound - 1].instanceId
-            : countFound > 0
-              ? cursor
-                  ? null
-                  : activities[countFound - 1].instanceId
-              : null
+            : null
 
     return {
         membershipId,
         nextCursor: nextCursor ? String(nextCursor) : null,
-        activities: activities.slice(0, count).map(({ activityHash, ...a }, i) => {
+        activities: activities.slice(0, count - 1).map(({ player, meta, ...a }) => {
             return {
-                meta: {
-                    activityId: activityHash.activityId,
-                    versionId: activityHash.versionId
-                },
                 ...a,
                 dayOne:
-                    includedIn(ListedRaids, activityHash.activityId) &&
-                    isDayOne(activityHash.activityId, a.dateCompleted),
+                    includedIn(ListedRaids, meta.activityId) &&
+                    isDayOne(meta.activityId, a.dateCompleted),
                 contest:
-                    includedIn(ListedRaids, activityHash.activityId) &&
-                    isContest(activityHash.activityId, a.dateStarted),
+                    includedIn(ListedRaids, meta.activityId) &&
+                    isContest(meta.activityId, a.dateStarted),
                 weekOne:
-                    includedIn(ListedRaids, activityHash.activityId) &&
-                    isWeekOne(activityHash.activityId, a.dateCompleted),
-                player: playerActivities[i]
+                    includedIn(ListedRaids, meta.activityId) &&
+                    isWeekOne(meta.activityId, a.dateCompleted),
+                player,
+                meta
             }
         })
     }
@@ -208,53 +200,28 @@ async function getFirstPageOfActivities(membershipId: bigint, count: number) {
     const today = new Date()
     today.setUTCHours(10, 0, 0, 0)
 
-    const { where: whereActivity, ...queryActivity } = activityQuery(membershipId, count)
-    const { where: whereActivityPlayer, ...queryActivityPlayer } = playerActivityQuery(
-        membershipId,
-        count
-    )
-
     const getActivites = (cutoff: Date) =>
-        Promise.all([
-            prisma.activity.findMany({
-                ...queryActivity,
-                where: {
-                    dateCompleted: {
-                        gte: cutoff
-                    },
-                    ...whereActivity
-                }
-            }),
-            prisma.activityPlayer.findMany({
-                where: {
-                    ...whereActivityPlayer,
-                    activity: {
-                        dateCompleted: {
-                            gte: cutoff
-                        }
-                    }
-                },
-                ...queryActivityPlayer
-            })
-        ])
+        prisma.$queryRaw<ActivityResult[]>(
+            generateActivityQuery(membershipId, count, undefined, cutoff)
+        )
 
     const lastMonth = new Date(today)
     lastMonth.setMonth(today.getUTCMonth() - 1)
 
-    const [activities, playerActivities] = await getActivites(lastMonth)
+    const activities = await getActivites(lastMonth)
 
     // Try this month, then this past year, then just screw it and go all time
     if (activities.length) {
-        return [activities, playerActivities] as const
+        return activities
     } else {
         const lastYear = new Date(today)
         lastYear.setFullYear(today.getUTCFullYear() - 1)
 
-        const [lastYearActivities, lastYearPlayerActivities] = await getActivites(lastYear)
+        const lastYearActivities = await getActivites(lastYear)
         if (lastYearActivities.length) {
-            return [lastYearActivities, lastYearPlayerActivities] as const
+            return lastYearActivities
         } else {
-            return getActivites(new Date(0))
+            return await getActivites(new Date(0))
         }
     }
 }
