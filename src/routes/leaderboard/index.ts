@@ -1,6 +1,7 @@
 import { RaidHubRouter } from "../../RaidHubRouter"
 import { leaderboardGlobalRoute } from "./global"
 import { leaderboardRaidIndividualRoute } from "./individual"
+import { pantheonRouter } from "./pantheon"
 import { leaderboardSearchRoute } from "./search"
 import { leaderboardSpeedrunRoute } from "./speedrun"
 import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
@@ -30,6 +31,10 @@ export const leaderboardRouter = new RaidHubRouter({
                     }
                 ]
             })
+        },
+        {
+            path: "/pantheon",
+            route: pantheonRouter
         }
     ]
 })

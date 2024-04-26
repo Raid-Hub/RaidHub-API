@@ -15,7 +15,7 @@
   "scripts": {
     "prepare": "husky",
     "generate": "prisma generate",
-    "dev": "bun run ./src/index.ts --hot",
+    "dev": "bun run ./src/index.ts",
     "db:pull": "prisma db pull",
     "test": "bun --env-file=.env jest --maxWorkers=50%",
     "types": "tsc --noEmit",

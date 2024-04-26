@@ -858,6 +858,10 @@
         "required": ["position", "rank", "value", "activity", "players"],
         "additionalProperties": false
       },
+      "PantheonPath": {
+        "type": "string",
+        "enum": ["atraks", "oryx", "rhulk", "nezarec"]
+      },
       "LeaderboardSearchQuery": {
         "type": "object",
         "properties": {
@@ -1391,14 +1395,62 @@
                   }
                 },
                 "required": ["clears"]
+              },
+              "pantheon": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "versionId": {
+                          "$ref": "#/components/schemas/PantheonEnum"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["versionId", "path", "displayName"]
+                    }
+                  },
+                  "speedrun": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "versionId": {
+                          "$ref": "#/components/schemas/PantheonEnum"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["versionId", "path", "displayName"]
+                    }
+                  }
+                },
+                "required": ["first", "speedrun"]
               }
             },
-            "required": ["global", "worldFirst", "individual"]
+            "required": ["global", "worldFirst", "individual", "pantheon"]
           },
           "raidUrlPaths": {
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/RaidPath"
+            }
+          },
+          "pantheonUrlPaths": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PantheonPath"
             }
           },
           "activityStrings": {
@@ -1431,6 +1483,7 @@
           "reprisedChallengePairings",
           "leaderboards",
           "raidUrlPaths",
+          "pantheonUrlPaths",
           "activityStrings",
           "versionStrings",
           "checkpointNames"
@@ -2021,6 +2074,110 @@
                 "duration",
                 "players"
               ]
+            }
+          }
+        },
+        "required": ["params", "entries"],
+        "additionalProperties": false
+      },
+      "LeaderboardPantheonFirstResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "$ref": "#/components/schemas/PantheonPath"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 25,
+                "exclusiveMinimum": true,
+                "maximum": 100,
+                "default": 50
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "required": ["version"],
+            "additionalProperties": false
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
+            }
+          }
+        },
+        "required": ["params", "entries"],
+        "additionalProperties": false
+      },
+      "LeaderboardPantheonSpeedrunResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "$ref": "#/components/schemas/PantheonPath"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 25,
+                "exclusiveMinimum": true,
+                "maximum": 100,
+                "default": 50
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "required": ["version"],
+            "additionalProperties": false
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
+            }
+          }
+        },
+        "required": ["params", "entries"],
+        "additionalProperties": false
+      },
+      "LeaderboardPantheonTotal-clearsResponse": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 25,
+                "exclusiveMinimum": true,
+                "maximum": 100,
+                "default": 50
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true,
+                "default": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualLeaderboardEntry"
             }
           }
         },
@@ -3408,6 +3565,225 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PathValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard/pantheon/{version}/first": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/PantheonPath"
+            },
+            "required": true,
+            "name": "version",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 25,
+              "exclusiveMinimum": true,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardPantheonFirstResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard/pantheon/{version}/speedrun": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/PantheonPath"
+            },
+            "required": true,
+            "name": "version",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 25,
+              "exclusiveMinimum": true,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardPantheonSpeedrunResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard/pantheon/total-clears": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 25,
+              "exclusiveMinimum": true,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardPantheonTotal-clearsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
                 }
               }
             }

@@ -56,3 +56,9 @@ export const zWorldFirstLeaderboardEntry = registry.register(
         })
         .strict()
 )
+
+export const zPantheonPath = registry.register(
+    "PantheonPath",
+    z.enum(["atraks", "oryx", "rhulk", "nezarec"])
+)
+export type PantheonPath = z.infer<typeof zPantheonPath>
