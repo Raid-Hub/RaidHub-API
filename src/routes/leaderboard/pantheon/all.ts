@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { IndividualBoards, IndividualPantheonBoards } from "../../../data/leaderboards"
+import { IndividualPantheonBoards } from "../../../data/leaderboards"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { prisma } from "../../../services/prisma"
 import { ok } from "../../../util/response"
@@ -61,7 +61,7 @@ export const pantheonAllRoute = new RaidHubRoute({
             schema: z
                 .object({
                     params: zLeaderboardQueryPagination.strict().extend({
-                        category: z.enum(IndividualBoards)
+                        category: z.enum(IndividualPantheonBoards)
                     }),
                     entries: z.array(zIndividualLeaderboardEntry)
                 })

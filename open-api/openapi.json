@@ -2193,7 +2193,7 @@
               },
               "category": {
                 "type": "string",
-                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
+                "enum": ["fresh", "total", "sherpas", "trios", "duos"]
               }
             },
             "required": ["category"],
