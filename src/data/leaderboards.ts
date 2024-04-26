@@ -1,5 +1,6 @@
 import { WorldFirstLeaderboardType } from "@prisma/client"
-import { Activity, ListedRaid } from "./raids"
+import { PantheonPath } from "../routes/leaderboard/_schema"
+import { Activity, ActivityVersion, ListedRaid, PantheonMode } from "./raids"
 
 export const WorldFirstBoards = ["normal", "prestige", "challenge", "master"] as const
 export type WorldFirstBoard = (typeof WorldFirstBoards)[number]
@@ -43,6 +44,20 @@ export const UrlPathsToRaid = {
     rootofnightmares: Activity.ROOT_OF_NIGHTMARES,
     crotasend: Activity.CROTAS_END
 } satisfies Record<string, ListedRaid>
+
+export const UrlPathsToPantheonVersion: Record<PantheonPath, PantheonMode> = {
+    atraks: ActivityVersion.PANTHEON_ATRAKS_SOVEREIGN,
+    oryx: ActivityVersion.PANTHEON_ORYX_EXALTED,
+    rhulk: ActivityVersion.PANTHEON_RHULK_INDOMITABLE,
+    nezarec: ActivityVersion.PANTHEON_NEZAREC_SUBLIME
+}
+
+export const PantheonVersionReleaseDates: Record<PantheonMode, Date> = {
+    [ActivityVersion.PANTHEON_ATRAKS_SOVEREIGN]: new Date("April 30, 2024 10:00:00 AM PDT"),
+    [ActivityVersion.PANTHEON_ORYX_EXALTED]: new Date("May 7, 2024 10:00:00 AM PDT"),
+    [ActivityVersion.PANTHEON_RHULK_INDOMITABLE]: new Date("May 14, 2024 10:00:00 AM PDT"),
+    [ActivityVersion.PANTHEON_NEZAREC_SUBLIME]: new Date("May 21, 2024 10:00:00 AM PDT")
+}
 
 export const WorldFirstLeaderboardsForRaid: Record<ListedRaid, WorldFirstLeaderboardType> = {
     [Activity.LEVIATHAN]: WorldFirstLeaderboardType.Normal,

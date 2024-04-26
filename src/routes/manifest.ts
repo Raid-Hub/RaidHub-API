@@ -7,6 +7,7 @@ import {
     IndividualBoardNames,
     IndividualClearsBoards,
     IndividualClearsLeaderboardsForRaid,
+    UrlPathsToPantheonVersion,
     UrlPathsToRaid,
     WorldFirstBoards,
     WorldFirstBoardsMap
@@ -28,7 +29,7 @@ import { z, zISODateString, zNumberEnum } from "../schema/zod"
 import { prisma } from "../services/prisma"
 import { groupBy } from "../util/helpers"
 import { ok } from "../util/response"
-import { zRaidPath } from "./leaderboard/_schema"
+import { zPantheonPath, zRaidPath } from "./leaderboard/_schema"
 
 // todo: add to DB
 const checkpoints: Record<ListedRaid, string> = {
@@ -57,7 +58,7 @@ export const manifestRoute = new RaidHubRoute({
     method: "get",
     middlewares: [cacheControl(60)],
     handler: async () => {
-        const [worldFirstLeaderboards, activities, versions, hashes] = await Promise.all([
+        const [worldFirstLeaderboards, activities, versions, hashes, pantheon] = await Promise.all([
             listWFLeaderboards(),
             prisma.activityDefinition.findMany({
                 select: {
@@ -76,6 +77,14 @@ export const manifestRoute = new RaidHubRoute({
                     hash: true,
                     versionId: true,
                     activityId: true
+                }
+            }),
+            prisma.activityHash.findMany({
+                select: {
+                    versionDefinition: true
+                },
+                where: {
+                    activityId: Activity.THE_PANTHEON
                 }
             })
         ])
@@ -104,6 +113,12 @@ export const manifestRoute = new RaidHubRoute({
                     k as keyof typeof UrlPathsToRaid
                 ])
             ),
+            pantheonUrlPaths: Object.fromEntries(
+                Object.entries(UrlPathsToPantheonVersion).map(([k, v]) => [
+                    v,
+                    k as keyof typeof UrlPathsToPantheonVersion
+                ])
+            ),
             leaderboards: {
                 worldFirst: worldFirstLeaderboards,
                 global: Object.entries(GlobalBoardNames).map(
@@ -127,6 +142,22 @@ export const manifestRoute = new RaidHubRoute({
                             ]
                         )
                     )
+                },
+                pantheon: {
+                    first: pantheon.map(p => ({
+                        displayName: p.versionDefinition.name,
+                        path: Object.entries(UrlPathsToPantheonVersion).find(
+                            ([, v]) => v == p.versionDefinition.id
+                        )![0],
+                        versionId: p.versionDefinition.id
+                    })),
+                    speedrun: pantheon.map(p => ({
+                        displayName: p.versionDefinition.name,
+                        path: Object.entries(UrlPathsToPantheonVersion).find(
+                            ([, v]) => v == p.versionDefinition.id
+                        )![0],
+                        versionId: p.versionDefinition.id
+                    }))
                 }
             },
             checkpointNames: checkpoints
@@ -183,9 +214,26 @@ export const manifestRoute = new RaidHubRoute({
                                     })
                                 )
                             )
+                        }),
+                        pantheon: z.object({
+                            first: z.array(
+                                z.object({
+                                    versionId: zPantheonEnum,
+                                    path: z.string(),
+                                    displayName: z.string()
+                                })
+                            ),
+                            speedrun: z.array(
+                                z.object({
+                                    versionId: zPantheonEnum,
+                                    path: z.string(),
+                                    displayName: z.string()
+                                })
+                            )
                         })
                     }),
                     raidUrlPaths: z.record(zRaidPath),
+                    pantheonUrlPaths: z.record(zPantheonPath),
                     activityStrings: z.record(z.string()),
                     versionStrings: z.record(z.string()),
                     checkpointNames: z.record(z.string())
