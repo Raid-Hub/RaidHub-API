@@ -1,28 +1,30 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
+import { IndividualBoards, IndividualPantheonBoards } from "../../../data/leaderboards"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { prisma } from "../../../services/prisma"
 import { ok } from "../../../util/response"
+import { IndividualBoardPositionKeys } from "../_common"
 import { zIndividualLeaderboardEntry, zLeaderboardQueryPagination } from "../_schema"
 
-// This is a temporary route that will be removed once the new leaderboard system is in place
-export const pantheonFullClearsRoute = new RaidHubRoute({
+export const pantheonAllRoute = new RaidHubRoute({
     method: "get",
+    params: z.object({
+        category: z.enum(IndividualPantheonBoards)
+    }),
     query: zLeaderboardQueryPagination,
     middlewares: [cacheControl(10)],
-    async handler({ query }) {
-        const entries = await prisma.individualLeaderboard.findMany({
+    async handler({ query, params }) {
+        const { rank, position, value } = IndividualBoardPositionKeys[params.category]
+
+        const entries = await prisma.individualPantheonLeaderboard.findMany({
             where: {
-                activityId: 101,
-                clearsPosition: {
+                [position]: {
                     gt: (query.page - 1) * query.count,
                     lte: query.page * query.count
                 }
             },
-            select: {
-                fullClearsRank: true,
-                fullClearsPosition: true,
-                fullClears: true,
+            include: {
                 player: {
                     select: {
                         membershipId: true,
@@ -36,16 +38,19 @@ export const pantheonFullClearsRoute = new RaidHubRoute({
                 }
             },
             orderBy: {
-                clearsPosition: "asc"
+                [position]: "asc"
             }
         })
 
         return ok({
-            params: query,
+            params: {
+                ...params,
+                ...query
+            },
             entries: entries.map(({ player, ...entry }) => ({
-                position: entry.fullClearsPosition,
-                rank: entry.fullClearsRank,
-                value: entry.fullClears,
+                position: entry[position],
+                rank: entry[rank],
+                value: entry[value],
                 player
             }))
         })
@@ -55,7 +60,9 @@ export const pantheonFullClearsRoute = new RaidHubRoute({
             statusCode: 200,
             schema: z
                 .object({
-                    params: zLeaderboardQueryPagination.strict(),
+                    params: zLeaderboardQueryPagination.strict().extend({
+                        category: z.enum(IndividualBoards)
+                    }),
                     entries: z.array(zIndividualLeaderboardEntry)
                 })
                 .strict()

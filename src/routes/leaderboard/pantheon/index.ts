@@ -1,6 +1,6 @@
 import { BungieMembershipType } from "bungie-net-core/models"
 import { RaidHubRouter } from "../../../RaidHubRouter"
-import { pantheonFullClearsRoute } from "./clears"
+import { pantheonAllRoute } from "./all"
 import { pantheonFirstRoute } from "./first"
 import { pantheonSpeedrunRoute } from "./speedrun"
 
@@ -51,8 +51,8 @@ export const pantheonRouter = new RaidHubRouter({
             route: pantheonSpeedrunRoute
         },
         {
-            path: "/total-clears",
-            route: pantheonFullClearsRoute
+            path: "/all/:category",
+            route: pantheonAllRoute
         }
     ]
 })
