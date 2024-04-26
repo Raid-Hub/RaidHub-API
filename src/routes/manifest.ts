@@ -7,6 +7,7 @@ import {
     IndividualBoardNames,
     IndividualClearsBoards,
     IndividualClearsLeaderboardsForRaid,
+    IndividualPantheonBoards,
     UrlPathsToPantheonVersion,
     UrlPathsToRaid,
     WorldFirstBoards,
@@ -94,7 +95,8 @@ export const manifestRoute = new RaidHubRoute({
             hashes: Object.fromEntries(
                 hashes.map(h => [h.hash, { activityId: h.activityId, versionId: h.versionId }])
             ),
-            pantheon: [...PantheonModes],
+            pantheonId: Activity.THE_PANTHEON,
+            pantheonModes: [...PantheonModes],
             listed: [...ListedRaids],
             sunset: [...SunsetRaids],
             contest: [...ContestRaids],
@@ -144,6 +146,24 @@ export const manifestRoute = new RaidHubRoute({
                     )
                 },
                 pantheon: {
+                    individual: [
+                        {
+                            displayName: "Total Clears",
+                            category: "total" as const
+                        },
+                        {
+                            displayName: "Sherpas",
+                            category: "sherpas" as const
+                        },
+                        {
+                            displayName: "Trios",
+                            category: "trios" as const
+                        },
+                        {
+                            displayName: "Duos",
+                            category: "duos" as const
+                        }
+                    ],
                     first: pantheon.map(p => ({
                         displayName: p.versionDefinition.name,
                         path: Object.entries(UrlPathsToPantheonVersion).find(
@@ -175,7 +195,8 @@ export const manifestRoute = new RaidHubRoute({
                         })
                     ),
                     listed: z.array(zRaidEnum),
-                    pantheon: z.array(zPantheonEnum),
+                    pantheonId: zActivityEnum,
+                    pantheonModes: z.array(zPantheonEnum),
                     sunset: z.array(zSunsetRaidEnum),
                     contest: z.array(zContestRaidEnum),
                     master: z.array(zMasterRaidEnum),
@@ -216,6 +237,12 @@ export const manifestRoute = new RaidHubRoute({
                             )
                         }),
                         pantheon: z.object({
+                            individual: z.array(
+                                z.object({
+                                    displayName: z.string(),
+                                    category: z.enum(IndividualPantheonBoards)
+                                })
+                            ),
                             first: z.array(
                                 z.object({
                                     versionId: zPantheonEnum,

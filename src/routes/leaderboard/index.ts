@@ -3,7 +3,6 @@ import { leaderboardGlobalRoute } from "./global"
 import { leaderboardRaidIndividualRoute } from "./individual"
 import { pantheonRouter } from "./pantheon"
 import { leaderboardSearchRoute } from "./search"
-import { leaderboardSpeedrunRoute } from "./speedrun"
 import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
 
 export const leaderboardRouter = new RaidHubRouter({
@@ -24,11 +23,11 @@ export const leaderboardRouter = new RaidHubRouter({
                     {
                         path: "/individual/:category",
                         route: leaderboardRaidIndividualRoute
-                    },
-                    {
-                        path: "/speedrun",
-                        route: leaderboardSpeedrunRoute
                     }
+                    // {
+                    //     path: "/speedrun",
+                    //     route: leaderboardSpeedrunRoute
+                    // }
                 ]
             })
         },

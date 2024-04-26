@@ -11,24 +11,25 @@ datasource db {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model Player {
-  membershipId                BigInt                  @id @map("membership_id")
-  membershipType              Int?                    @map("membership_type")
-  iconPath                    String?                 @map("icon_path")
-  displayName                 String?                 @map("display_name")
-  bungieGlobalDisplayName     String?                 @map("bungie_global_display_name")
-  bungieGlobalDisplayNameCode String?                 @map("bungie_global_display_name_code")
-  bungieName                  String?                 @default(dbgenerated("\nCASE\n    WHEN ((bungie_global_display_name IS NOT NULL) AND (bungie_global_display_name_code IS NOT NULL)) THEN ((bungie_global_display_name || '#'::text) || bungie_global_display_name_code)\n    ELSE display_name\nEND")) @map("bungie_name")
-  lastSeen                    DateTime                @map("last_seen")
-  clears                      Int                     @default(0) @map("clears")
-  fullClears                  Int                     @default(0) @map("fresh_clears")
-  sherpas                     Int                     @default(0) @map("sherpas")
-  sumOfBestTimes              Int?                    @map("sum_of_best")
-  lastCrawled                 DateTime?               @map("last_crawled")
-  searchScore                 Decimal?                @default(dbgenerated("(sqrt(((clears + 1))::double precision) * power((2)::double precision, (GREATEST((0)::double precision, date_part('epoch'::text, (last_seen - '2017-08-27 00:00:00'::timestamp without time zone))) / (20000000)::double precision)))")) @map("_search_score") @db.Decimal
-  activityPlayer              ActivityPlayer[]
-  stats                       PlayerStats[]           @relation("player_stats_membership_id")
-  individualLeaderboards      IndividualLeaderboard[] @relation("individual_leaderboard")
-  globalRanks                 GlobalLeaderboard?      @relation("global_leaderboard")
+  membershipId                   BigInt                         @id @map("membership_id")
+  membershipType                 Int?                           @map("membership_type")
+  iconPath                       String?                        @map("icon_path")
+  displayName                    String?                        @map("display_name")
+  bungieGlobalDisplayName        String?                        @map("bungie_global_display_name")
+  bungieGlobalDisplayNameCode    String?                        @map("bungie_global_display_name_code")
+  bungieName                     String?                        @default(dbgenerated("\nCASE\n    WHEN ((bungie_global_display_name IS NOT NULL) AND (bungie_global_display_name_code IS NOT NULL)) THEN ((bungie_global_display_name || '#'::text) || bungie_global_display_name_code)\n    ELSE display_name\nEND")) @map("bungie_name")
+  lastSeen                       DateTime                       @map("last_seen")
+  clears                         Int                            @default(0) @map("clears")
+  fullClears                     Int                            @default(0) @map("fresh_clears")
+  sherpas                        Int                            @default(0) @map("sherpas")
+  sumOfBestTimes                 Int?                           @map("sum_of_best")
+  lastCrawled                    DateTime?                      @map("last_crawled")
+  searchScore                    Decimal?                       @default(dbgenerated("(sqrt(((clears + 1))::double precision) * power((2)::double precision, (GREATEST((0)::double precision, date_part('epoch'::text, (last_seen - '2017-08-27 00:00:00'::timestamp without time zone))) / (20000000)::double precision)))")) @map("_search_score") @db.Decimal
+  activityPlayer                 ActivityPlayer[]
+  stats                          PlayerStats[]                  @relation("player_stats_membership_id")
+  individualLeaderboards         IndividualLeaderboard[]        @relation("individual_leaderboard")
+  globalRanks                    GlobalLeaderboard?             @relation("global_leaderboard")
+  individualPantheonLeaderboards IndividualPantheonLeaderboard? @relation("individual_pantheon")
 
   @@map("player")
 }
@@ -246,7 +247,7 @@ view IndividualLeaderboard {
   @@unique([activityId(sort: Desc), fullClearsPosition(sort: Asc)], map: "idx_individual_leaderboard_fresh_clears")
   @@unique([activityId(sort: Desc), sherpasPosition(sort: Asc)], map: "idx_individual_leaderboard_sherpas")
   @@unique([activityId(sort: Desc), triosPosition(sort: Asc)], map: "idx_individual_leaderboard_trios")
-  @@unique([activityId(sort: Desc), duos(Positionsort: Asc)], map: "idx_individual_leaderboard_duos")
+  @@unique([activityId(sort: Desc), duosPosition(sort: Asc)], map: "idx_individual_leaderboard_duos")
   @@unique([activityId(sort: Desc), solosPosition(sort: Asc)], map: "idx_individual_leaderboard_solos")
   @@map("individual_leaderboard")
 }
@@ -278,4 +279,32 @@ view WorldFirstPlayerRanking {
 
   @@index([rank(Sort: Asc)], map: "idx_world_first_player_ranking_rank")
   @@map("world_first_player_ranking")
+}
+
+view IndividualPantheonLeaderboard {
+  membershipId BigInt @unique @map("membership_id")
+  player       Player @relation("individual_pantheon", fields: [membershipId], references: [membershipId])
+
+  clears             Int
+  clearsPosition     Int @map("clears_position")
+  clearsRank         Int @map("clears_rank")
+  fullClears         Int @map("fresh_clears")
+  fullClearsPosition Int @map("fresh_clears_position")
+  fullClearsRank     Int @map("fresh_clears_rank")
+  sherpas            Int
+  sherpasPosition    Int @map("sherpas_position")
+  sherpasRank        Int @map("sherpas_rank")
+  trios              Int
+  triosPosition      Int @map("trios_position")
+  triosRank          Int @map("trios_rank")
+  duos               Int
+  duosPosition       Int @map("duos_position")
+  duosRank           Int @map("duos_rank")
+
+  @@unique([clearsPosition(sort: Asc)], map: "idx_individual_pantheon_leaderboard_clears")
+  @@unique([fullClearsPosition(sort: Asc)], map: "idx_individual_pantheon_leaderboard_fresh_clears")
+  @@unique([sherpasPosition(sort: Asc)], map: "idx_individual_pantheon_leaderboard_sherpas")
+  @@unique([triosPosition(sort: Asc)], map: "idx_individual_pantheon_leaderboard_trios")
+  @@unique([duosPosition(sort: Asc)], map: "idx_individual_pantheon_leaderboard_duos")
+  @@map("individual_pantheon_leaderboard")
 }

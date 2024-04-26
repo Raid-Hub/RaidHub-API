@@ -19,6 +19,7 @@ export const IndividualClearsBoards = [
     "duos",
     "solos"
 ] as const satisfies IndividualBoard[]
+export const IndividualPantheonBoards = ["fresh", "total", "sherpas", "trios", "duos"] as const
 export type IndividualBoard = (typeof IndividualBoards)[number]
 
 export const GlobalBoards = [

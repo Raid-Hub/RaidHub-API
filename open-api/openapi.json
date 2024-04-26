@@ -3,7 +3,7 @@
   "info": {
     "title": "RaidHub API",
     "description": "The Semi-public API for RaidHub",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "contact": {
       "name": "RaidHub Admin",
       "email": "admin@raidhub.io"
@@ -1269,7 +1269,10 @@
               "$ref": "#/components/schemas/RaidEnum"
             }
           },
-          "pantheon": {
+          "pantheonId": {
+            "$ref": "#/components/schemas/ActivityEnum"
+          },
+          "pantheonModes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PantheonEnum"
@@ -1399,6 +1402,22 @@
               "pantheon": {
                 "type": "object",
                 "properties": {
+                  "individual": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string",
+                          "enum": ["fresh", "total", "sherpas", "trios", "duos"]
+                        }
+                      },
+                      "required": ["displayName", "category"]
+                    }
+                  },
                   "first": {
                     "type": "array",
                     "items": {
@@ -1436,7 +1455,7 @@
                     }
                   }
                 },
-                "required": ["first", "speedrun"]
+                "required": ["individual", "first", "speedrun"]
               }
             },
             "required": ["global", "worldFirst", "individual", "pantheon"]
@@ -1475,7 +1494,8 @@
         "required": [
           "hashes",
           "listed",
-          "pantheon",
+          "pantheonId",
+          "pantheonModes",
           "sunset",
           "contest",
           "master",
@@ -2002,84 +2022,6 @@
         "required": ["params", "entries"],
         "additionalProperties": false
       },
-      "LeaderboardSpeedrunResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
-            "type": "object",
-            "properties": {
-              "count": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true
-              },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
-              },
-              "raid": {
-                "$ref": "#/components/schemas/RaidPath"
-              }
-            },
-            "required": ["count", "raid"]
-          },
-          "entries": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "rank": {
-                  "type": "number"
-                },
-                "instanceId": {
-                  "type": "string",
-                  "pattern": "^\\d+n?$"
-                },
-                "dateStarted": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "dateCompleted": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "duration": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": true
-                },
-                "players": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "player": {
-                        "$ref": "#/components/schemas/PlayerInfo"
-                      },
-                      "data": {
-                        "$ref": "#/components/schemas/ActivityPlayerData"
-                      }
-                    },
-                    "required": ["player", "data"]
-                  }
-                }
-              },
-              "required": [
-                "rank",
-                "instanceId",
-                "dateStarted",
-                "dateCompleted",
-                "duration",
-                "players"
-              ]
-            }
-          }
-        },
-        "required": ["params", "entries"],
-        "additionalProperties": false
-      },
       "LeaderboardPantheonFirstResponse": {
         "type": "object",
         "properties": {
@@ -2152,7 +2094,7 @@
         "required": ["params", "entries"],
         "additionalProperties": false
       },
-      "LeaderboardPantheonTotal-clearsResponse": {
+      "LeaderboardPantheonAllResponse": {
         "type": "object",
         "properties": {
           "params": {
@@ -2170,8 +2112,13 @@
                 "minimum": 0,
                 "exclusiveMinimum": true,
                 "default": 1
+              },
+              "category": {
+                "type": "string",
+                "enum": ["fresh", "total", "sherpas", "trios", "duos"]
               }
             },
+            "required": ["category"],
             "additionalProperties": false
           },
           "entries": {
@@ -3493,85 +3440,6 @@
         }
       }
     },
-    "/leaderboard/{raid}/speedrun": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/components/schemas/RaidPath"
-            },
-            "required": true,
-            "name": "raid",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
-              "maximum": 100,
-              "default": 50
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LeaderboardSpeedrunResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/leaderboard/pantheon/{version}/first": {
       "get": {
         "parameters": [
@@ -3730,9 +3598,18 @@
         }
       }
     },
-    "/leaderboard/pantheon/total-clears": {
+    "/leaderboard/pantheon/all/{category}": {
       "get": {
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["fresh", "total", "sherpas", "trios", "duos"]
+            },
+            "required": true,
+            "name": "category",
+            "in": "path"
+          },
           {
             "schema": {
               "type": "integer",
@@ -3763,7 +3640,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LeaderboardPantheonTotal-clearsResponse"
+                  "$ref": "#/components/schemas/LeaderboardPantheonAllResponse"
                 }
               }
             }
@@ -3784,6 +3661,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathValidationError"
                 }
               }
             }
