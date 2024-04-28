@@ -2,7 +2,12 @@ import { Prisma } from "@prisma/client"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { isContest, isDayOne, isWeekOne } from "../../data/raceDates"
 import { ListedRaids } from "../../data/raids"
-import { ErrorCode, zActivityWithPlayerData, zRaidEnum, zVersionEnum } from "../../schema/common"
+import {
+    ErrorCode,
+    zActivityEnum,
+    zActivityWithPlayerData,
+    zVersionEnum
+} from "../../schema/common"
 import { z, zBigIntString, zCount } from "../../schema/zod"
 import { prisma } from "../../services/prisma"
 import { includedIn } from "../../util/helpers"
@@ -59,7 +64,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
                     activities: z.array(
                         zActivityWithPlayerData.extend({
                             meta: z.object({
-                                activityId: zRaidEnum,
+                                activityId: zActivityEnum,
                                 versionId: zVersionEnum
                             })
                         })

@@ -152,15 +152,15 @@ export const manifestRoute = new RaidHubRoute({
                             category: "total" as const
                         },
                         {
-                            displayName: "Sherpas",
+                            displayName: "Total Sherpas",
                             category: "sherpas" as const
                         },
                         {
-                            displayName: "Trios",
+                            displayName: "Total Trios",
                             category: "trios" as const
                         },
                         {
-                            displayName: "Duos",
+                            displayName: "Total Duos",
                             category: "duos" as const
                         }
                     ],

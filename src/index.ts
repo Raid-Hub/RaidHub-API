@@ -1,10 +1,10 @@
 import compression from "compression"
 import express from "express"
 import path from "path"
-import { servePrometheus } from "./metrics/registry"
 import { verifyApiKey } from "./middlewares/apiKeys"
 import { errorHandler } from "./middlewares/errorHandler"
 import { router } from "./routes"
+import { servePrometheus } from "./services/prometheus"
 
 // @ts-expect-error this is a hack to make BigInts work with JSON.stringify
 BigInt.prototype.toJSON = function () {

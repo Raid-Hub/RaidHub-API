@@ -1,6 +1,6 @@
 import { RequestHandler } from "express"
 import { RaidHubRoute } from "../../RaidHubRoute"
-import { httpRequestTimer } from "../../metrics/registry"
+import { httpRequestTimer } from "../../services/prometheus"
 
 export const measureDuration =
     (

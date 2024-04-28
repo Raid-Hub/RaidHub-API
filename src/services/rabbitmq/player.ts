@@ -15,7 +15,7 @@ export async function sendAsyncPlayerRequest(request: PlayerRequest) {
 
     return chan
         ?.assertQueue(queueName, {
-            durable: false
+            durable: true
         })
         .then(() => {
             const message = JSON.stringify(request)

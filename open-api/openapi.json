@@ -1582,7 +1582,7 @@
                       "type": "object",
                       "properties": {
                         "activityId": {
-                          "$ref": "#/components/schemas/RaidEnum"
+                          "$ref": "#/components/schemas/ActivityEnum"
                         },
                         "versionId": {
                           "$ref": "#/components/schemas/ActivityVersionEnum"
