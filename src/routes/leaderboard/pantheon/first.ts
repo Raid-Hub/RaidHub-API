@@ -23,7 +23,7 @@ export const pantheonFirstRoute = new RaidHubRoute({
         SELECT 
             (ROW_NUMBER() OVER ()) AS "position",
             (ROW_NUMBER() OVER ()) AS "rank",
-            EXTRACT(EPOCH FROM "date_completed" - ${date}::timestamp) AS "value",
+            EXTRACT(EPOCH FROM "date_completed") - EXTRACT(EPOCH FROM ${date.toISOString()}::timestamp) AS "value",
             JSONB_BUILD_OBJECT(
                 'instanceId', "instance_id",
                 'hash', "hash",
