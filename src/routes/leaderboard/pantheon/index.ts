@@ -2,6 +2,7 @@ import { BungieMembershipType } from "bungie-net-core/models"
 import { RaidHubRouter } from "../../../RaidHubRouter"
 import { pantheonAllRoute } from "./all"
 import { pantheonFirstRoute } from "./first"
+import { pantheonScoreRoute } from "./score"
 import { pantheonSpeedrunRoute } from "./speedrun"
 
 export type PantheonLeaderboardEntry = {
@@ -45,6 +46,10 @@ export const pantheonRouter = new RaidHubRouter({
         {
             path: "/:version/first",
             route: pantheonFirstRoute
+        },
+        {
+            path: "/:version/score",
+            route: pantheonScoreRoute
         },
         {
             path: "/:version/speedrun",
