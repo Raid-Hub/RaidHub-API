@@ -48,7 +48,7 @@ jobs:
 
             - name: Run Tests
               env:
-                  ADMIN_CLIENT_SECRET: "secret-token"
+                  CLIENT_SECRET: "secret-token"
                   JWT_SECRET: "jwt-secret"
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}

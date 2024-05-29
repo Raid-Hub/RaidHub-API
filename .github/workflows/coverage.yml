@@ -39,7 +39,7 @@ jobs:
 
             - name: Run Tests
               env:
-                  ADMIN_CLIENT_SECRET: "secret-token"
+                  CLIENT_SECRET: "secret-token"
                   JWT_SECRET: "jwt-secret"
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
               run: bun run test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false --testTimeout=30000 --ci
