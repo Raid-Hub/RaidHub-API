@@ -41,7 +41,7 @@ jobs:
               env:
                   ADMIN_CLIENT_SECRET: "secret-token"
                   JWT_SECRET: "jwt-secret"
-                  DATABASE_URL: postgresql://readonly:${{ secrets.POSTGRES_READONLY_PASSWORD }}@localhost:5432/raidhub?schema=public&connection_limit=5&pool_timeout=60
+                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
               run: bun run test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false --testTimeout=30000 --ci
               continue-on-error: true
 
