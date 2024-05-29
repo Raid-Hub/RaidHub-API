@@ -1,64 +1,52 @@
 import { gunzipSync } from "zlib"
+import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
+import { getRawCompressedPGCR } from "../data-access-layer/pgcr"
 import { cacheControl } from "../middlewares/cache-control"
-import { ErrorCode } from "../schema/common"
-import { zPgcrSchema } from "../schema/pgcr"
-import { z, zBigIntString } from "../schema/zod"
-import { prisma } from "../services/prisma"
-import { fail, ok } from "../util/response"
+import {
+    RaidHubPostGameCarnageReport,
+    zRaidHubPostGameCarnageReport
+} from "../schema/components/RaidHubPostGameCarnageReport"
+import { ErrorCode } from "../schema/errors/ErrorCode"
+import { zBigIntString } from "../schema/util"
+
+const decoder = new TextDecoder()
 
 export const pgcrRoute = new RaidHubRoute({
     method: "get",
+    description: `Get a raw post game carnage report by instanceId. 
+This is essentially the raw data from the Bungie API, with a few fields trimmed off. 
+It should be a subset of the data returned by the Bungie API. 
+Useful if you need to access PGCRs when Bungie's API is down.`,
     params: z.object({
         instanceId: zBigIntString()
     }),
-    middlewares: [cacheControl(86400)],
-    async handler({ params }) {
-        const instanceId = params.instanceId
-        const bytes = await getRawPGCRBytes({ instanceId })
-        if (bytes === null) {
-            return fail(
-                { notFound: true, instanceId },
-                ErrorCode.PGCRNotFoundError,
-                `No activity found with id ${instanceId}`
-            )
-        } else {
-            const data = decompressGzippedBytes(bytes)
-            return ok(data)
-        }
-    },
+    middleware: [cacheControl(86400)],
     response: {
         success: {
             statusCode: 200,
-            schema: zPgcrSchema.strict()
+            schema: zRaidHubPostGameCarnageReport
         },
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PGCRNotFoundError,
+                code: ErrorCode.PGCRNotFoundError,
                 schema: z.object({
-                    notFound: z.literal(true),
                     instanceId: zBigIntString()
                 })
             }
         ]
+    },
+    async handler({ params }) {
+        const instanceId = params.instanceId
+
+        const result = await getRawCompressedPGCR(instanceId)
+        if (!result) {
+            return RaidHubRoute.fail(ErrorCode.PGCRNotFoundError, { instanceId })
+        }
+
+        const decompressed = gunzipSync(result.data)
+        const pgcr = JSON.parse(decoder.decode(decompressed)) as RaidHubPostGameCarnageReport
+        return RaidHubRoute.ok(pgcr)
     }
 })
-
-async function getRawPGCRBytes({ instanceId }: { instanceId: bigint }) {
-    const rows: [{ data: Buffer }] = await prisma.$queryRaw`
-    SELECT DISTINCT data 
-    FROM pgcr 
-    WHERE instance_id = ${instanceId}`
-
-    if (rows.length !== 1) return null
-
-    return rows[0].data
-}
-
-function decompressGzippedBytes(bytes: Buffer) {
-    const decompressed = gunzipSync(bytes).toString("utf8")
-    const json = JSON.parse(decompressed)
-
-    return json
-}

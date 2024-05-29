@@ -1,78 +1,21 @@
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
+import { DatabaseError } from "postgresql-client"
+import { z } from "zod"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"
-import { ErrorCode, registry } from "../../schema/common"
-import { z } from "../../schema/zod"
-import { prisma } from "../../services/prisma"
-import { fail, ok } from "../../util/response"
+import { ErrorCode } from "../../schema/errors/ErrorCode"
+import { zNaturalNumber } from "../../schema/util"
+import { postgres } from "../../services/postgres"
 
 export const adminQueryRoute = new RaidHubRoute({
     isAdministratorRoute: true,
+    description: "Run a query against the database",
     method: "post",
     body: z.object({
         query: z.string(),
         type: z.enum(["SELECT", "EXPLAIN"]),
         ignoreCost: z.boolean().default(false)
     }),
-    middlewares: [cacheControl(5)],
-    async handler(req) {
-        try {
-            if (req.body.type === "EXPLAIN") {
-                const explained = await explainQuery(req.body.query)
-                return ok({
-                    data: explained.map(r => r["QUERY PLAN"]),
-                    type: "EXPLAIN" as const
-                })
-            }
 
-            // Wrap the query in a subquery to limit the number of rows returned
-            // This is not a security measure, but rather a way to prevent the server from
-            // returning too much data at once. The client is trusted to not abuse this, but
-            // the server will still enforce the limit to prevent mistakes.
-            const wrappedQuery = `SELECT * FROM (${req.body.query.replace(
-                ";",
-                ""
-            )}) AS foo LIMIT 50`
-
-            if (req.body.ignoreCost) {
-                const rows =
-                    await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(wrappedQuery)
-                return ok({ data: rows, type: "SELECT" as const })
-            }
-
-            const explained = await explainQuery(wrappedQuery)
-            const costString = explained[0]["QUERY PLAN"]
-                .split(" ")
-                .find(s => s.startsWith("(cost="))!
-            const minCostString = costString.substring(
-                costString.indexOf("=") + 1,
-                costString.indexOf("..")
-            )
-            const maxCostString = costString.substring(costString.indexOf("..") + 2)
-            const minCost = parseFloat(minCostString)
-            const maxCost = parseFloat(maxCostString)
-
-            if (maxCost > 1_000_000) {
-                return ok({
-                    data: null,
-                    type: "HIGH COST" as const,
-                    cost: maxCost,
-                    estimatedDuration: (minCost + maxCost) / 2 / 100_000
-                })
-            }
-
-            const rows = await prisma.$queryRawUnsafe<{ [column: string]: unknown }[]>(wrappedQuery)
-
-            return ok({ data: rows, type: "SELECT" as const })
-        } catch (err) {
-            const e = err as PrismaClientKnownRequestError
-            return fail(
-                { name: e.name, code: e.code, message: e.meta?.message },
-                ErrorCode.AdminQuerySyntaxError,
-                "Query syntax error"
-            )
-        }
-    },
     response: {
         success: {
             statusCode: 200,
@@ -95,21 +38,81 @@ export const adminQueryRoute = new RaidHubRoute({
         },
         errors: [
             {
-                type: ErrorCode.AdminQuerySyntaxError,
+                code: ErrorCode.AdminQuerySyntaxError,
                 statusCode: 501,
-                schema: registry.register(
-                    "AdminQuerySyntaxError",
-                    z.object({
-                        name: z.string(),
-                        code: z.string(),
-                        message: z.string()
-                    })
-                )
+                schema: z.object({
+                    name: z.string(),
+                    code: z.string(),
+                    line: z.string(),
+                    position: zNaturalNumber()
+                })
             }
         ]
+    },
+    middleware: [cacheControl(5)],
+    async handler(req) {
+        try {
+            if (req.body.type === "EXPLAIN") {
+                const explained = await explainQuery(req.body.query)
+                return RaidHubRoute.ok({
+                    data: explained.map(r => r["QUERY PLAN"]),
+                    type: "EXPLAIN" as const
+                })
+            }
+
+            // Wrap the query in a subquery to limit the number of rows returned
+            // This is not a security measure, but rather a way to prevent the server from
+            // returning too much data at once. The client is trusted to not abuse this, but
+            // the server will still enforce the limit to prevent mistakes.
+            const wrappedQuery = `SELECT * FROM (${req.body.query.replace(
+                ";",
+                ""
+            )}) AS __foo__ LIMIT 50`
+
+            if (req.body.ignoreCost) {
+                const rows = await postgres.queryRows<Record<string, unknown>>(wrappedQuery)
+                return RaidHubRoute.ok({ data: rows, type: "SELECT" as const })
+            }
+
+            const explained = await explainQuery(wrappedQuery)
+            const costString = explained[0]["QUERY PLAN"]
+                .split(" ")
+                .find(s => s.startsWith("(cost="))!
+            const minCostString = costString.substring(
+                costString.indexOf("=") + 1,
+                costString.indexOf("..")
+            )
+            const maxCostString = costString.substring(costString.indexOf("..") + 2)
+            const minCost = parseFloat(minCostString)
+            const maxCost = parseFloat(maxCostString)
+
+            if (maxCost > 1_000_000) {
+                return RaidHubRoute.ok({
+                    data: null,
+                    type: "HIGH COST" as const,
+                    cost: maxCost,
+                    estimatedDuration: (minCost + maxCost) / 2 / 100_000
+                })
+            }
+
+            const rows = await postgres.queryRows<Record<string, unknown>>(wrappedQuery)
+
+            return RaidHubRoute.ok({ data: rows, type: "SELECT" as const })
+        } catch (err) {
+            if (err instanceof DatabaseError) {
+                return RaidHubRoute.fail(ErrorCode.AdminQuerySyntaxError, {
+                    name: err.name,
+                    code: err.code,
+                    line: err.line,
+                    position: err.position
+                })
+            } else {
+                throw err
+            }
+        }
     }
 })
 
 async function explainQuery(query: string) {
-    return prisma.$queryRawUnsafe<{ "QUERY PLAN": string }[]>(`EXPLAIN ${query}`)
+    return await postgres.queryRows<{ "QUERY PLAN": string }>(`EXPLAIN ${query}`)
 }

@@ -14,9 +14,7 @@
   },
   "scripts": {
     "prepare": "husky",
-    "generate": "prisma generate",
     "dev": "bun run ./src/index.ts",
-    "db:pull": "prisma db pull",
     "test": "bun --env-file=.env jest --maxWorkers=50%",
     "types": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.json",
@@ -51,18 +49,17 @@
     "lint-staged": "^15.2.0",
     "prettier": "^3.0.3",
     "prettier-plugin-organize-imports": "^3.2.4",
-    "prisma": "^5.10.2",
     "redoc-cli": "^0.13.21",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
-    "typescript": "5.3"
+    "typescript": "5.4"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.2",
     "amqplib": "^0.10.3",
     "compression": "^1.7.4",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
+    "postgresql-client": "^2.11.0",
     "prom-client": "^15.1.1",
     "zlib": "^1.0.5",
     "zod": "^3.22.4"
@@ -79,10 +76,8 @@
     "testEnvironment": "node",
     "testTimeout": 15000,
     "modulePathIgnorePatterns": [
-      "dist/*"
-    ],
-    "coveragePathIgnorePatterns": [
-      "prisma.ts"
+      "dist/*",
+      "__ignore__/*"
     ],
     "coverageReporters": [
       "html"

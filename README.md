@@ -27,17 +27,9 @@ Note: you will need to clone the [RaidHub-Services](https://github.com/Raid-Hub/
 
 Note: `yarn build`, `yarn start`, `yarn stop`, and `yarn restart` are production commands and do not need to be used in the dev environment
 
-### Making Database Changes
-
-1. Apply new changes to `schema.prisma` with `yarn db:push`
-2. Reset database with `yarn db:reset`
-3. Generate migration files with `yarn db:migrate`
-4. To seed database, run `yarn db:seed Name#0001 Name2#0002 ...`
-
 ## Resources and Tools
 
 -   TypeScript https://www.typescriptlang.org/docs/
 -   Express.js (Framework) https://expressjs.com/
 -   Zod (Schema Validation) https://zod.dev/
--   Prisma (ORM) https://www.prisma.io/docs
 -   Zod to OpenAPI https://github.com/asteasolutions/zod-to-openapi

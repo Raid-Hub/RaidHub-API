@@ -1,6 +1,6 @@
 import express from "express"
 import request from "supertest"
-import { generateJWT } from "../routes/authorize"
+import { generateJWT } from "../routes/authorize/admin"
 import { adminProtected } from "./admin"
 
 const app = express()
@@ -16,18 +16,18 @@ describe("admin protected", () => {
         const res = await request(app).get("/admin")
         expect(res.status).toBe(403)
         expect(res.body.success).toBe(false)
-        expect(res.body.error.type).toBe("InsufficientPermissionsError")
+        expect(res.body.errorCode).toBe("InsufficientPermissionsError")
     })
 
     test("should return 403 if invalid authorization is provided", async () => {
         const res = await request(app).get("/admin").set("Authorization", "Bearer 123")
         expect(res.status).toBe(403)
         expect(res.body.success).toBe(false)
-        expect(res.body.error.type).toBe("InsufficientPermissionsError")
+        expect(res.body.errorCode).toBe("InsufficientPermissionsError")
     })
 
     test("should return 200 if valid authorization is provided", async () => {
-        const token = generateJWT()
+        const token = generateJWT("234671294")
         const res = await request(app)
             .get("/admin")
             .set("Authorization", "Bearer " + token)

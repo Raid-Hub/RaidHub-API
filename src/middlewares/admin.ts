@@ -1,23 +1,29 @@
 import { RequestHandler } from "express"
 import jwt from "jsonwebtoken"
-import { zInsufficientPermissionsError } from "../RaidHubErrors"
-import { ErrorCode } from "../schema/common"
+import { ErrorCode } from "../schema/errors/ErrorCode"
+import { zInsufficientPermissionsError } from "../schema/errors/InsufficientPermissionsError"
+
+const error = (): (typeof zInsufficientPermissionsError)["_input"] => ({
+    minted: new Date(),
+    success: false,
+    errorCode: ErrorCode.InsufficientPermissionsError,
+    error: {
+        message: "Forbidden"
+    }
+})
 
 export const adminProtected: RequestHandler = (req, res, next) => {
     const authHeader = req.headers["authorization"]
-    const token = authHeader && authHeader.split(" ")[1]
+    const [format, token] = authHeader ? authHeader.split(" ") : ["", ""]
 
-    jwt.verify(token!, process.env.JWT_SECRET!, (err, _) => {
+    if (format !== "Bearer") {
+        res.status(403).json(error())
+        return
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET!, (err, _) => {
         if (err) {
-            res.status(403).json({
-                message: "Forbidden",
-                minted: new Date(),
-                success: false,
-                error: {
-                    message: "Forbidden",
-                    type: ErrorCode.InsufficientPermissionsError
-                }
-            } satisfies (typeof zInsufficientPermissionsError)["_input"])
+            res.status(403).json(error())
         }
 
         next()

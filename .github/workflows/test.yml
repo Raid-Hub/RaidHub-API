@@ -38,7 +38,6 @@ jobs:
             - name: Install dependencies
               run: |
                   bun install --frozen-lockfile
-                  bun prisma generate
 
             - name: Tunnel to VPS
               env:

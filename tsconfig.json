@@ -18,6 +18,6 @@
 
     "rootDir": "."
   },
-  "include": ["src/**/*.ts", "prisma/seed.ts", "api-keys.json"],
+  "include": ["src/**/*.ts", "api-keys.json"],
   "exclude": ["scripts/*"]
 }

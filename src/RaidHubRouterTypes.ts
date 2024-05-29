@@ -1,24 +1,19 @@
 import { RouteConfig } from "@asteasolutions/zod-to-openapi"
 import { Router } from "express"
-import { ZodType } from "zod"
+import { ZodType, z } from "zod"
 import { RaidHubRouter } from "./RaidHubRouter"
-import { z } from "./schema/zod"
+import { ErrorCode } from "./schema/errors/ErrorCode"
 
 export interface IRaidHubRoute {
     express: Router
-    openApiRoutes(): RouteConfig[]
+    $generateOpenApiRoutes(): RouteConfig[]
     setParent(parent: RaidHubRouter | null): void
     getParent(): RaidHubRouter | null
 }
 
-export type RaidHubResponse<T, E> = {
-    minted: Date
-    message?: string
-} & ({ success: true; response: T } | { success: false; error: E })
-
-export type RaidHubHandlerReturn<T, E, C> =
-    | { success: true; response: T; message?: string }
-    | { success: false; error: E; type: C; message?: string }
+export type RaidHubHandlerReturn<T, E, C extends ErrorCode> =
+    | { success: true; response: T }
+    | { success: false; error: E; code: C }
 
 export type RaidHubHandler<
     Params extends ZodType,
@@ -26,7 +21,7 @@ export type RaidHubHandler<
     Body extends ZodType,
     T,
     E,
-    C extends string
+    C extends ErrorCode
 > = (req: {
     params: z.infer<Params>
     query: z.infer<Query>
