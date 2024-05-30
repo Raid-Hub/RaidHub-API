@@ -52,13 +52,13 @@ export const leaderboardIndividualGlobalRoute = new RaidHubRoute({
         const { page, count, search } = req.query
 
         if (search) {
-            const entries = await searchIndividualGlobalLeaderboard({
+            const data = await searchIndividualGlobalLeaderboard({
                 membershipId: search,
                 take: count,
                 column: categoryMap[category]
             })
 
-            if (!entries) {
+            if (!data) {
                 return RaidHubRoute.fail(ErrorCode.PlayerNotOnLeaderboardError, {
                     membershipId: search
                 })
@@ -67,7 +67,9 @@ export const leaderboardIndividualGlobalRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "individual" as const,
                 format: category === "speedrun" ? ("duration" as const) : ("numerical" as const),
-                entries
+                page: data.page,
+                count,
+                entries: data.entries
             })
         } else {
             const entries = await getIndividualGlobalLeaderboard({
@@ -79,6 +81,8 @@ export const leaderboardIndividualGlobalRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "individual" as const,
                 format: category === "speedrun" ? ("duration" as const) : ("numerical" as const),
+                page,
+                count,
                 entries
             })
         }

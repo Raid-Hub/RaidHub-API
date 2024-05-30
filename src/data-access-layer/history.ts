@@ -28,6 +28,9 @@ export const getActivities = async (
             date_completed AS "dateCompleted",
             duration AS "duration",
             platform_type AS "platformType",
+            date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isDayOne",
+            date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isContest",
+            date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') AS "isWeekOne",
             JSONB_BUILD_OBJECT(
                 'completed', activity_player.completed,
                 'sherpas', activity_player.sherpas,
@@ -37,6 +40,7 @@ export const getActivities = async (
         FROM activity_player
         INNER JOIN activity USING (instance_id)
         INNER JOIN activity_hash USING (hash)
+        INNER JOIN activity_definition ON activity_definition.id = activity_hash.activity_id
         WHERE membership_id = $1::bigint
             AND date_completed < $2
             ${cutoff ? "AND date_completed > $4" : ""}

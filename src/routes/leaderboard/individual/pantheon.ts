@@ -68,14 +68,14 @@ export const leaderboardIndividualPantheonRoute = new RaidHubRoute({
         }
 
         if (search) {
-            const entries = await searchIndividualPantheonLeaderboard({
+            const data = await searchIndividualPantheonLeaderboard({
                 versionId: versionDefinition.id,
                 membershipId: search,
                 take: count,
                 column: categoryMap[category]
             })
 
-            if (!entries) {
+            if (!data) {
                 return RaidHubRoute.fail(ErrorCode.PlayerNotOnLeaderboardError, {
                     membershipId: search
                 })
@@ -84,7 +84,9 @@ export const leaderboardIndividualPantheonRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "individual" as const,
                 format: "numerical" as const,
-                entries
+                page: data.page,
+                count,
+                entries: data.entries
             })
         } else {
             const entries = await getIndividualPantheonLeaderboard({
@@ -97,6 +99,8 @@ export const leaderboardIndividualPantheonRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "individual" as const,
                 format: "numerical" as const,
+                page,
+                count,
                 entries
             })
         }

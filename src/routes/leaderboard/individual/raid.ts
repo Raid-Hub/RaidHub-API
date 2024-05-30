@@ -68,14 +68,14 @@ export const leaderboardIndividualRaidRoute = new RaidHubRoute({
         }
 
         if (search) {
-            const entries = await searchIndividualRaidLeaderboard({
+            const data = await searchIndividualRaidLeaderboard({
                 raidId: raidDefinition.id,
                 membershipId: search,
                 take: count,
                 column: categoryMap[category]
             })
 
-            if (!entries) {
+            if (!data) {
                 return RaidHubRoute.fail(ErrorCode.PlayerNotOnLeaderboardError, {
                     membershipId: search
                 })
@@ -84,7 +84,9 @@ export const leaderboardIndividualRaidRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "individual" as const,
                 format: "numerical" as const,
-                entries
+                page: data.page,
+                count,
+                entries: data.entries
             })
         } else {
             const entries = await getIndividualRaidLeaderboard({
@@ -97,6 +99,8 @@ export const leaderboardIndividualRaidRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "individual" as const,
                 format: "numerical" as const,
+                page,
+                count,
                 entries
             })
         }

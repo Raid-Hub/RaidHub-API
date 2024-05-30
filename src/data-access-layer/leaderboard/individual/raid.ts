@@ -73,10 +73,14 @@ export const searchIndividualRaidLeaderboard = async ({
     )
     if (!result) return null
 
-    return await getIndividualRaidLeaderboard({
-        raidId,
-        skip: (Math.ceil(result.position / take) - 1) * take,
-        take,
-        column
-    })
+    const page = Math.ceil(result.position / take)
+    return {
+        page,
+        entries: await getIndividualRaidLeaderboard({
+            raidId,
+            skip: (page - 1) * take,
+            take,
+            column
+        })
+    }
 }

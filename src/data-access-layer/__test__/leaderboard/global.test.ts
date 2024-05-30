@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { cleanupPostgresAfterAll } from "../../../routes/testUtil"
 import { zIndividualLeaderboardEntry } from "../../../schema/components/LeaderboardData"
+import { zNaturalNumber } from "../../../schema/util"
 import {
     getIndividualGlobalLeaderboard,
     searchIndividualGlobalLeaderboard
@@ -34,11 +35,16 @@ describe("searchIndividualGlobalLeaderboard", () => {
             membershipId: "4611686018488107374"
         }).catch(console.error)
 
-        const parsed = z.array(zIndividualLeaderboardEntry).safeParse(data)
+        const parsed = z
+            .object({
+                page: zNaturalNumber(),
+                entries: z.array(zIndividualLeaderboardEntry)
+            })
+            .safeParse(data)
         if (!parsed.success) {
             expect(parsed.error.errors).toHaveLength(0)
         } else {
-            expect(parsed.data.length).toBeGreaterThan(0)
+            expect(parsed.data.entries.length).toBeGreaterThan(0)
             expect(parsed.success).toBe(true)
         }
     })

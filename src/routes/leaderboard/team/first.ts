@@ -59,14 +59,14 @@ Use the /contest endpoint instead to get the full rankings for the duration of t
         }
 
         if (search) {
-            const entries = await searchFirstTeamActivityVersionLeaderboard({
+            const data = await searchFirstTeamActivityVersionLeaderboard({
                 membershipId: search,
                 activityId: definition.activityId,
                 versionId: definition.versionId,
                 take: count
             })
 
-            if (!entries) {
+            if (!data) {
                 return RaidHubRoute.fail(ErrorCode.PlayerNotOnLeaderboardError, {
                     membershipId: search
                 })
@@ -75,7 +75,9 @@ Use the /contest endpoint instead to get the full rankings for the duration of t
             return RaidHubRoute.ok({
                 type: "team" as const,
                 format: "duration" as const,
-                entries
+                page: data.page,
+                count,
+                entries: data.entries
             })
         } else {
             const entries = await getFirstTeamActivityVersionLeaderboard({
@@ -88,6 +90,8 @@ Use the /contest endpoint instead to get the full rankings for the duration of t
             return RaidHubRoute.ok({
                 type: "team" as const,
                 format: "duration" as const,
+                page,
+                count,
                 entries
             })
         }

@@ -67,9 +67,13 @@ export const searchContestTeamLeaderboard = async ({
     )
     if (!result) return null
 
-    return await getContestTeamLeaderboard({
-        raidId,
-        skip: (Math.ceil(result.position / take) - 1) * take,
-        take
-    })
+    const page = Math.ceil(result.position / take)
+    return {
+        page,
+        entries: await getContestTeamLeaderboard({
+            raidId,
+            skip: (page - 1) * take,
+            take
+        })
+    }
 }

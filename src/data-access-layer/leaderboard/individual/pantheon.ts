@@ -73,10 +73,14 @@ export const searchIndividualPantheonLeaderboard = async ({
     )
     if (!result) return null
 
-    return await getIndividualPantheonLeaderboard({
-        versionId,
-        skip: (Math.ceil(result.position / take) - 1) * take,
-        take,
-        column
-    })
+    const page = Math.ceil(result.position / take)
+    return {
+        page,
+        entries: await getIndividualPantheonLeaderboard({
+            versionId,
+            skip: (page - 1) * take,
+            take,
+            column
+        })
+    }
 }

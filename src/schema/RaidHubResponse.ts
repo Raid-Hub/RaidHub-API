@@ -32,11 +32,7 @@ export const registerResponse = (path: string, schema: ZodType) =>
             .filter(Boolean)
             .map(str => str.charAt(0).toUpperCase() + str.slice(1))
             .join("") + "Response",
-        z.object({
-            minted: zISODateString(),
-            success: z.literal(true),
-            response: schema
-        })
+        schema
     )
 
 export const registerError = <T extends ZodRawShape>(code: ErrorCode, schema: ZodObject<T>) =>

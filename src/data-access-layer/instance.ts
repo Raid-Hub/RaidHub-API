@@ -19,9 +19,13 @@ export async function getInstance(instanceId: bigint | string): Promise<Instance
             date_started AS "dateStarted",
             date_completed AS "dateCompleted",
             duration AS "duration",
-            platform_type AS "platformType"
+            platform_type AS "platformType",
+            date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isDayOne",
+            date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isContest",
+            date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') AS "isWeekOne"
         FROM activity
         INNER JOIN activity_hash USING (hash)
+        INNER JOIN activity_definition ON activity_definition.id = activity_hash.activity_id
         WHERE instance_id = $1::bigint
         LIMIT 1;`,
         {
@@ -34,7 +38,8 @@ export async function getInstanceExtended(
     instanceId: bigint | string
 ): Promise<InstanceExtended | null> {
     const instanceQuery = getInstance(instanceId)
-    const instancePlayers = await postgres.queryRows<InstancePlayerExtended>(
+    const leaderboardEntryPromise = getLeaderboardEntryForInstance(instanceId)
+    const instancePlayersPromise = postgres.queryRows<InstancePlayerExtended>(
         `
         SELECT 
             completed as "completed",
@@ -97,15 +102,19 @@ export async function getInstanceExtended(
         }
     )
 
-    return await instanceQuery.then(async instance =>
-        instance
-            ? {
-                  ...instance,
-                  metadata: await getInstanceMetadataByHash(instance.hash),
-                  players: instancePlayers
-              }
-            : null
-    )
+    return await instanceQuery.then(async instance => {
+        if (!instance) {
+            return null
+        }
+        const instanceMetadataPromise = getInstanceMetadataByHash(instance.hash)
+
+        return {
+            ...instance,
+            leaderboardRank: await leaderboardEntryPromise.then(entry => entry?.rank || null),
+            metadata: await instanceMetadataPromise,
+            players: await instancePlayersPromise
+        }
+    })
 }
 
 export async function getInstanceMetadataByHash(hash: bigint | string): Promise<InstanceMetadata> {
@@ -127,4 +136,19 @@ export async function getInstanceMetadataByHash(hash: bigint | string): Promise<
         throw new Error("Metadata not found")
     }
     return metaData
+}
+
+export const getLeaderboardEntryForInstance = async (instanceId: bigint | string) => {
+    return await postgres.queryRow<{
+        rank: number
+    }>(
+        `SELECT rank
+        FROM team_activity_version_leaderboard
+        WHERE instance_id = $1::bigint
+        ORDER BY rank ASC
+        LIMIT 1;`,
+        {
+            params: [instanceId]
+        }
+    )
 }

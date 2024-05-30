@@ -29,7 +29,7 @@ export const leaderboardRouter = new RaidHubRouter({
                         route: leaderboardTeamFirstActivityVersionRoute
                     },
                     {
-                        path: "/contest/:activity",
+                        path: "/contest/:raid",
                         route: leaderboardTeamContestRoute
                     }
                 ]

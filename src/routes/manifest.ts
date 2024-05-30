@@ -75,11 +75,15 @@ export const manifestRoute = new RaidHubRoute({
                     contestRaidIds: z.array(zNaturalNumber()).openapi({
                         description: "The list of raid activityId which had a contest mode"
                     }),
+                    resprisedRaidIds: z.array(zNaturalNumber()).openapi({
+                        description:
+                            "The list of raid activityId which have been reprised from Destiny 1"
+                    }),
                     pantheonIds: z.array(zNaturalNumber()).openapi({
                         description: "The list of activityId for Pantheon"
                     }),
-                    pantheonVersionIds: z.array(zNaturalNumber()).openapi({
-                        description: "The set of versionId for Pantheon"
+                    versionsForActivity: z.record(z.array(zNaturalNumber())).openapi({
+                        description: "The set of versionId for each activityId"
                     })
                 })
                 .strict()
@@ -93,7 +97,17 @@ export const manifestRoute = new RaidHubRoute({
         ])
         const raids = activities.filter(a => a.isRaid)
         const pantheonId = 101
-        const pantheonVersions = versions.filter(v => v.associatedActivityId === pantheonId)
+        const versionsSetForActivity: Record<number, Set<number>> = {}
+        for (const { activityId, versionId } of hashes) {
+            if (!versionsSetForActivity[activityId]) {
+                versionsSetForActivity[activityId] = new Set()
+            }
+            versionsSetForActivity[activityId].add(versionId)
+        }
+        const versionsForActivity: Record<number, number[]> = {}
+        Object.entries(versionsSetForActivity).forEach(([activityId, set]) => {
+            versionsForActivity[parseInt(activityId)] = [...set]
+        })
 
         return RaidHubRoute.ok({
             hashes: Object.fromEntries(
@@ -122,8 +136,11 @@ export const manifestRoute = new RaidHubRoute({
                 ...new Set(hashes.filter(h => h.versionId === 4).map(h => h.activityId))
             ],
             contestRaidIds: raids.filter(a => a.contestEnd !== null).map(a => a.id),
+            resprisedRaidIds: versions
+                .filter(v => v.associatedActivityId && v.associatedActivityId < 100)
+                .map(a => a.associatedActivityId!),
             pantheonIds: [pantheonId],
-            pantheonVersionIds: pantheonVersions.map(v => v.id)
+            versionsForActivity: versionsForActivity
         })
     }
 })

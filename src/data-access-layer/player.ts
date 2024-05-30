@@ -48,7 +48,10 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
                     'dateStarted', fastest.date_started,
                     'dateCompleted', fastest.date_completed,
                     'duration', fastest.duration,
-                    'platformType', fastest.platform_type
+                    'platformType', fastest.platform_type,
+                    'isDayOne', date_completed < COALESCE(contest_end, TIMESTAMP 'epoch'),
+                    'isContest', date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch'),
+                    'isWeekOne', date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch')
                 ) 
                 ELSE NULL 
             END as "fastestInstance"

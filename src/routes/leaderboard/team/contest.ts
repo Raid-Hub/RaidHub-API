@@ -54,13 +54,13 @@ export const leaderboardTeamContestRoute = new RaidHubRoute({
         }
 
         if (search) {
-            const entries = await searchContestTeamLeaderboard({
+            const data = await searchContestTeamLeaderboard({
                 membershipId: search,
                 raidId: definition.id,
                 take: count
             })
 
-            if (!entries) {
+            if (!data) {
                 return RaidHubRoute.fail(ErrorCode.PlayerNotOnLeaderboardError, {
                     membershipId: search
                 })
@@ -69,7 +69,9 @@ export const leaderboardTeamContestRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "team" as const,
                 format: "duration" as const,
-                entries
+                page: data.page,
+                count,
+                entries: data.entries
             })
         } else {
             const entries = await getContestTeamLeaderboard({
@@ -81,6 +83,8 @@ export const leaderboardTeamContestRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 type: "team" as const,
                 format: "duration" as const,
+                page,
+                count,
                 entries
             })
         }

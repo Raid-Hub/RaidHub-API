@@ -73,9 +73,13 @@ export const searchIndividualGlobalLeaderboard = async ({
     )
     if (!result) return null
 
-    return await getIndividualGlobalLeaderboard({
-        skip: (Math.ceil(result.position / take) - 1) * take,
-        take,
-        column
-    })
+    const page = Math.ceil(result.position / take)
+    return {
+        page,
+        entries: await getIndividualGlobalLeaderboard({
+            skip: (page - 1) * take,
+            take,
+            column
+        })
+    }
 }

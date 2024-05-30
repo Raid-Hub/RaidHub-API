@@ -35,11 +35,15 @@ export const zLeaderboardData = registry.register(
         z.object({
             type: z.literal("team"),
             format: z.enum(["duration", "numerical"]),
+            page: zNaturalNumber(),
+            count: zNaturalNumber(),
             entries: z.array(zTeamLeaderboardEntry)
         }),
         z.object({
             type: z.literal("individual"),
             format: z.enum(["duration", "numerical"]),
+            page: zNaturalNumber(),
+            count: zNaturalNumber(),
             entries: z.array(zIndividualLeaderboardEntry)
         })
     ])

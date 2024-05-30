@@ -293,7 +293,15 @@ export class RaidHubRoute<
         const path = this.getFullPath().replace(/\/:(\w+)/g, "/{$1}")
 
         const allResponses = [
-            [this.successCode, "Success", registerResponse(path, this.responseSchema)],
+            [
+                this.successCode,
+                "Success",
+                z.object({
+                    minted: z.date(),
+                    success: z.literal(true),
+                    response: registerResponse(path, this.responseSchema)
+                })
+            ],
             ...this.errors,
             [401, "Unauthorized", zApiKeyError],
             this.isAdministratorRoute ? [403, "Forbidden", zInsufficientPermissionsError] : null,
