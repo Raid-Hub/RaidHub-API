@@ -4,7 +4,7 @@ import { getActivities } from "../../../data-access-layer/history"
 import { getPlayer } from "../../../data-access-layer/player"
 import { zInstanceForPlayer } from "../../../schema/components/InstanceForPlayer"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
-import { zBigIntString, zISODateString, zWholeNumber } from "../../../schema/util"
+import { zBigIntString, zISODateString } from "../../../schema/util"
 
 export const playerActivitiesRoute = new RaidHubRoute({
     method: "get",
@@ -16,9 +16,38 @@ in order to optimize performance. Subsequent requests will return the full numbe
         membershipId: zBigIntString()
     }),
     query: z.object({
-        count: zWholeNumber().min(10).max(5000).default(2000),
+        count: z.coerce.number().int().min(10).max(5000).default(2000),
         cursor: zISODateString().optional()
     }),
+
+    response: {
+        success: {
+            statusCode: 200,
+            schema: z
+                .object({
+                    membershipId: zBigIntString(),
+                    nextCursor: zISODateString().nullable(),
+                    activities: z.array(zInstanceForPlayer)
+                })
+                .strict()
+        },
+        errors: [
+            {
+                statusCode: 404,
+                code: ErrorCode.PlayerNotFoundError,
+                schema: z.object({
+                    membershipId: zBigIntString()
+                })
+            },
+            {
+                statusCode: 403,
+                code: ErrorCode.PlayerPrivateProfileError,
+                schema: z.object({
+                    membershipId: zBigIntString()
+                })
+            }
+        ]
+    },
     middleware: [
         (req, res, next) => {
             // save the previous send method
@@ -43,6 +72,8 @@ in order to optimize performance. Subsequent requests will return the full numbe
 
         if (!player) {
             return RaidHubRoute.fail(ErrorCode.PlayerNotFoundError, { membershipId })
+        } else if (player.isPrivate) {
+            return RaidHubRoute.fail(ErrorCode.PlayerPrivateProfileError, { membershipId })
         }
 
         const activities = cursor
@@ -66,27 +97,6 @@ in order to optimize performance. Subsequent requests will return the full numbe
             nextCursor,
             activities
         })
-    },
-    response: {
-        success: {
-            statusCode: 200,
-            schema: z
-                .object({
-                    membershipId: zBigIntString(),
-                    nextCursor: zISODateString().nullable(),
-                    activities: z.array(zInstanceForPlayer)
-                })
-                .strict()
-        },
-        errors: [
-            {
-                statusCode: 404,
-                code: ErrorCode.PlayerNotFoundError,
-                schema: z.object({
-                    membershipId: zBigIntString()
-                })
-            }
-        ]
     }
 })
 

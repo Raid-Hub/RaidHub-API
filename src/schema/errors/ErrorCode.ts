@@ -11,6 +11,7 @@ export enum ErrorCode {
     BodyValidationError = "BodyValidationError",
     /** Specific */
     PlayerNotFoundError = "PlayerNotFoundError",
+    PlayerPrivateProfileError = "PlayerPrivateProfileError",
     InstanceNotFoundError = "InstanceNotFoundError",
     PGCRNotFoundError = "PGCRNotFoundError",
     LeaderboardNotFoundError = "LeaderboardNotFoundError",

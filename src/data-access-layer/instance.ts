@@ -53,7 +53,8 @@ export async function getInstanceExtended(
                 'displayName', "display_name", 
                 'bungieGlobalDisplayName', "bungie_global_display_name", 
                 'bungieGlobalDisplayNameCode', "bungie_global_display_name_code", 
-                'lastSeen', "last_seen"
+                'lastSeen', "last_seen",
+                'isPrivate', "is_private"
             ) AS "playerInfo", 
             "t1"."characters_json" AS "characters"
         FROM "activity_player" "ap"
@@ -98,7 +99,8 @@ export async function getInstanceExtended(
         WHERE instance_id = $1::bigint
         ORDER BY completed DESC, time_played_seconds DESC;`,
         {
-            params: [instanceId]
+            params: [instanceId],
+            fetchCount: 100000
         }
     )
 

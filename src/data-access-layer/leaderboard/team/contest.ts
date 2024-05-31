@@ -28,7 +28,8 @@ export const getContestTeamLeaderboard = async ({
                         'displayName', display_name,
                         'bungieGlobalDisplayName', bungie_global_display_name,
                         'bungieGlobalDisplayNameCode', bungie_global_display_name_code,
-                        'lastSeen', last_seen
+                        'lastSeen', last_seen,
+                        'isPrivate', is_private
                     )
                 ) as "players"
             FROM activity_player
@@ -40,7 +41,8 @@ export const getContestTeamLeaderboard = async ({
             AND activity_id = $3
         ORDER BY position ASC`,
         {
-            params: [skip, take, raidId]
+            params: [skip, take, raidId],
+            fetchCount: take
         }
     )
 }

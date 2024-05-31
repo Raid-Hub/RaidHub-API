@@ -1,5 +1,7 @@
 import { z } from "zod"
 import { cleanupPostgresAfterAll } from "../../routes/testUtil"
+import { zActivityDefinition } from "../../schema/components/ActivityDefinition"
+import { zVersionDefinition } from "../../schema/components/VersionDefinition"
 import { zBigIntString, zNaturalNumber } from "../../schema/util"
 import {
     getActivityVersion,
@@ -57,23 +59,7 @@ describe("listActivityDefinitions", () => {
     it("returns the correct shape", async () => {
         const data = await listActivityDefinitions().catch(console.error)
 
-        const parsed = z
-            .array(
-                z
-                    .object({
-                        id: zNaturalNumber(),
-                        name: z.string(),
-                        path: z.string(),
-                        isSunset: z.boolean(),
-                        isRaid: z.boolean(),
-                        contestEnd: z.date().nullable(),
-                        releaseDate: z.date().nullable(),
-                        dayOneEnd: z.date().nullable(),
-                        weekOneEnd: z.date().nullable()
-                    })
-                    .strict()
-            )
-            .safeParse(data)
+        const parsed = z.array(zActivityDefinition).safeParse(data)
         if (!parsed.success) {
             expect(parsed.error.errors).toHaveLength(0)
         } else {
@@ -87,18 +73,7 @@ describe("listVersionDefinitions", () => {
     it("returns the correct shape", async () => {
         const data = await listVersionDefinitions().catch(console.error)
 
-        const parsed = z
-            .array(
-                z
-                    .object({
-                        id: zNaturalNumber(),
-                        name: z.string(),
-                        path: z.string(),
-                        associatedActivityId: zNaturalNumber().nullable()
-                    })
-                    .strict()
-            )
-            .safeParse(data)
+        const parsed = z.array(zVersionDefinition).safeParse(data)
         if (!parsed.success) {
             expect(parsed.error.errors).toHaveLength(0)
         } else {

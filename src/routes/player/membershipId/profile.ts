@@ -1,9 +1,14 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getProfile } from "../../../data-access-layer/player"
+import {
+    getPlayer,
+    getPlayerActivityStats,
+    getPlayerGlobalStats,
+    getWorldFirstEntries
+} from "../../../data-access-layer/player"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { processPlayerAsync } from "../../../middlewares/processPlayerAsync"
-import { zPlayerProfile } from "../../../schema/components/PlayerProfile"
+import { WorldFirstEntry, zPlayerProfile } from "../../../schema/components/PlayerProfile"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
 import { zBigIntString } from "../../../schema/util"
 
@@ -26,18 +31,54 @@ This is used to hydrate the RaidHub profile page`,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
+            },
+            {
+                statusCode: 403,
+                code: ErrorCode.PlayerPrivateProfileError,
+                schema: z.object({
+                    membershipId: zBigIntString()
+                })
             }
         ]
     },
     middleware: [cacheControl(30), processPlayerAsync],
     async handler(req) {
-        const data = await getProfile(req.params.membershipId)
-        if (!data) {
-            return RaidHubRoute.fail(ErrorCode.PlayerNotFoundError, {
-                membershipId: req.params.membershipId
-            })
-        } else {
-            return RaidHubRoute.ok(data)
+        const membershipId = req.params.membershipId
+
+        const player = await getPlayer(membershipId)
+
+        if (!player) {
+            return RaidHubRoute.fail(ErrorCode.PlayerNotFoundError, { membershipId })
+        } else if (player.isPrivate) {
+            return RaidHubRoute.fail(ErrorCode.PlayerPrivateProfileError, { membershipId })
         }
+
+        const [activityStats, globalStats, worldFirstEntries] = await Promise.all([
+            getPlayerActivityStats(membershipId),
+            getPlayerGlobalStats(membershipId),
+            getWorldFirstEntries(membershipId)
+        ])
+
+        return RaidHubRoute.ok({
+            playerInfo: player,
+            stats: {
+                global: globalStats ?? {
+                    clears: null,
+                    freshClears: null,
+                    sherpas: null,
+                    sumOfBest: null
+                },
+                activity: Object.fromEntries(activityStats.map(stat => [stat.activityId, stat]))
+            },
+            worldFirstEntries: Object.fromEntries(
+                worldFirstEntries.map(
+                    entry =>
+                        [entry.activityId, entry.rank === null ? null : entry] as [
+                            number,
+                            WorldFirstEntry | null
+                        ]
+                )
+            )
+        })
     }
 })

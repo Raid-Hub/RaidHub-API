@@ -1,3 +1,5 @@
+import { ActivityDefinition } from "../schema/components/ActivityDefinition"
+import { VersionDefinition } from "../schema/components/VersionDefinition"
 import { postgres } from "../services/postgres"
 
 export const getRaidId = async (raidPath: string) => {
@@ -36,17 +38,7 @@ export const getActivityVersion = async (activityPath: string, versionPath: stri
 }
 
 export const listActivityDefinitions = async () => {
-    return await postgres.queryRows<{
-        id: number
-        name: string
-        path: string
-        isSunset: boolean
-        isRaid: boolean
-        contestEnd: Date | null
-        releaseDate: Date | null
-        dayOneEnd: Date | null
-        weekOneEnd: Date | null
-    }>(
+    return await postgres.queryRows<ActivityDefinition>(
         `SELECT 
             id,
             name,
@@ -56,23 +48,20 @@ export const listActivityDefinitions = async () => {
             release_date AS "releaseDate",
             day_one_end AS "dayOneEnd",
             week_one_end AS "weekOneEnd",
-            contest_end AS "contestEnd"
+            contest_end AS "contestEnd",
+            milestone_hash AS "milestoneHash"
         FROM activity_definition`
     )
 }
 
 export const listVersionDefinitions = async () => {
-    return await postgres.queryRows<{
-        id: number
-        name: string
-        path: string
-        associatedActivityId: number | null
-    }>(
+    return await postgres.queryRows<VersionDefinition>(
         `SELECT 
             id,
             name,
             path,
-            associated_activity_id AS "associatedActivityId"
+            associated_activity_id AS "associatedActivityId",
+            is_challenge_mode AS "isChallengeMode"
         FROM version_definition`
     )
 }

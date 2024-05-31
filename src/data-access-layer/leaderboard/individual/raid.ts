@@ -35,7 +35,8 @@ export const getIndividualRaidLeaderboard = async ({
                 'displayName', display_name,
                 'bungieGlobalDisplayName', bungie_global_display_name,
                 'bungieGlobalDisplayNameCode', bungie_global_display_name_code,
-                'lastSeen', last_seen
+                'lastSeen', last_seen,
+                'isPrivate', is_private
             ) as "playerInfo"
         FROM individual_raid_leaderboard
         JOIN player USING (membership_id)
@@ -43,7 +44,8 @@ export const getIndividualRaidLeaderboard = async ({
             AND activity_id = $3
         ORDER BY ${column}_position ASC`,
         {
-            params: [skip, take, raidId]
+            params: [skip, take, raidId],
+            fetchCount: take
         }
     )
 }

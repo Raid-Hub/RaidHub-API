@@ -2,7 +2,6 @@ import { z } from "zod"
 import { cleanupPostgresAfterAll } from "../../routes/testUtil"
 import { zPlayerInfo } from "../../schema/components/PlayerInfo"
 import {
-    zPlayerProfile,
     zPlayerProfileActivityStats,
     zPlayerProfileGlobalStats,
     zWorldFirstEntry
@@ -12,7 +11,6 @@ import {
     getPlayer,
     getPlayerActivityStats,
     getPlayerGlobalStats,
-    getProfile,
     getWorldFirstEntries
 } from "../player"
 
@@ -78,19 +76,6 @@ describe("getWorldFirstEntries", () => {
             expect(parsed.error.errors).toHaveLength(0)
         } else {
             expect(parsed.data.length).toBeGreaterThan(0)
-            expect(parsed.success).toBe(true)
-        }
-    })
-})
-
-describe("getProfile", () => {
-    it("returns the correct shape", async () => {
-        const data = await getProfile("4611686018488107374").catch(console.error)
-
-        const parsed = zPlayerProfile.safeParse(data)
-        if (!parsed.success) {
-            expect(parsed.error.errors).toHaveLength(0)
-        } else {
             expect(parsed.success).toBe(true)
         }
     })

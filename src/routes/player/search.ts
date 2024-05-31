@@ -12,7 +12,7 @@ export const playerSearchRoute = new RaidHubRoute({
 Players who have not attempted a raid may not appear in the search results. 
 Results are ordered by a combination of the number of raid completions and last played date.`,
     query: z.object({
-        count: zNaturalNumber().min(1).max(50).default(20),
+        count: z.coerce.number().int().min(1).max(50).default(20),
         query: z.string().min(1),
         membershipType: zDestinyMembershipType.default(-1).openapi({
             description:

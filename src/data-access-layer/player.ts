@@ -1,6 +1,5 @@
 import { PlayerInfo } from "../schema/components/PlayerInfo"
 import {
-    PlayerProfile,
     PlayerProfileActivityStats,
     PlayerProfileGlobalStats,
     WorldFirstEntry
@@ -16,7 +15,8 @@ export const getPlayer = async (membershipId: bigint | string) => {
             display_name AS "displayName",
             bungie_global_display_name AS "bungieGlobalDisplayName",
             bungie_global_display_name_code AS "bungieGlobalDisplayNameCode",
-            last_seen AS "lastSeen"
+            last_seen AS "lastSeen",
+            is_private AS "isPrivate"
         FROM player 
         WHERE membership_id = $1::bigint`,
         {
@@ -62,7 +62,8 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
         LEFT JOIN activity_hash fastest_ah ON fastest.hash = fastest_ah.hash
         ORDER BY activity_definition.id`,
         {
-            params: [membershipId]
+            params: [membershipId],
+            fetchCount: 100
         }
     )
 }
@@ -102,16 +103,25 @@ export const getWorldFirstEntries = async (membershipId: bigint | string) => {
               rank: null
               instanceId: null
               timeAfterLaunch: null
+              isDayOne: boolean
+              isContest: boolean
+              isWeekOne: boolean
+              isChallengeMode: boolean
           }
     >(
-        `SELECT
+        `
+        SELECT
             activity_definition.id AS "activityId",
             rank,
             instance_id::text AS "instanceId",
-            time_after_launch AS "timeAfterLaunch"
+            time_after_launch AS "timeAfterLaunch",
+            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') ELSE false END) AS "isDayOne",
+            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') ELSE false END) AS "isContest",
+            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') ELSE false END) AS "isWeekOne",
+            COALESCE(is_challenge_mode, false) AS "isChallengeMode"
         FROM activity_definition
         LEFT JOIN LATERAL (
-            SELECT instance_id, time_after_launch, rank
+            SELECT instance_id, time_after_launch, date_completed, rank, is_challenge_mode
             FROM world_first_contest_leaderboard
             WHERE activity_id = activity_definition.id
                 AND membership_ids @> $1::jsonb
@@ -120,46 +130,10 @@ export const getWorldFirstEntries = async (membershipId: bigint | string) => {
             LIMIT 1
         ) AS "__inner__" ON true
         WHERE is_raid = true
-        ORDER BY activity_definition.id ASC`,
+        ORDER BY activity_definition.id ASC;`,
         {
-            params: [`${[membershipId]}`]
+            params: [`${[membershipId]}`],
+            fetchCount: 100
         }
     )
-}
-
-export const getProfile = async (membershipId: bigint | string) => {
-    const playerPromise = getPlayer(membershipId)
-    const activityStatsPromise = getPlayerActivityStats(membershipId)
-    const globalStatsPromise = getPlayerGlobalStats(membershipId)
-    const worldFirstEntriesPromise = getWorldFirstEntries(membershipId)
-
-    return await playerPromise.then(async (playerInfo): Promise<PlayerProfile | null> => {
-        if (!playerInfo) {
-            return null
-        }
-        const [activityStats, globalStats, worldFirstEntries] = await Promise.all([
-            activityStatsPromise,
-            globalStatsPromise,
-            worldFirstEntriesPromise
-        ])
-
-        return {
-            playerInfo,
-            stats: {
-                global: globalStats ?? {
-                    clears: null,
-                    freshClears: null,
-                    sherpas: null,
-                    sumOfBest: null
-                },
-                activity: Object.fromEntries(activityStats.map(stat => [stat.activityId, stat]))
-            },
-            worldFirstEntries: Object.fromEntries(
-                worldFirstEntries.map(entry => [
-                    entry.activityId,
-                    entry.rank === null ? null : entry
-                ])
-            )
-        }
-    })
 }

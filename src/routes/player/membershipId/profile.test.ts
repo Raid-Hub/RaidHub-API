@@ -27,3 +27,17 @@ describe("player profile 404", () => {
 
     test("1", () => t("1"))
 })
+
+describe("player profile 403", () => {
+    const t = async (membershipId: string) => {
+        const result = await playerProfileRoute.$mock({
+            params: {
+                membershipId
+            }
+        })
+
+        expectErr(result)
+    }
+
+    test("4611686018467346804", () => t("4611686018467346804"))
+})

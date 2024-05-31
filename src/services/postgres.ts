@@ -5,8 +5,11 @@ class RaidHubPool extends Pool {
         super(config)
     }
 
-    async queryRow<T>(sql: string, options?: QueryOptions): Promise<T | null> {
-        const { rows, fields, executeTime } = await this.query(sql, options)
+    async queryRow<T>(sql: string, options?: Omit<QueryOptions, "objectRows">): Promise<T | null> {
+        const { rows, executeTime } = await this.query(sql, {
+            ...options,
+            objectRows: true
+        })
         if (!process.env.PROD && !process.env.TS_JEST) {
             /* istanbul ignore next */
             console.log(executeTime, sql)
@@ -14,28 +17,23 @@ class RaidHubPool extends Pool {
 
         if (!rows?.[0]) return null
 
-        return (rows[0] as (string | number | boolean | null | Date | bigint)[]).reduce(
-            (obj, curr, idx) => Object.assign(obj, { [fields![idx].fieldName]: curr }),
-            {}
-        ) as T
+        return rows[0] as T
     }
 
-    async queryRows<T>(sql: string, options?: QueryOptions): Promise<T[]> {
-        const { rows, fields, executeTime } = await this.query(sql, options)
+    async queryRows<T>(
+        sql: string,
+        options?: Omit<QueryOptions, "objectRows"> & { fetchCount: number }
+    ): Promise<T[]> {
+        const { rows, executeTime } = await this.query(sql, {
+            ...options,
+            objectRows: true
+        })
         if (!process.env.PROD && !process.env.TS_JEST) {
             /* istanbul ignore next */
             console.log(executeTime, sql)
         }
 
-        return (
-            rows?.map(
-                (row: (string | number | boolean | null | Date | bigint)[]) =>
-                    row.reduce(
-                        (obj, curr, idx) => Object.assign(obj, { [fields![idx].fieldName]: curr }),
-                        {}
-                    ) as T
-            ) ?? []
-        )
+        return rows as T[]
     }
 }
 export const postgres = new RaidHubPool({

@@ -30,7 +30,8 @@ export const getFirstTeamActivityVersionLeaderboard = async ({
                         'displayName', display_name,
                         'bungieGlobalDisplayName', bungie_global_display_name,
                         'bungieGlobalDisplayNameCode', bungie_global_display_name_code,
-                        'lastSeen', last_seen
+                        'lastSeen', last_seen,
+                        'isPrivate', is_private
                     )
                 ) as "players"
             FROM activity_player
@@ -42,7 +43,8 @@ export const getFirstTeamActivityVersionLeaderboard = async ({
             AND activity_id = $3 AND version_id = $4
         ORDER BY position ASC`,
         {
-            params: [skip, take, activityId, versionId]
+            params: [skip, take, activityId, versionId],
+            fetchCount: take
         }
     )
 }

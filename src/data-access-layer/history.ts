@@ -15,8 +15,8 @@ export const getActivities = async (
 ) => {
     return await postgres.queryRows<InstanceForPlayer>(
         `SELECT 
-            instance_id AS "instanceId",
-            hash AS "hash",
+            instance_id::text AS "instanceId",
+            hash::text AS "hash",
             activity_id AS "activityId",
             version_id AS "versionId",
             activity.completed AS "completed",
@@ -28,8 +28,8 @@ export const getActivities = async (
             date_completed AS "dateCompleted",
             duration AS "duration",
             platform_type AS "platformType",
-            date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isDayOne",
-            date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isContest",
+            date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isDayOne",
+            date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isContest",
             date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') AS "isWeekOne",
             JSONB_BUILD_OBJECT(
                 'completed', activity_player.completed,
@@ -47,7 +47,8 @@ export const getActivities = async (
         ORDER BY date_completed DESC
         LIMIT $3;`,
         {
-            params: cutoff ? [membershipId, cursor, count, cutoff] : [membershipId, cursor, count]
+            params: cutoff ? [membershipId, cursor, count, cutoff] : [membershipId, cursor, count],
+            fetchCount: count
         }
     )
 }

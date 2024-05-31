@@ -42,10 +42,14 @@ export type WorldFirstEntry = z.infer<typeof zWorldFirstEntry>
 export const zWorldFirstEntry = registry.register(
     "WorldFirstEntry",
     z.object({
-        activityId: zBigIntString(),
+        activityId: zNaturalNumber(),
         instanceId: zBigIntString(),
         timeAfterLaunch: zWholeNumber(),
-        rank: zNaturalNumber()
+        rank: zNaturalNumber(),
+        isDayOne: z.boolean(),
+        isContest: z.boolean(),
+        isWeekOne: z.boolean(),
+        isChallengeMode: z.boolean()
     })
 )
 

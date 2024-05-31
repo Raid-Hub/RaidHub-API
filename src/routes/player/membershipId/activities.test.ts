@@ -49,6 +49,21 @@ describe("player activities 404", () => {
     test("1", () => t("1"))
 })
 
+describe("player activities 403", () => {
+    const t = async (membershipId: string) => {
+        const result = await playerActivitiesRoute.$mock({
+            params: {
+                membershipId
+            },
+            query: {}
+        })
+
+        expectErr(result)
+    }
+
+    test("4611686018467346804", () => t("4611686018467346804"))
+})
+
 describe("activities middleware test", () => {
     // @ts-expect-error BigInt override
     BigInt.prototype.toJSON = function () {

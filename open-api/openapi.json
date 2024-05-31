@@ -30,6 +30,7 @@
           "QueryValidationError",
           "BodyValidationError",
           "PlayerNotFoundError",
+          "PlayerPrivateProfileError",
           "InstanceNotFoundError",
           "PGCRNotFoundError",
           "LeaderboardNotFoundError",
@@ -583,6 +584,10 @@
           "lastSeen": {
             "type": "string",
             "format": "date-time"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether or not the player has chosen to hide their on Bungie.net."
           }
         },
         "required": [
@@ -592,7 +597,8 @@
           "displayName",
           "bungieGlobalDisplayName",
           "bungieGlobalDisplayNameCode",
-          "lastSeen"
+          "lastSeen",
+          "isPrivate"
         ],
         "additionalProperties": false,
         "example": {
@@ -602,7 +608,8 @@
           "displayName": "xx_newo_xx",
           "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
           "membershipType": 3,
-          "lastSeen": "2021-05-01T00:00:00.000Z"
+          "lastSeen": "2021-05-01T00:00:00.000Z",
+          "isPrivate": false
         }
       },
       "InstancePlayerExtended": {
@@ -794,6 +801,125 @@
           }
         },
         "description": "Pagination parameters for leaderboard data"
+      },
+      "ActivityDefinition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "isSunset": {
+            "type": "boolean"
+          },
+          "isRaid": {
+            "type": "boolean"
+          },
+          "releaseDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dayOneEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contestEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "weekOneEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "milestoneHash": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "isSunset",
+          "isRaid",
+          "releaseDate",
+          "dayOneEnd",
+          "contestEnd",
+          "weekOneEnd",
+          "milestoneHash"
+        ],
+        "additionalProperties": false,
+        "description": "The definition of an activity in the RaidHub database.",
+        "example": {
+          "id": 9,
+          "name": "Vault of Glass",
+          "path": "vaultofglass",
+          "isSunset": false,
+          "isRaid": true,
+          "releaseDate": "2021-05-22T00:00:00.000Z",
+          "dayOneEnd": "2021-05-23T00:00:00.000Z",
+          "contestEnd": "2021-05-23T00:00:00.000Z",
+          "weekOneEnd": "2021-05-25T00:00:00.000Z",
+          "milestoneHash": "1888320892"
+        }
+      },
+      "VersionDefinition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "associatedActivityId": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "isChallengeMode": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "associatedActivityId",
+          "isChallengeMode"
+        ],
+        "additionalProperties": false,
+        "description": "The definition of a version in the RaidHub database.",
+        "examples": [
+          {
+            "id": 1,
+            "name": "Normal",
+            "path": "normal",
+            "associatedActivityId": null,
+            "isChallengeMode": false
+          },
+          {
+            "id": 129,
+            "name": "Oryx Exalted",
+            "path": "oryx",
+            "associatedActivityId": 101,
+            "isChallengeMode": false
+          }
+        ]
       },
       "RaidHubPostGameCarnageReport": {
         "type": "object",
@@ -1174,8 +1300,9 @@
         "type": "object",
         "properties": {
           "activityId": {
-            "type": "string",
-            "pattern": "^\\d+n?$"
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
           },
           "instanceId": {
             "type": "string",
@@ -1189,9 +1316,30 @@
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": true
+          },
+          "isDayOne": {
+            "type": "boolean"
+          },
+          "isContest": {
+            "type": "boolean"
+          },
+          "isWeekOne": {
+            "type": "boolean"
+          },
+          "isChallengeMode": {
+            "type": "boolean"
           }
         },
-        "required": ["activityId", "instanceId", "timeAfterLaunch", "rank"]
+        "required": [
+          "activityId",
+          "instanceId",
+          "timeAfterLaunch",
+          "rank",
+          "isDayOne",
+          "isContest",
+          "isWeekOne",
+          "isChallengeMode"
+        ]
       },
       "PlayerProfile": {
         "type": "object",
@@ -1230,6 +1378,35 @@
         },
         "required": ["playerInfo", "stats", "worldFirstEntries"]
       },
+      "Teammate": {
+        "type": "object",
+        "properties": {
+          "estimatedTimePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "instanceCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "playerInfo": {
+            "$ref": "#/components/schemas/PlayerInfo"
+          }
+        },
+        "required": [
+          "estimatedTimePlayedSeconds",
+          "clears",
+          "instanceCount",
+          "playerInfo"
+        ],
+        "additionalProperties": false
+      },
       "ManifestResponse": {
         "type": "object",
         "properties": {
@@ -1256,80 +1433,16 @@
           "activityDefinitions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                },
-                "isSunset": {
-                  "type": "boolean"
-                },
-                "isRaid": {
-                  "type": "boolean"
-                },
-                "releaseDate": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "dayOneEnd": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "contestEnd": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "weekOneEnd": {
-                  "type": "string",
-                  "format": "date-time"
-                }
-              },
-              "required": [
-                "name",
-                "path",
-                "isSunset",
-                "isRaid",
-                "releaseDate",
-                "dayOneEnd",
-                "contestEnd",
-                "weekOneEnd"
-              ]
+              "$ref": "#/components/schemas/ActivityDefinition"
             },
-            "description": "The mapping of each RaidHub activityId to its English name"
+            "description": "The mapping of each RaidHub activityId to its definition"
           },
           "versionDefinitions": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                },
-                "associatedActivityId": {
-                  "type": "integer",
-                  "nullable": true,
-                  "minimum": 0,
-                  "exclusiveMinimum": true
-                }
-              },
-              "required": ["name", "path", "associatedActivityId"]
+              "$ref": "#/components/schemas/VersionDefinition"
             },
-            "description": "The mapping of each RaidHub versionId to its English name"
-          },
-          "raidIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
-            },
-            "description": "The list of activityId which are Raids"
+            "description": "The mapping of each RaidHub versionId to its definition"
           },
           "listedRaidIds": {
             "type": "array",
@@ -1338,7 +1451,8 @@
               "minimum": 0,
               "exclusiveMinimum": true
             },
-            "description": "The list of active raid activityId in order of newest to oldest"
+            "minItems": 8,
+            "description": "The list of all activityId in order of newest to oldest"
           },
           "sunsetRaidIds": {
             "type": "array",
@@ -1356,6 +1470,7 @@
               "minimum": 0,
               "exclusiveMinimum": true
             },
+            "minItems": 3,
             "description": "The list of raid activityId which had a prestige mode"
           },
           "masterRaidIds": {
@@ -1365,6 +1480,7 @@
               "minimum": 0,
               "exclusiveMinimum": true
             },
+            "minItems": 5,
             "description": "The list of raid activityId which have a master mode"
           },
           "contestRaidIds": {
@@ -1374,6 +1490,7 @@
               "minimum": 0,
               "exclusiveMinimum": true
             },
+            "minItems": 8,
             "description": "The list of raid activityId which had a contest mode"
           },
           "resprisedRaidIds": {
@@ -1383,7 +1500,18 @@
               "minimum": 0,
               "exclusiveMinimum": true
             },
+            "minItems": 3,
             "description": "The list of raid activityId which have been reprised from Destiny 1"
+          },
+          "resprisedChallengeVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 3,
+            "description": "The list of version versionId which are the challenge mode for reprised raids"
           },
           "pantheonIds": {
             "type": "array",
@@ -1392,6 +1520,7 @@
               "minimum": 0,
               "exclusiveMinimum": true
             },
+            "minItems": 1,
             "description": "The list of activityId for Pantheon"
           },
           "versionsForActivity": {
@@ -1402,7 +1531,8 @@
                 "type": "integer",
                 "minimum": 0,
                 "exclusiveMinimum": true
-              }
+              },
+              "minItems": 1
             },
             "description": "The set of versionId for each activityId"
           }
@@ -1411,13 +1541,13 @@
           "hashes",
           "activityDefinitions",
           "versionDefinitions",
-          "raidIds",
           "listedRaidIds",
           "sunsetRaidIds",
           "prestigeRaidIds",
           "masterRaidIds",
           "contestRaidIds",
           "resprisedRaidIds",
+          "resprisedChallengeVersionIds",
           "pantheonIds",
           "versionsForActivity"
         ],
@@ -1509,6 +1639,10 @@
           "lastSeen": {
             "type": "string",
             "format": "date-time"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether or not the player has chosen to hide their on Bungie.net."
           }
         },
         "required": [
@@ -1518,7 +1652,8 @@
           "displayName",
           "bungieGlobalDisplayName",
           "bungieGlobalDisplayNameCode",
-          "lastSeen"
+          "lastSeen",
+          "isPrivate"
         ],
         "additionalProperties": false,
         "example": {
@@ -1528,7 +1663,8 @@
           "displayName": "xx_newo_xx",
           "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
           "membershipType": 3,
-          "lastSeen": "2021-05-01T00:00:00.000Z"
+          "lastSeen": "2021-05-01T00:00:00.000Z",
+          "isPrivate": false
         }
       },
       "PlayerProfileResponse": {
@@ -1567,6 +1703,12 @@
           }
         },
         "required": ["playerInfo", "stats", "worldFirstEntries"]
+      },
+      "PlayerTeammatesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Teammate"
+        }
       },
       "ActivityResponse": {
         "allOf": [
@@ -2299,7 +2441,6 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "exclusiveMinimum": true,
               "maximum": 50,
               "default": 20
             },
@@ -2469,6 +2610,23 @@
               }
             }
           },
+          "403": {
+            "description": "PlayerPrivateProfileError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "membershipId": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  },
+                  "required": ["membershipId"]
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2617,6 +2775,116 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "PlayerPrivateProfileError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "membershipId": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  },
+                  "required": ["membershipId"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["membershipId"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/player/{membershipId}/teammates": {
+      "get": {
+        "summary": "/player/{membershipId}/teammates",
+        "description": "",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": true,
+            "name": "membershipId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PlayerTeammatesResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "PlayerPrivateProfileError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "membershipId": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  },
+                  "required": ["membershipId"]
                 }
               }
             }

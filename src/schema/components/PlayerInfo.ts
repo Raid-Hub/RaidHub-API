@@ -24,7 +24,10 @@ export const zPlayerInfo = registry.register(
             }),
             bungieGlobalDisplayName: z.string().nullable(),
             bungieGlobalDisplayNameCode: z.string().nullable(),
-            lastSeen: zISODateString()
+            lastSeen: zISODateString(),
+            isPrivate: z.boolean().openapi({
+                description: "Whether or not the player has chosen to hide their on Bungie.net."
+            })
         })
         .openapi({
             example: {
@@ -34,7 +37,8 @@ export const zPlayerInfo = registry.register(
                 displayName: "xx_newo_xx",
                 iconPath: "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
                 membershipType: 3,
-                lastSeen: new Date("2021-05-01T00:00:00.000Z")
+                lastSeen: new Date("2021-05-01T00:00:00.000Z"),
+                isPrivate: false
             }
         })
         .strict()

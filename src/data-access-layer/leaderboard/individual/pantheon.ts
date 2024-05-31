@@ -35,7 +35,8 @@ export const getIndividualPantheonLeaderboard = async ({
                 'displayName', display_name,
                 'bungieGlobalDisplayName', bungie_global_display_name,
                 'bungieGlobalDisplayNameCode', bungie_global_display_name_code,
-                'lastSeen', last_seen
+                'lastSeen', last_seen,
+                'isPrivate', is_private
             ) as "playerInfo"
         FROM individual_pantheon_version_leaderboard
         JOIN player USING (membership_id)
@@ -43,7 +44,8 @@ export const getIndividualPantheonLeaderboard = async ({
             AND version_id = $3
         ORDER BY ${column}_position ASC`,
         {
-            params: [skip, take, versionId]
+            params: [skip, take, versionId],
+            fetchCount: take
         }
     )
 }

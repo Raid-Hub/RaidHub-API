@@ -38,14 +38,16 @@ export const getIndividualGlobalLeaderboard = async ({
                 'displayName', display_name,
                 'bungieGlobalDisplayName', bungie_global_display_name,
                 'bungieGlobalDisplayNameCode', bungie_global_display_name_code,
-                'lastSeen', last_seen
+                'lastSeen', last_seen,
+                'isPrivate', is_private
             ) as "playerInfo"
         FROM global_leaderboard
         JOIN player USING (membership_id)
         WHERE ${column}_position > $1 AND ${column}_position <= ($1 + $2)
         ORDER BY ${column}_position ASC`,
         {
-            params: [skip, take]
+            params: [skip, take],
+            fetchCount: take
         }
     )
 }

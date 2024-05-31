@@ -6,7 +6,9 @@ import {
     listVersionDefinitions
 } from "../data-access-layer/definitions"
 import { cacheControl } from "../middlewares/cache-control"
-import { zISODateString, zNaturalNumber } from "../schema/util"
+import { zActivityDefinition } from "../schema/components/ActivityDefinition"
+import { zVersionDefinition } from "../schema/components/VersionDefinition"
+import { zNaturalNumber } from "../schema/util"
 
 export const manifestRoute = new RaidHubRoute({
     method: "get",
@@ -28,61 +30,54 @@ export const manifestRoute = new RaidHubRoute({
                             description:
                                 "The mapping of each Bungie.net hash to a RaidHub activityId and versionId"
                         }),
-                    activityDefinitions: z
-                        .record(
-                            z.object({
-                                name: z.string(),
-                                path: z.string(),
-                                isSunset: z.boolean(),
-                                isRaid: z.boolean(),
-                                releaseDate: zISODateString().nullable(),
-                                dayOneEnd: zISODateString().nullable(),
-                                contestEnd: zISODateString().nullable(),
-                                weekOneEnd: zISODateString().nullable()
-                            })
-                        )
-                        .openapi({
-                            description:
-                                "The mapping of each RaidHub activityId to its English name"
-                        }),
-                    versionDefinitions: z
-                        .record(
-                            z.object({
-                                name: z.string(),
-                                path: z.string(),
-                                associatedActivityId: zNaturalNumber().nullable()
-                            })
-                        )
-                        .openapi({
-                            description: "The mapping of each RaidHub versionId to its English name"
-                        }),
-                    raidIds: z.array(zNaturalNumber()).openapi({
-                        description: "The list of activityId which are Raids"
+                    activityDefinitions: z.record(zActivityDefinition).openapi({
+                        description: "The mapping of each RaidHub activityId to its definition"
                     }),
-                    listedRaidIds: z.array(zNaturalNumber()).openapi({
-                        description:
-                            "The list of active raid activityId in order of newest to oldest"
+                    versionDefinitions: z.record(zVersionDefinition).openapi({
+                        description: "The mapping of each RaidHub versionId to its definition"
                     }),
+                    listedRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of all activityId in order of newest to oldest"
+                        })
+                        .min(8),
                     sunsetRaidIds: z.array(zNaturalNumber()).openapi({
                         description: "The list of inactive raid activityId"
                     }),
-                    prestigeRaidIds: z.array(zNaturalNumber()).openapi({
-                        description: "The list of raid activityId which had a prestige mode"
-                    }),
-                    masterRaidIds: z.array(zNaturalNumber()).openapi({
-                        description: "The list of raid activityId which have a master mode"
-                    }),
-                    contestRaidIds: z.array(zNaturalNumber()).openapi({
-                        description: "The list of raid activityId which had a contest mode"
-                    }),
-                    resprisedRaidIds: z.array(zNaturalNumber()).openapi({
+                    prestigeRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of raid activityId which had a prestige mode"
+                        })
+                        .min(3),
+                    masterRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of raid activityId which have a master mode"
+                        })
+                        .min(5),
+                    contestRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of raid activityId which had a contest mode"
+                        })
+                        .min(8),
+                    resprisedRaidIds: z.array(zNaturalNumber()).min(3).openapi({
                         description:
                             "The list of raid activityId which have been reprised from Destiny 1"
                     }),
-                    pantheonIds: z.array(zNaturalNumber()).openapi({
-                        description: "The list of activityId for Pantheon"
+                    resprisedChallengeVersionIds: z.array(zNaturalNumber()).min(3).openapi({
+                        description:
+                            "The list of version versionId which are the challenge mode for reprised raids"
                     }),
-                    versionsForActivity: z.record(z.array(zNaturalNumber())).openapi({
+                    pantheonIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of activityId for Pantheon"
+                        })
+                        .min(1),
+                    versionsForActivity: z.record(z.array(zNaturalNumber()).min(1)).openapi({
                         description: "The set of versionId for each activityId"
                     })
                 })
@@ -119,15 +114,9 @@ export const manifestRoute = new RaidHubRoute({
                     }
                 ])
             ),
-            activityDefinitions: Object.fromEntries(
-                activities.map(({ id, ...data }) => [id, data])
-            ),
-            versionDefinitions: Object.fromEntries(versions.map(({ id, ...data }) => [id, data])),
-            raidIds: raids.map(a => a.id),
-            listedRaidIds: raids
-                .filter(a => !a.isSunset)
-                .map(a => a.id)
-                .sort((a, b) => b - a),
+            activityDefinitions: Object.fromEntries(activities.map(data => [data.id, data])),
+            versionDefinitions: Object.fromEntries(versions.map(data => [data.id, data])),
+            listedRaidIds: raids.map(a => a.id).sort((a, b) => b - a),
             sunsetRaidIds: raids.filter(a => a.isSunset).map(a => a.id),
             prestigeRaidIds: [
                 ...new Set(hashes.filter(h => h.versionId === 3).map(h => h.activityId))
@@ -139,6 +128,7 @@ export const manifestRoute = new RaidHubRoute({
             resprisedRaidIds: versions
                 .filter(v => v.associatedActivityId && v.associatedActivityId < 100)
                 .map(a => a.associatedActivityId!),
+            resprisedChallengeVersionIds: versions.filter(v => v.isChallengeMode).map(v => v.id),
             pantheonIds: [pantheonId],
             versionsForActivity: versionsForActivity
         })

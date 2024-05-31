@@ -26,7 +26,8 @@ export async function searchForPlayer(
             display_name AS "displayName",
             bungie_global_display_name AS "bungieGlobalDisplayName",
             bungie_global_display_name_code AS "bungieGlobalDisplayNameCode",
-            last_seen AS "lastSeen"
+            last_seen AS "lastSeen",
+            is_private AS "isPrivate"
         FROM player 
         WHERE lower(${opts.global ? "bungie_name" : "display_name"}) LIKE $1 
             ${opts.membershipType ? "AND membership_type = $3" : ""}
@@ -36,7 +37,8 @@ export async function searchForPlayer(
         {
             params: opts.membershipType
                 ? [searchTerm + "%", opts.count, opts.membershipType]
-                : [searchTerm + "%", opts.count]
+                : [searchTerm + "%", opts.count],
+            fetchCount: opts.count
         }
     )
     return {
