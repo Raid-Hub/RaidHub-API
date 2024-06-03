@@ -116,7 +116,15 @@ export const manifestRoute = new RaidHubRoute({
             ),
             activityDefinitions: Object.fromEntries(activities.map(data => [data.id, data])),
             versionDefinitions: Object.fromEntries(versions.map(data => [data.id, data])),
-            listedRaidIds: raids.map(a => a.id).sort((a, b) => b - a),
+            listedRaidIds: raids
+                .sort((a, b) => {
+                    if (+a.isSunset ^ +b.isSunset) {
+                        return a.isSunset ? 1 : -1
+                    } else {
+                        return b.id - a.id
+                    }
+                })
+                .map(a => a.id),
             sunsetRaidIds: raids.filter(a => a.isSunset).map(a => a.id),
             prestigeRaidIds: [
                 ...new Set(hashes.filter(h => h.versionId === 3).map(h => h.activityId))
