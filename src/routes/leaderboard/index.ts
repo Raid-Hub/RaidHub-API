@@ -1,39 +1,39 @@
 import { RaidHubRouter } from "../../RaidHubRouter"
-import { leaderboardGlobalRoute } from "./global"
-import { leaderboardRaidIndividualRoute } from "./individual"
-import { pantheonRouter } from "./pantheon"
-import { leaderboardSearchRoute } from "./search"
-import { leaderboardRaidWorldfirstRoute } from "./worldfirst"
+import { leaderboardIndividualGlobalRoute } from "./individual/global"
+import { leaderboardIndividualPantheonRoute } from "./individual/pantheon"
+import { leaderboardIndividualRaidRoute } from "./individual/raid"
+import { leaderboardTeamContestRoute } from "./team/contest"
+import { leaderboardTeamFirstActivityVersionRoute } from "./team/first"
 
 export const leaderboardRouter = new RaidHubRouter({
     routes: [
-        { path: "/search", route: leaderboardSearchRoute },
         {
-            path: "/global/:category",
-            route: leaderboardGlobalRoute
-        },
-        {
-            path: "/:raid",
+            path: "/individual",
             route: new RaidHubRouter({
                 routes: [
+                    { path: "/global/:category", route: leaderboardIndividualGlobalRoute },
+                    { path: "/raid/:raid/:category", route: leaderboardIndividualRaidRoute },
                     {
-                        path: "/worldfirst/:category",
-                        route: leaderboardRaidWorldfirstRoute
-                    },
-                    {
-                        path: "/individual/:category",
-                        route: leaderboardRaidIndividualRoute
+                        path: "/pantheon/:version/:category",
+                        route: leaderboardIndividualPantheonRoute
                     }
-                    // {
-                    //     path: "/speedrun",
-                    //     route: leaderboardSpeedrunRoute
-                    // }
                 ]
             })
         },
         {
-            path: "/pantheon",
-            route: pantheonRouter
+            path: "/team",
+            route: new RaidHubRouter({
+                routes: [
+                    {
+                        path: "/first/:activity/:version",
+                        route: leaderboardTeamFirstActivityVersionRoute
+                    },
+                    {
+                        path: "/contest/:raid",
+                        route: leaderboardTeamContestRoute
+                    }
+                ]
+            })
         }
     ]
 })

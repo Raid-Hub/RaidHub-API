@@ -24,3 +24,5 @@ test.js
 /open-api/*.html
 coverage/*
 
+__ignore__
+

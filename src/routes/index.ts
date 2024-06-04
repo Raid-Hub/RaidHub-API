@@ -1,7 +1,7 @@
 import { RaidHubRouter } from "../RaidHubRouter"
-import { activityRouter } from "./activity"
+import { activityRoute } from "./activity"
 import { adminRouter } from "./admin"
-import { authorizationRoute } from "./authorize"
+import { adminAuthorizationRoute } from "./authorize/admin"
 import { leaderboardRouter } from "./leaderboard"
 import { manifestRoute } from "./manifest"
 import { pgcrRoute } from "./pgcr"
@@ -18,8 +18,8 @@ export const router = new RaidHubRouter({
             route: playerRouter
         },
         {
-            path: "/activity",
-            route: activityRouter
+            path: "/activity/:instanceId",
+            route: activityRoute
         },
         {
             path: "/leaderboard",
@@ -34,8 +34,8 @@ export const router = new RaidHubRouter({
             route: adminRouter
         },
         {
-            path: "/authorize",
-            route: authorizationRoute
+            path: "/authorize/admin",
+            route: adminAuthorizationRoute
         }
     ]
 })

@@ -1,9 +1,12 @@
+import { cleanupPostgresAfterAll, expectErr, expectOk } from "../testUtil"
 import { adminQueryRoute } from "./query"
+
+cleanupPostgresAfterAll()
 
 describe("admin query 200", () => {
     const t = async (query: string, type: string, ignoreCost?: boolean) => {
         const result = await adminQueryRoute.$mock({ body: { query, type, ignoreCost } })
-        expect(result.type).toBe("ok")
+        expectOk(result)
         return result
     }
 
@@ -56,8 +59,7 @@ describe("admin query 200", () => {
 describe("admin query syntax error", () => {
     const t = async (query: string, type: string, ignoreCost?: boolean) => {
         const result = await adminQueryRoute.$mock({ body: { query, type, ignoreCost } })
-        expect(result.type).toBe("err")
-        return result
+        expectErr(result)
     }
 
     test("Bad table", () => t("SELECT * from fasdhfahfuiasdf", "SELECT"))

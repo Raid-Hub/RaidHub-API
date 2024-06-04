@@ -3,7 +3,7 @@
   "info": {
     "title": "RaidHub API",
     "description": "The Semi-public API for RaidHub",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "contact": {
       "name": "RaidHub Admin",
       "email": "admin@raidhub.io"
@@ -21,86 +21,288 @@
   ],
   "components": {
     "schemas": {
-      "BungieMembershipType": {
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "Unknown",
+          "ApiKeyError",
+          "PathValidationError",
+          "QueryValidationError",
+          "BodyValidationError",
+          "PlayerNotFoundError",
+          "PlayerPrivateProfileError",
+          "InstanceNotFoundError",
+          "PGCRNotFoundError",
+          "LeaderboardNotFoundError",
+          "PlayerNotOnLeaderboardError",
+          "RaidNotFoundError",
+          "PantheonVersionNotFoundError",
+          "InvalidActivityVersionComboError",
+          "AdminQuerySyntaxError",
+          "InsufficientPermissionsError",
+          "InvalidClientSecretError",
+          "InternalServerError"
+        ]
+      },
+      "RaidHubResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "minted": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "success": {
+                "type": "boolean",
+                "enum": [true]
+              },
+              "response": {
+                "nullable": true
+              }
+            },
+            "required": ["minted", "success"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "minted": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "success": {
+                "type": "boolean",
+                "enum": [false]
+              },
+              "code": {
+                "$ref": "#/components/schemas/ErrorCode"
+              },
+              "error": {
+                "nullable": true
+              }
+            },
+            "required": ["minted", "success", "code"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ApiKeyError": {
+        "type": "object",
+        "properties": {
+          "minted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "code": {
+            "type": "string",
+            "enum": ["ApiKeyError"]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["Invalid API Key"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Missing API Key"]
+                  }
+                ]
+              },
+              "apiKey": {
+                "type": "string",
+                "nullable": true
+              },
+              "origin": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": ["message", "apiKey", "origin"]
+          }
+        },
+        "required": ["minted", "success", "code", "error"]
+      },
+      "ZodIssue": {
+        "type": "object",
+        "properties": {
+          "fatal": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "invalid_type",
+              "invalid_literal",
+              "custom",
+              "invalid_union",
+              "invalid_union_discriminator",
+              "invalid_enum_value",
+              "unrecognized_keys",
+              "invalid_arguments",
+              "invalid_return_type",
+              "invalid_date",
+              "invalid_string",
+              "too_small",
+              "too_big",
+              "invalid_intersection_types",
+              "not_multiple_of",
+              "not_finite"
+            ]
+          }
+        },
+        "required": ["message", "path", "code"]
+      },
+      "BodyValidationError": {
+        "type": "object",
+        "properties": {
+          "minted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "code": {
+            "type": "string",
+            "enum": ["BodyValidationError"]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "issues": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ZodIssue"
+                }
+              }
+            },
+            "required": ["issues"]
+          }
+        },
+        "required": ["minted", "success", "code", "error"]
+      },
+      "InsufficientPermissionsError": {
+        "type": "object",
+        "properties": {
+          "minted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "code": {
+            "type": "string",
+            "enum": ["InsufficientPermissionsError"]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "enum": ["Forbidden"]
+              }
+            },
+            "required": ["message"]
+          }
+        },
+        "required": ["minted", "success", "code", "error"]
+      },
+      "PathValidationError": {
+        "type": "object",
+        "properties": {
+          "minted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "code": {
+            "type": "string",
+            "enum": ["PathValidationError"]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "issues": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ZodIssue"
+                }
+              }
+            },
+            "required": ["issues"]
+          }
+        },
+        "required": ["minted", "success", "code", "error"]
+      },
+      "QueryValidationError": {
+        "type": "object",
+        "properties": {
+          "minted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "code": {
+            "type": "string",
+            "enum": ["QueryValidationError"]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "issues": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ZodIssue"
+                }
+              }
+            },
+            "required": ["issues"]
+          }
+        },
+        "required": ["minted", "success", "code", "error"]
+      },
+      "DestinyMembershipType": {
         "type": "integer",
-        "enum": [0, 1, 2, 3, 4, 5, 6, 10, 254, -1],
+        "enum": [0, 1, 2, 3, 4, 5, 6, -1],
         "externalDocs": {
           "url": "https://bungie-net.github.io/#/components/schemas/BungieMembershipType"
         }
       },
-      "ActivityEnum": {
-        "type": "integer",
-        "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1, 101]
-      },
-      "RaidEnum": {
-        "type": "integer",
-        "enum": [13, 12, 11, 10, 9, 8, 7, 4, 6, 5, 3, 2, 1]
-      },
-      "ActivityVersionEnum": {
-        "type": "integer",
-        "enum": [1, 2, 3, 4, 64, 65, 66, 128, 129, 130, 131]
-      },
-      "PlayerInfo": {
-        "type": "object",
-        "properties": {
-          "membershipId": {
-            "type": "string",
-            "pattern": "^\\d+n?$"
-          },
-          "membershipType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/BungieMembershipType"
-              },
-              {
-                "nullable": true,
-                "description": "The platform on which the player created their account."
-              }
-            ]
-          },
-          "iconPath": {
-            "type": "string",
-            "nullable": true
-          },
-          "displayName": {
-            "type": "string",
-            "nullable": true,
-            "description": "The platform-specific display name of the player. No longer shown in-game."
-          },
-          "bungieGlobalDisplayName": {
-            "type": "string",
-            "nullable": true
-          },
-          "bungieGlobalDisplayNameCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastSeen": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "membershipId",
-          "membershipType",
-          "iconPath",
-          "displayName",
-          "bungieGlobalDisplayName",
-          "bungieGlobalDisplayNameCode",
-          "lastSeen"
-        ],
-        "additionalProperties": false,
-        "example": {
-          "bungieGlobalDisplayName": "Newo",
-          "bungieGlobalDisplayNameCode": "9010",
-          "membershipId": "4611686018488107374",
-          "displayName": "xx_newo_xx",
-          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
-          "membershipType": 3,
-          "lastSeen": "2021-05-01T00:00:00.000Z"
-        }
-      },
-      "Activity": {
+      "Instance": {
         "type": "object",
         "properties": {
           "instanceId": {
@@ -110,6 +312,16 @@
           "hash": {
             "type": "string",
             "pattern": "^\\d+n?$"
+          },
+          "activityId": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "versionId": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
           },
           "completed": {
             "type": "boolean"
@@ -127,6 +339,10 @@
             "minimum": 0,
             "exclusiveMinimum": true
           },
+          "score": {
+            "type": "integer",
+            "minimum": 0
+          },
           "dateStarted": {
             "type": "string",
             "format": "date-time"
@@ -138,87 +354,68 @@
           "duration": {
             "type": "integer",
             "minimum": 0,
-            "exclusiveMinimum": true
+            "exclusiveMinimum": true,
+            "description": "Activity duration in seconds"
           },
           "platformType": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/BungieMembershipType"
+                "$ref": "#/components/schemas/DestinyMembershipType"
               },
               {
-                "default": 0
+                "description": "If all players are on the same platform, this will be the platform type. Otherwise, it will be `0`."
               }
             ]
           },
-          "score": {
-            "type": "integer",
-            "minimum": 0
+          "isDayOne": {
+            "type": "boolean",
+            "description": "If the activity was completed before the day one end date"
+          },
+          "isContest": {
+            "type": "boolean",
+            "description": "If the activity was completed before the contest end date"
+          },
+          "isWeekOne": {
+            "type": "boolean",
+            "description": "If the activity was completed before the week one end date"
           }
         },
         "required": [
           "instanceId",
           "hash",
+          "activityId",
+          "versionId",
           "completed",
           "flawless",
           "fresh",
           "playerCount",
+          "score",
           "dateStarted",
           "dateCompleted",
           "duration",
-          "score"
+          "platformType",
+          "isDayOne",
+          "isContest",
+          "isWeekOne"
         ],
         "additionalProperties": false
       },
-      "ActivityExtended": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Activity"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "dayOne": {
-                "type": "boolean"
-              },
-              "contest": {
-                "type": "boolean"
-              },
-              "weekOne": {
-                "type": "boolean"
-              }
-            },
-            "required": ["dayOne", "contest", "weekOne"],
-            "additionalProperties": false
-          }
-        ]
-      },
-      "ActivityPlayerData": {
+      "InstanceMetadata": {
         "type": "object",
         "properties": {
-          "completed": {
+          "activityName": {
+            "type": "string"
+          },
+          "versionName": {
+            "type": "string"
+          },
+          "isRaid": {
             "type": "boolean"
-          },
-          "sherpas": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "isFirstClear": {
-            "type": "boolean"
-          },
-          "timePlayedSeconds": {
-            "type": "integer",
-            "minimum": 0
           }
         },
-        "required": [
-          "completed",
-          "sherpas",
-          "isFirstClear",
-          "timePlayedSeconds"
-        ],
-        "additionalProperties": false
+        "required": ["activityName", "versionName", "isRaid"]
       },
-      "ActivityCharacterWeapon": {
+      "InstanceCharacterWeapon": {
         "type": "object",
         "properties": {
           "weaponHash": {
@@ -234,9 +431,10 @@
             "minimum": 0
           }
         },
-        "required": ["weaponHash", "kills", "precisionKills"]
+        "required": ["weaponHash", "kills", "precisionKills"],
+        "additionalProperties": false
       },
-      "ActivityCharacter": {
+      "InstanceCharacter": {
         "type": "object",
         "properties": {
           "characterId": {
@@ -299,7 +497,7 @@
           "weapons": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ActivityCharacterWeapon"
+              "$ref": "#/components/schemas/InstanceCharacterWeapon"
             }
           }
         },
@@ -319,483 +517,181 @@
           "grenadeKills",
           "meleeKills",
           "weapons"
-        ]
+        ],
+        "additionalProperties": false
       },
-      "PlayerWithExtendedActivityData": {
+      "InstancePlayer": {
         "type": "object",
         "properties": {
-          "player": {
-            "$ref": "#/components/schemas/PlayerInfo"
+          "completed": {
+            "type": "boolean"
           },
-          "data": {
+          "isFirstClear": {
+            "type": "boolean"
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "completed",
+          "isFirstClear",
+          "sherpas",
+          "timePlayedSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "PlayerInfo": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "membershipType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DestinyMembershipType"
+              },
+              {
+                "nullable": true,
+                "description": "The platform on which the player created their account."
+              }
+            ]
+          },
+          "iconPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "The platform-specific display name of the player. No longer shown in-game."
+          },
+          "bungieGlobalDisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bungieGlobalDisplayNameCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSeen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether or not the player has chosen to hide their on Bungie.net."
+          }
+        },
+        "required": [
+          "membershipId",
+          "membershipType",
+          "iconPath",
+          "displayName",
+          "bungieGlobalDisplayName",
+          "bungieGlobalDisplayNameCode",
+          "lastSeen",
+          "isPrivate"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "bungieGlobalDisplayName": "Newo",
+          "bungieGlobalDisplayNameCode": "9010",
+          "membershipId": "4611686018488107374",
+          "displayName": "xx_newo_xx",
+          "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
+          "membershipType": 3,
+          "lastSeen": "2021-05-01T00:00:00.000Z",
+          "isPrivate": false
+        }
+      },
+      "InstancePlayerExtended": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InstancePlayer"
+          },
+          {
             "type": "object",
             "properties": {
-              "completed": {
-                "type": "boolean"
-              },
-              "sherpas": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "isFirstClear": {
-                "type": "boolean"
-              },
-              "timePlayedSeconds": {
-                "type": "integer",
-                "minimum": 0
+              "playerInfo": {
+                "$ref": "#/components/schemas/PlayerInfo"
               },
               "characters": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/ActivityCharacter"
+                  "$ref": "#/components/schemas/InstanceCharacter"
                 }
               }
             },
-            "required": [
-              "completed",
-              "sherpas",
-              "isFirstClear",
-              "timePlayedSeconds",
-              "characters"
-            ]
-          }
-        },
-        "required": ["player", "data"]
-      },
-      "ActivityWithPlayerData": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ActivityExtended"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "player": {
-                "$ref": "#/components/schemas/ActivityPlayerData"
-              }
-            },
-            "required": ["player"],
+            "required": ["playerInfo", "characters"],
             "additionalProperties": false
           }
         ]
       },
-      "RaidHubErrorCode": {
-        "type": "string",
-        "enum": [
-          "Unknown",
-          "PlayerNotFoundError",
-          "ActivityNotFoundError",
-          "PGCRNotFoundError",
-          "LeaderboardNotFoundError",
-          "InvalidClientSecretError",
-          "InsufficientPermissionsError",
-          "PathValidationError",
-          "QueryValidationError",
-          "BodyValidationError",
-          "InternalServerError",
-          "ApiKeyError",
-          "AdminQuerySyntaxError"
-        ]
-      },
-      "RaidHubError": {
-        "type": "object",
-        "properties": {
-          "minted": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "message": {
-            "type": "string"
-          },
-          "success": {
-            "type": "boolean",
-            "enum": [false]
-          },
-          "error": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "Unknown",
-                  "PlayerNotFoundError",
-                  "ActivityNotFoundError",
-                  "PGCRNotFoundError",
-                  "LeaderboardNotFoundError",
-                  "InvalidClientSecretError",
-                  "InsufficientPermissionsError",
-                  "PathValidationError",
-                  "QueryValidationError",
-                  "BodyValidationError",
-                  "InternalServerError",
-                  "ApiKeyError",
-                  "AdminQuerySyntaxError"
-                ]
-              }
-            },
-            "required": ["type"],
-            "additionalProperties": {
-              "nullable": true
-            }
-          }
-        },
-        "required": ["minted", "message", "success", "error"]
-      },
-      "ZodIssue": {
-        "type": "object",
-        "properties": {
-          "fatal": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "path": {
-            "type": "array",
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                }
-              ]
-            }
-          },
-          "code": {
-            "type": "string",
-            "enum": [
-              "invalid_type",
-              "invalid_literal",
-              "custom",
-              "invalid_union",
-              "invalid_union_discriminator",
-              "invalid_enum_value",
-              "unrecognized_keys",
-              "invalid_arguments",
-              "invalid_return_type",
-              "invalid_date",
-              "invalid_string",
-              "too_small",
-              "too_big",
-              "invalid_intersection_types",
-              "not_multiple_of",
-              "not_finite"
-            ]
-          }
-        },
-        "required": ["message", "path", "code"]
-      },
-      "PathValidationError": {
+      "InstanceExtended": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/RaidHubError"
+            "$ref": "#/components/schemas/Instance"
           },
           {
             "type": "object",
             "properties": {
-              "message": {
-                "type": "string",
-                "enum": ["Invalid path params"]
+              "leaderboardRank": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0,
+                "exclusiveMinimum": true
               },
-              "error": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["PathValidationError"]
-                  },
-                  "issues": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ZodIssue"
-                    }
-                  }
-                },
-                "required": ["type", "issues"]
-              }
-            }
-          }
-        ]
-      },
-      "QueryValidationError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RaidHubError"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "enum": ["Invalid query params"]
+              "metadata": {
+                "$ref": "#/components/schemas/InstanceMetadata"
               },
-              "error": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["QueryValidationError"]
-                  },
-                  "issues": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ZodIssue"
-                    }
-                  }
-                },
-                "required": ["type", "issues"]
-              }
-            }
-          }
-        ]
-      },
-      "BodyValidationError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RaidHubError"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "enum": ["Invalid JSON body"]
-              },
-              "error": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["BodyValidationError"]
-                  },
-                  "issues": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ZodIssue"
-                    }
-                  }
-                },
-                "required": ["type", "issues"]
-              }
-            }
-          }
-        ]
-      },
-      "InternalServerError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RaidHubError"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "enum": ["Something went wrong."]
-              },
-              "error": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["InternalServerError"]
-                  },
-                  "at": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                },
-                "required": ["type", "at"]
-              }
-            }
-          }
-        ]
-      },
-      "InsufficientPermissionsError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RaidHubError"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "error": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["InsufficientPermissionsError"]
-                  },
-                  "message": {
-                    "type": "string",
-                    "enum": ["Forbidden"]
-                  }
-                },
-                "required": ["type", "message"]
-              }
-            }
-          }
-        ]
-      },
-      "ApiKeyError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RaidHubError"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "message": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "enum": ["Invalid API Key"]
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["Missing API Key"]
-                  }
-                ]
-              },
-              "error": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["ApiKeyError"]
-                  },
-                  "apiKey": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "origin": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                },
-                "required": ["type", "apiKey", "origin"]
-              }
-            }
-          }
-        ]
-      },
-      "ActivitySearchBody": {
-        "type": "object",
-        "properties": {
-          "membershipId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^\\d+n?$"
-              },
-              {
+              "players": {
                 "type": "array",
                 "items": {
-                  "type": "string",
-                  "pattern": "^\\d+n?$"
+                  "$ref": "#/components/schemas/InstancePlayerExtended"
                 }
               }
-            ]
-          },
-          "minPlayers": {
-            "type": "integer",
-            "nullable": true,
-            "minimum": 0
-          },
-          "maxPlayers": {
-            "type": "integer",
-            "nullable": true,
-            "minimum": 0
-          },
-          "minDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "maxDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "minSeason": {
-            "type": "integer",
-            "nullable": true,
-            "minimum": 0
-          },
-          "maxSeason": {
-            "type": "integer",
-            "nullable": true,
-            "minimum": 0
-          },
-          "fresh": {
-            "type": "boolean"
-          },
-          "completed": {
-            "type": "boolean"
-          },
-          "flawless": {
-            "type": "boolean"
-          },
-          "raid": {
-            "$ref": "#/components/schemas/RaidEnum"
-          },
-          "platformType": {
+            },
+            "required": ["leaderboardRank", "metadata", "players"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "TeamLeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "position": {
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": true
           },
-          "reversed": {
-            "type": "boolean",
-            "nullable": true,
-            "default": false
-          },
-          "count": {
+          "rank": {
             "type": "integer",
             "minimum": 0,
-            "exclusiveMinimum": true,
-            "default": 25
+            "exclusiveMinimum": true
           },
-          "page": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true,
-            "default": 1
+          "value": {
+            "type": "number"
+          },
+          "instanceId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlayerInfo"
+            }
           }
         },
-        "required": ["membershipId"]
-      },
-      "AdminQuerySyntaxError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": ["name", "code", "message"]
-      },
-      "RaidPath": {
-        "type": "string",
-        "enum": [
-          "leviathan",
-          "eaterofworlds",
-          "spireofstars",
-          "lastwish",
-          "scourgeofthepast",
-          "crownofsorrow",
-          "gardenofsalvation",
-          "deepstonecrypt",
-          "vaultofglass",
-          "vowofthedisciple",
-          "kingsfall",
-          "rootofnightmares",
-          "crotasend"
-        ]
+        "required": ["position", "rank", "value", "instanceId", "players"]
       },
       "IndividualLeaderboardEntry": {
         "type": "object",
@@ -813,137 +709,224 @@
           "value": {
             "type": "number"
           },
-          "player": {
+          "playerInfo": {
             "$ref": "#/components/schemas/PlayerInfo"
           }
         },
-        "required": ["position", "rank", "value", "player"],
-        "additionalProperties": false
+        "required": ["position", "rank", "value", "playerInfo"]
       },
-      "WorldFirstLeaderboardEntry": {
-        "type": "object",
-        "properties": {
-          "position": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "rank": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "value": {
-            "type": "number"
-          },
-          "activity": {
-            "$ref": "#/components/schemas/Activity"
-          },
-          "players": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "player": {
-                  "$ref": "#/components/schemas/PlayerInfo"
-                },
-                "data": {
-                  "$ref": "#/components/schemas/ActivityPlayerData"
-                }
-              },
-              "required": ["player", "data"]
-            }
-          }
-        },
-        "required": ["position", "rank", "value", "activity", "players"],
-        "additionalProperties": false
-      },
-      "PantheonPath": {
-        "type": "string",
-        "enum": ["atraks", "oryx", "rhulk", "nezarec"]
-      },
-      "LeaderboardSearchQuery": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "anyOf": [
-              {
+      "LeaderboardData": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
                 "type": "string",
-                "enum": ["worldfirst"]
+                "enum": ["team"]
               },
-              {
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
                 "type": "string",
                 "enum": ["individual"]
               },
-              {
+              "format": {
                 "type": "string",
-                "enum": ["global"]
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                }
               }
-            ]
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          }
+        ]
+      },
+      "LeaderboardPagination": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 100,
+            "default": 50
           },
-          "membershipId": {
+          "search": {
             "type": "string",
             "pattern": "^\\d+n?$"
           },
-          "count": {
+          "page": {
             "type": "integer",
-            "minimum": 5,
+            "minimum": 0,
             "exclusiveMinimum": true,
-            "maximum": 100,
-            "default": 25
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": ["normal", "prestige", "challenge", "master"]
-              },
-              {
-                "type": "string",
-                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "total-clears",
-                  "sherpas",
-                  "full-clears",
-                  "cumulative-speedrun"
-                ]
-              }
-            ]
-          },
-          "raid": {
-            "type": "number"
+            "default": 1,
+            "description": "Page number of leaderboard data. Ignored if `search` is provided. Defaults to 1"
           }
         },
-        "required": ["type", "membershipId", "category"]
+        "description": "Pagination parameters for leaderboard data"
       },
-      "PantheonEnum": {
-        "type": "integer",
-        "enum": [128, 129, 130, 131]
+      "ActivityDefinition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "isSunset": {
+            "type": "boolean"
+          },
+          "isRaid": {
+            "type": "boolean"
+          },
+          "releaseDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dayOneEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contestEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "weekOneEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "milestoneHash": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "isSunset",
+          "isRaid",
+          "releaseDate",
+          "dayOneEnd",
+          "contestEnd",
+          "weekOneEnd",
+          "milestoneHash"
+        ],
+        "additionalProperties": false,
+        "description": "The definition of an activity in the RaidHub database.",
+        "example": {
+          "id": 9,
+          "name": "Vault of Glass",
+          "path": "vaultofglass",
+          "isSunset": false,
+          "isRaid": true,
+          "releaseDate": "2021-05-22T00:00:00.000Z",
+          "dayOneEnd": "2021-05-23T00:00:00.000Z",
+          "contestEnd": "2021-05-23T00:00:00.000Z",
+          "weekOneEnd": "2021-05-25T00:00:00.000Z",
+          "milestoneHash": "1888320892"
+        }
       },
-      "SunsetRaidEnum": {
-        "type": "integer",
-        "enum": [1, 2, 3, 5, 6]
+      "VersionDefinition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "associatedActivityId": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "isChallengeMode": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "associatedActivityId",
+          "isChallengeMode"
+        ],
+        "additionalProperties": false,
+        "description": "The definition of a version in the RaidHub database.",
+        "examples": [
+          {
+            "id": 1,
+            "name": "Normal",
+            "path": "normal",
+            "associatedActivityId": null,
+            "isChallengeMode": false
+          },
+          {
+            "id": 129,
+            "name": "Oryx Exalted",
+            "path": "oryx",
+            "associatedActivityId": 101,
+            "isChallengeMode": false
+          }
+        ]
       },
-      "MasterRaidEnum": {
-        "type": "integer",
-        "enum": [9, 10, 11, 12, 13]
-      },
-      "PrestigeRaidEnum": {
-        "type": "integer",
-        "enum": [1, 2, 3]
-      },
-      "ContestRaidEnum": {
-        "type": "integer",
-        "enum": [6, 7, 8, 9, 10, 11, 12, 13]
-      },
-      "DestinyPostGameCarnageReport": {
+      "RaidHubPostGameCarnageReport": {
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "startingPhaseIndex": {
             "type": "number"
@@ -988,7 +971,7 @@
                 }
               },
               "membershipType": {
-                "$ref": "#/components/schemas/BungieMembershipType"
+                "$ref": "#/components/schemas/DestinyMembershipType"
               }
             },
             "required": [
@@ -1015,19 +998,19 @@
                           "nullable": true
                         },
                         "crossSaveOverride": {
-                          "$ref": "#/components/schemas/BungieMembershipType"
+                          "$ref": "#/components/schemas/DestinyMembershipType"
                         },
                         "applicableMembershipTypes": {
                           "type": "array",
                           "nullable": true,
                           "items": {
-                            "$ref": "#/components/schemas/BungieMembershipType"
+                            "$ref": "#/components/schemas/DestinyMembershipType"
                           }
                         },
                         "membershipType": {
                           "allOf": [
                             {
-                              "$ref": "#/components/schemas/BungieMembershipType"
+                              "$ref": "#/components/schemas/DestinyMembershipType"
                             },
                             {
                               "nullable": true
@@ -1182,24 +1165,141 @@
           "url": "https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData"
         }
       },
-      "PlayerStatRanking": {
+      "InstanceForPlayer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Instance"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "player": {
+                "$ref": "#/components/schemas/InstancePlayer"
+              }
+            },
+            "required": ["player"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PlayerProfileActivityStats": {
         "type": "object",
         "properties": {
-          "value": {
-            "type": "integer",
-            "nullable": true
+          "activityId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
           },
-          "rank": {
+          "freshClears": {
             "type": "integer",
-            "nullable": true
+            "minimum": 0
+          },
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "trios": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duos": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "solos": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fastestInstance": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Instance"
+              },
+              {
+                "nullable": true
+              }
+            ]
           }
         },
-        "required": ["value", "rank"]
+        "required": [
+          "activityId",
+          "freshClears",
+          "clears",
+          "sherpas",
+          "trios",
+          "duos",
+          "solos",
+          "fastestInstance"
+        ]
       },
-      "PlayerProfileLeaderboardEntry": {
+      "GlobalStat": {
         "type": "object",
         "properties": {
           "rank": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["rank", "value"]
+      },
+      "PlayerProfileGlobalStats": {
+        "type": "object",
+        "properties": {
+          "clears": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GlobalStat"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "freshClears": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GlobalStat"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "sherpas": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GlobalStat"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "sumOfBest": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GlobalStat"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": ["clears", "freshClears", "sherpas", "sumOfBest"]
+      },
+      "WorldFirstEntry": {
+        "type": "object",
+        "properties": {
+          "activityId": {
             "type": "integer",
             "minimum": 0,
             "exclusiveMinimum": true
@@ -1208,42 +1308,104 @@
             "type": "string",
             "pattern": "^\\d+n?$"
           },
-          "boardId": {
-            "type": "string"
+          "timeAfterLaunch": {
+            "type": "integer",
+            "minimum": 0
           },
-          "type": {
-            "type": "string",
-            "enum": ["Normal", "Challenge", "Prestige", "Master"]
+          "rank": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
           },
-          "activityHash": {
-            "type": "string",
-            "pattern": "^\\d+n?$"
-          },
-          "dateCompleted": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "dayOne": {
+          "isDayOne": {
             "type": "boolean"
           },
-          "contest": {
+          "isContest": {
             "type": "boolean"
           },
-          "weekOne": {
+          "isWeekOne": {
+            "type": "boolean"
+          },
+          "isChallengeMode": {
             "type": "boolean"
           }
         },
         "required": [
-          "rank",
+          "activityId",
           "instanceId",
-          "boardId",
-          "type",
-          "activityHash",
-          "dateCompleted",
-          "dayOne",
-          "contest",
-          "weekOne"
+          "timeAfterLaunch",
+          "rank",
+          "isDayOne",
+          "isContest",
+          "isWeekOne",
+          "isChallengeMode"
         ]
+      },
+      "PlayerProfile": {
+        "type": "object",
+        "properties": {
+          "playerInfo": {
+            "$ref": "#/components/schemas/PlayerInfo"
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "global": {
+                "$ref": "#/components/schemas/PlayerProfileGlobalStats"
+              },
+              "activity": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/PlayerProfileActivityStats"
+                }
+              }
+            },
+            "required": ["global", "activity"]
+          },
+          "worldFirstEntries": {
+            "type": "object",
+            "additionalProperties": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/WorldFirstEntry"
+                },
+                {
+                  "nullable": true
+                }
+              ]
+            }
+          }
+        },
+        "required": ["playerInfo", "stats", "worldFirstEntries"]
+      },
+      "Teammate": {
+        "type": "object",
+        "properties": {
+          "estimatedTimePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "instanceCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "playerInfo": {
+            "$ref": "#/components/schemas/PlayerInfo"
+          }
+        },
+        "required": [
+          "estimatedTimePlayedSeconds",
+          "clears",
+          "instanceCount",
+          "playerInfo"
+        ],
+        "additionalProperties": false
       },
       "ManifestResponse": {
         "type": "object",
@@ -1254,259 +1416,140 @@
               "type": "object",
               "properties": {
                 "activityId": {
-                  "$ref": "#/components/schemas/ActivityEnum"
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
                 },
                 "versionId": {
-                  "$ref": "#/components/schemas/ActivityVersionEnum"
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
                 }
               },
               "required": ["activityId", "versionId"]
-            }
-          },
-          "listed": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RaidEnum"
-            }
-          },
-          "pantheonId": {
-            "$ref": "#/components/schemas/ActivityEnum"
-          },
-          "pantheonModes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PantheonEnum"
-            }
-          },
-          "sunset": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SunsetRaidEnum"
-            }
-          },
-          "contest": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContestRaidEnum"
-            }
-          },
-          "master": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MasterRaidEnum"
-            }
-          },
-          "prestige": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PrestigeRaidEnum"
-            }
-          },
-          "reprisedChallengePairings": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "raid": {
-                  "$ref": "#/components/schemas/RaidEnum"
-                },
-                "version": {
-                  "$ref": "#/components/schemas/ActivityVersionEnum"
-                },
-                "triumphName": {
-                  "type": "string"
-                }
-              },
-              "required": ["raid", "version", "triumphName"]
-            }
-          },
-          "leaderboards": {
-            "type": "object",
-            "properties": {
-              "global": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "category": {
-                      "type": "string",
-                      "enum": [
-                        "total-clears",
-                        "sherpas",
-                        "full-clears",
-                        "cumulative-speedrun"
-                      ]
-                    },
-                    "displayName": {
-                      "type": "string"
-                    },
-                    "format": {
-                      "type": "string",
-                      "enum": ["number", "time"]
-                    }
-                  },
-                  "required": ["category", "displayName", "format"]
-                }
-              },
-              "worldFirst": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "displayName": {
-                        "type": "string"
-                      },
-                      "category": {
-                        "type": "string",
-                        "enum": ["normal", "prestige", "challenge", "master"]
-                      },
-                      "date": {
-                        "type": "string",
-                        "format": "date-time"
-                      }
-                    },
-                    "required": ["id", "displayName", "category", "date"]
-                  }
-                }
-              },
-              "individual": {
-                "type": "object",
-                "properties": {
-                  "clears": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "category": {
-                            "type": "string",
-                            "enum": ["fresh", "total", "trios", "duos", "solos"]
-                          }
-                        },
-                        "required": ["displayName", "category"]
-                      }
-                    }
-                  }
-                },
-                "required": ["clears"]
-              },
-              "pantheon": {
-                "type": "object",
-                "properties": {
-                  "individual": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "category": {
-                          "type": "string",
-                          "enum": ["fresh", "total", "sherpas", "trios", "duos"]
-                        }
-                      },
-                      "required": ["displayName", "category"]
-                    }
-                  },
-                  "first": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "versionId": {
-                          "$ref": "#/components/schemas/PantheonEnum"
-                        },
-                        "path": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        }
-                      },
-                      "required": ["versionId", "path", "displayName"]
-                    }
-                  },
-                  "speedrun": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "versionId": {
-                          "$ref": "#/components/schemas/PantheonEnum"
-                        },
-                        "path": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        }
-                      },
-                      "required": ["versionId", "path", "displayName"]
-                    }
-                  }
-                },
-                "required": ["individual", "first", "speedrun"]
-              }
             },
-            "required": ["global", "worldFirst", "individual", "pantheon"]
+            "description": "The mapping of each Bungie.net hash to a RaidHub activityId and versionId"
           },
-          "raidUrlPaths": {
+          "activityDefinitions": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "#/components/schemas/RaidPath"
-            }
+              "$ref": "#/components/schemas/ActivityDefinition"
+            },
+            "description": "The mapping of each RaidHub activityId to its definition"
           },
-          "pantheonUrlPaths": {
+          "versionDefinitions": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "#/components/schemas/PantheonPath"
-            }
+              "$ref": "#/components/schemas/VersionDefinition"
+            },
+            "description": "The mapping of each RaidHub versionId to its definition"
           },
-          "activityStrings": {
+          "listedRaidIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 8,
+            "description": "The list of all activityId in order of newest to oldest"
+          },
+          "sunsetRaidIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "description": "The list of inactive raid activityId"
+          },
+          "prestigeRaidIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 3,
+            "description": "The list of raid activityId which had a prestige mode"
+          },
+          "masterRaidIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 5,
+            "description": "The list of raid activityId which have a master mode"
+          },
+          "contestRaidIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 8,
+            "description": "The list of raid activityId which had a contest mode"
+          },
+          "resprisedRaidIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 3,
+            "description": "The list of raid activityId which have been reprised from Destiny 1"
+          },
+          "resprisedChallengeVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 3,
+            "description": "The list of version versionId which are the challenge mode for reprised raids"
+          },
+          "pantheonIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 1,
+            "description": "The list of activityId for Pantheon"
+          },
+          "versionsForActivity": {
             "type": "object",
             "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "versionStrings": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "checkpointNames": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "minItems": 1
+            },
+            "description": "The set of versionId for each activityId"
           }
         },
         "required": [
           "hashes",
-          "listed",
-          "pantheonId",
-          "pantheonModes",
-          "sunset",
-          "contest",
-          "master",
-          "prestige",
-          "reprisedChallengePairings",
-          "leaderboards",
-          "raidUrlPaths",
-          "pantheonUrlPaths",
-          "activityStrings",
-          "versionStrings",
-          "checkpointNames"
+          "activityDefinitions",
+          "versionDefinitions",
+          "listedRaidIds",
+          "sunsetRaidIds",
+          "prestigeRaidIds",
+          "masterRaidIds",
+          "contestRaidIds",
+          "resprisedRaidIds",
+          "resprisedChallengeVersionIds",
+          "pantheonIds",
+          "versionsForActivity"
         ],
         "additionalProperties": false
       },
@@ -1530,31 +1573,7 @@
           "results": {
             "type": "array",
             "items": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/PlayerInfo"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "clears": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  },
-                  "required": ["clears"],
-                  "additionalProperties": false
-                }
-              ],
-              "example": {
-                "bungieGlobalDisplayName": "Newo",
-                "bungieGlobalDisplayNameCode": "9010",
-                "membershipId": "4611686018488107374",
-                "displayName": "xx_newo_xx",
-                "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
-                "membershipType": 3,
-                "lastSeen": "2021-05-01T00:00:00.000Z"
-              }
+              "$ref": "#/components/schemas/PlayerInfo"
             }
           }
         },
@@ -1568,42 +1587,18 @@
             "type": "string",
             "pattern": "^\\d+n?$"
           },
+          "nextCursor": {
+            "type": "string",
+            "format": "date-time"
+          },
           "activities": {
             "type": "array",
             "items": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/ActivityWithPlayerData"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "meta": {
-                      "type": "object",
-                      "properties": {
-                        "activityId": {
-                          "$ref": "#/components/schemas/ActivityEnum"
-                        },
-                        "versionId": {
-                          "$ref": "#/components/schemas/ActivityVersionEnum"
-                        }
-                      },
-                      "required": ["activityId", "versionId"]
-                    }
-                  },
-                  "required": ["meta"],
-                  "additionalProperties": false
-                }
-              ]
+              "$ref": "#/components/schemas/InstanceForPlayer"
             }
-          },
-          "nextCursor": {
-            "type": "string",
-            "nullable": true,
-            "pattern": "^\\d+n?$"
           }
         },
-        "required": ["membershipId", "activities", "nextCursor"],
+        "required": ["membershipId", "nextCursor", "activities"],
         "additionalProperties": false
       },
       "PlayerBasicResponse": {
@@ -1616,7 +1611,7 @@
           "membershipType": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/BungieMembershipType"
+                "$ref": "#/components/schemas/DestinyMembershipType"
               },
               {
                 "nullable": true,
@@ -1644,6 +1639,10 @@
           "lastSeen": {
             "type": "string",
             "format": "date-time"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether or not the player has chosen to hide their on Bungie.net."
           }
         },
         "required": [
@@ -1653,7 +1652,8 @@
           "displayName",
           "bungieGlobalDisplayName",
           "bungieGlobalDisplayNameCode",
-          "lastSeen"
+          "lastSeen",
+          "isPrivate"
         ],
         "additionalProperties": false,
         "example": {
@@ -1663,479 +1663,408 @@
           "displayName": "xx_newo_xx",
           "iconPath": "/common/destiny2_content/icons/93844c8b76ea80683a880479e3506980.jpg",
           "membershipType": 3,
-          "lastSeen": "2021-05-01T00:00:00.000Z"
+          "lastSeen": "2021-05-01T00:00:00.000Z",
+          "isPrivate": false
         }
       },
       "PlayerProfileResponse": {
         "type": "object",
         "properties": {
-          "player": {
+          "playerInfo": {
             "$ref": "#/components/schemas/PlayerInfo"
           },
           "stats": {
             "type": "object",
             "properties": {
               "global": {
-                "type": "object",
-                "nullable": true,
-                "properties": {
-                  "clears": {
-                    "$ref": "#/components/schemas/PlayerStatRanking"
-                  },
-                  "fullClears": {
-                    "$ref": "#/components/schemas/PlayerStatRanking"
-                  },
-                  "sherpas": {
-                    "$ref": "#/components/schemas/PlayerStatRanking"
-                  },
-                  "speed": {
-                    "$ref": "#/components/schemas/PlayerStatRanking"
-                  }
-                },
-                "required": ["clears", "fullClears", "sherpas", "speed"]
+                "$ref": "#/components/schemas/PlayerProfileGlobalStats"
               },
-              "byRaid": {
+              "activity": {
                 "type": "object",
                 "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "fastestClear": {
-                      "type": "object",
-                      "nullable": true,
-                      "properties": {
-                        "instanceId": {
-                          "type": "integer",
-                          "format": "int64"
-                        },
-                        "duration": {
-                          "type": "integer"
-                        }
-                      },
-                      "required": ["instanceId", "duration"]
-                    },
-                    "clears": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "fullClears": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "sherpas": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "trios": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "duos": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "solos": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  },
-                  "required": [
-                    "fastestClear",
-                    "clears",
-                    "fullClears",
-                    "sherpas",
-                    "trios",
-                    "duos",
-                    "solos"
-                  ]
+                  "$ref": "#/components/schemas/PlayerProfileActivityStats"
                 }
               }
             },
-            "required": ["global", "byRaid"]
+            "required": ["global", "activity"]
           },
           "worldFirstEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PlayerProfileLeaderboardEntry"
-            }
-          }
-        },
-        "required": ["player", "stats", "worldFirstEntries"],
-        "additionalProperties": false
-      },
-      "ActivitySearchResponse": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "$ref": "#/components/schemas/ActivitySearchBody"
-          },
-          "results": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActivityExtended"
-            }
-          }
-        },
-        "required": ["query", "results"],
-        "additionalProperties": false
-      },
-      "ActivityResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ActivityExtended"
-          },
-          {
             "type": "object",
-            "properties": {
-              "meta": {
-                "type": "object",
-                "properties": {
-                  "activityId": {
-                    "$ref": "#/components/schemas/ActivityEnum"
-                  },
-                  "activityName": {
-                    "type": "string"
-                  },
-                  "versionId": {
-                    "$ref": "#/components/schemas/ActivityVersionEnum"
-                  },
-                  "versionName": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "activityId",
-                  "activityName",
-                  "versionId",
-                  "versionName"
-                ]
-              },
-              "leaderboardEntries": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "number"
-                }
-              },
-              "players": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/PlayerWithExtendedActivityData"
-                }
-              }
-            },
-            "required": ["meta", "leaderboardEntries", "players"],
-            "additionalProperties": false
-          }
-        ]
-      },
-      "LeaderboardSearchResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "enum": ["individual"]
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["worldfirst"]
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["global"]
-                  }
-                ]
-              },
-              "category": {
-                "type": "string"
-              },
-              "raid": {
-                "$ref": "#/components/schemas/RaidEnum"
-              },
-              "membershipId": {
-                "type": "string",
-                "pattern": "^\\d+n?$"
-              },
-              "count": {
-                "type": "integer",
-                "minimum": 5,
-                "exclusiveMinimum": true,
-                "maximum": 100,
-                "default": 25
-              }
-            },
-            "required": ["type", "category", "membershipId"],
-            "additionalProperties": false
-          },
-          "page": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "rank": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "position": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "entries": {
-            "type": "array",
-            "items": {
-              "anyOf": [
+            "additionalProperties": {
+              "allOf": [
                 {
-                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                  "$ref": "#/components/schemas/WorldFirstEntry"
                 },
                 {
-                  "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
+                  "nullable": true
                 }
               ]
             }
           }
         },
-        "required": ["params", "page", "rank", "position", "entries"],
-        "additionalProperties": false
+        "required": ["playerInfo", "stats", "worldFirstEntries"]
       },
-      "LeaderboardGlobalResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
+      "PlayerTeammatesResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Teammate"
+        }
+      },
+      "ActivityResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Instance"
+          },
+          {
             "type": "object",
             "properties": {
-              "category": {
+              "leaderboardRank": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "metadata": {
+                "$ref": "#/components/schemas/InstanceMetadata"
+              },
+              "players": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InstancePlayerExtended"
+                }
+              }
+            },
+            "required": ["leaderboardRank", "metadata", "players"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "LeaderboardIndividualGlobalResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
                 "type": "string",
-                "enum": [
-                  "total-clears",
-                  "sherpas",
-                  "full-clears",
-                  "cumulative-speedrun"
-                ]
+                "enum": ["team"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
               },
               "count": {
                 "type": "integer",
                 "minimum": 0,
                 "exclusiveMinimum": true
               },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamLeaderboardEntry"
+                }
               }
             },
-            "required": ["category", "count"]
+            "required": ["type", "format", "page", "count", "entries"]
           },
-          "entries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualLeaderboardEntry"
-            }
-          }
-        },
-        "required": ["params", "entries"],
-        "additionalProperties": false
-      },
-      "LeaderboardWorldfirstResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
+          {
             "type": "object",
             "properties": {
-              "raid": {
-                "$ref": "#/components/schemas/RaidPath"
-              },
-              "category": {
+              "type": {
                 "type": "string",
-                "enum": ["normal", "prestige", "challenge", "master"]
+                "enum": ["individual"]
               },
-              "count": {
-                "type": "integer",
-                "minimum": 25,
-                "exclusiveMinimum": true,
-                "maximum": 100,
-                "default": 50
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
               },
               "page": {
                 "type": "integer",
                 "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
-              }
-            },
-            "required": ["raid", "category"],
-            "additionalProperties": false
-          },
-          "date": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "entries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
-            }
-          }
-        },
-        "required": ["params", "date", "entries"],
-        "additionalProperties": false
-      },
-      "LeaderboardIndividualResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
-            "type": "object",
-            "properties": {
-              "raid": {
-                "$ref": "#/components/schemas/RaidPath"
-              },
-              "category": {
-                "type": "string",
-                "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
+                "exclusiveMinimum": true
               },
               "count": {
                 "type": "integer",
                 "minimum": 0,
                 "exclusiveMinimum": true
               },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                }
               }
             },
-            "required": ["raid", "category", "count"]
-          },
-          "entries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualLeaderboardEntry"
-            }
+            "required": ["type", "format", "page", "count", "entries"]
           }
-        },
-        "required": ["params", "entries"],
-        "additionalProperties": false
+        ]
       },
-      "LeaderboardPantheonFirstResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
+      "LeaderboardIndividualRaidResponse": {
+        "oneOf": [
+          {
             "type": "object",
             "properties": {
-              "version": {
-                "$ref": "#/components/schemas/PantheonPath"
-              },
-              "count": {
-                "type": "integer",
-                "minimum": 25,
-                "exclusiveMinimum": true,
-                "maximum": 100,
-                "default": 50
-              },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
-              }
-            },
-            "required": ["version"],
-            "additionalProperties": false
-          },
-          "entries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
-            }
-          }
-        },
-        "required": ["params", "entries"],
-        "additionalProperties": false
-      },
-      "LeaderboardPantheonSpeedrunResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
-            "type": "object",
-            "properties": {
-              "version": {
-                "$ref": "#/components/schemas/PantheonPath"
-              },
-              "count": {
-                "type": "integer",
-                "minimum": 25,
-                "exclusiveMinimum": true,
-                "maximum": 100,
-                "default": 50
-              },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
-              }
-            },
-            "required": ["version"],
-            "additionalProperties": false
-          },
-          "entries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorldFirstLeaderboardEntry"
-            }
-          }
-        },
-        "required": ["params", "entries"],
-        "additionalProperties": false
-      },
-      "LeaderboardPantheonAllResponse": {
-        "type": "object",
-        "properties": {
-          "params": {
-            "type": "object",
-            "properties": {
-              "count": {
-                "type": "integer",
-                "minimum": 25,
-                "exclusiveMinimum": true,
-                "maximum": 100,
-                "default": 50
-              },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true,
-                "default": 1
-              },
-              "category": {
+              "type": {
                 "type": "string",
-                "enum": ["fresh", "total", "sherpas", "trios", "duos"]
+                "enum": ["team"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamLeaderboardEntry"
+                }
               }
             },
-            "required": ["category"],
-            "additionalProperties": false
+            "required": ["type", "format", "page", "count", "entries"]
           },
-          "entries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IndividualLeaderboardEntry"
-            }
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["individual"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
           }
-        },
-        "required": ["params", "entries"],
-        "additionalProperties": false
+        ]
+      },
+      "LeaderboardIndividualPantheonResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["team"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["individual"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          }
+        ]
+      },
+      "LeaderboardTeamFirstResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["team"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["individual"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          }
+        ]
+      },
+      "LeaderboardTeamContestResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["team"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["individual"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["duration", "numerical"]
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndividualLeaderboardEntry"
+                }
+              }
+            },
+            "required": ["type", "format", "page", "count", "entries"]
+          }
+        ]
       },
       "PgcrResponse": {
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "startingPhaseIndex": {
             "type": "number"
@@ -2180,7 +2109,7 @@
                 }
               },
               "membershipType": {
-                "$ref": "#/components/schemas/BungieMembershipType"
+                "$ref": "#/components/schemas/DestinyMembershipType"
               }
             },
             "required": [
@@ -2207,19 +2136,19 @@
                           "nullable": true
                         },
                         "crossSaveOverride": {
-                          "$ref": "#/components/schemas/BungieMembershipType"
+                          "$ref": "#/components/schemas/DestinyMembershipType"
                         },
                         "applicableMembershipTypes": {
                           "type": "array",
                           "nullable": true,
                           "items": {
-                            "$ref": "#/components/schemas/BungieMembershipType"
+                            "$ref": "#/components/schemas/DestinyMembershipType"
                           }
                         },
                         "membershipType": {
                           "allOf": [
                             {
-                              "$ref": "#/components/schemas/BungieMembershipType"
+                              "$ref": "#/components/schemas/DestinyMembershipType"
                             },
                             {
                               "nullable": true
@@ -2368,7 +2297,6 @@
           }
         },
         "required": ["period", "activityDetails", "entries"],
-        "additionalProperties": false,
         "description": "A raw PGCR with a few redundant fields removed",
         "externalDocs": {
           "description": "Bungie.net API documentation",
@@ -2433,7 +2361,7 @@
           }
         ]
       },
-      "AuthorizeResponse": {
+      "AuthorizeAdminResponse": {
         "type": "object",
         "properties": {
           "value": {
@@ -2465,13 +2393,28 @@
   "paths": {
     "/manifest": {
       "get": {
+        "summary": "/manifest",
+        "description": "The RaidHub manifest provides definitions for all activities and versions in the RaidHub database.",
         "responses": {
           "200": {
             "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ManifestResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/ManifestResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2491,12 +2434,13 @@
     },
     "/player/search": {
       "get": {
+        "summary": "/player/search",
+        "description": "Search for players in the RaidHub database by Bungie name or platform display name. \nPlayers who have not attempted a raid may not appear in the search results. \nResults are ordered by a combination of the number of raid completions and last played date.",
         "parameters": [
           {
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
+              "minimum": 1,
               "maximum": 50,
               "default": 20
             },
@@ -2512,6 +2456,32 @@
             "required": true,
             "name": "query",
             "in": "query"
+          },
+          {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DestinyMembershipType"
+                },
+                {
+                  "default": -1,
+                  "description": "Filter by Destiny membership type. Defaults to -1 (all). Note that the membership type of an account is determined by the platform the was first created on"
+                }
+              ]
+            },
+            "required": false,
+            "name": "membershipType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "description": "Search by bungie name. Defaults to true. Set this parameter to false to search by platform display name instead"
+            },
+            "required": false,
+            "name": "global",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2520,7 +2490,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlayerSearchResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PlayerSearchResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2550,6 +2533,8 @@
     },
     "/player/{membershipId}/activities": {
       "get": {
+        "summary": "/player/{membershipId}/activities",
+        "description": "Get a player's activity history. This endpoint uses date cursors to paginate through a player's activity history. \nThe first request should not include a cursor. Subsequent requests should include the `nextCursor` \nvalue from the previous response. Note that the first request may not return the full number of activities requested\nin order to optimize performance. Subsequent requests will return the full number of activities requested.",
         "parameters": [
           {
             "schema": {
@@ -2563,8 +2548,7 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 50,
-              "exclusiveMinimum": true,
+              "minimum": 10,
               "maximum": 5000,
               "default": 2000
             },
@@ -2575,7 +2559,7 @@
           {
             "schema": {
               "type": "string",
-              "pattern": "^\\d+n?$"
+              "format": "date-time"
             },
             "required": false,
             "name": "cursor",
@@ -2588,7 +2572,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlayerActivitiesResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PlayerActivitiesResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2613,6 +2610,23 @@
               }
             }
           },
+          "403": {
+            "description": "PlayerPrivateProfileError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "membershipId": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  },
+                  "required": ["membershipId"]
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2622,16 +2636,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
                         "membershipId": {
                           "type": "string",
                           "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["notFound", "membershipId"]
+                      "required": ["membershipId"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -2646,6 +2656,8 @@
     },
     "/player/{membershipId}/basic": {
       "get": {
+        "summary": "/player/{membershipId}/basic",
+        "description": "An extremely low-cost API call. Get basic information Bungie information about a player. The information is not\nguaranteed to be fully up-to-date, however, it should be accurate enough for most use cases where\nyou only have the membershipId available.",
         "parameters": [
           {
             "schema": {
@@ -2663,7 +2675,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlayerBasicResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PlayerBasicResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2687,16 +2712,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
                         "membershipId": {
                           "type": "string",
                           "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["notFound", "membershipId"]
+                      "required": ["membershipId"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -2711,6 +2732,8 @@
     },
     "/player/{membershipId}/profile": {
       "get": {
+        "summary": "/player/{membershipId}/profile",
+        "description": "Get a player's profile information. This includes global stats, activity stats, and world first entries. \nThis is used to hydrate the RaidHub profile page",
         "parameters": [
           {
             "schema": {
@@ -2728,7 +2751,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlayerProfileResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PlayerProfileResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2739,6 +2775,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "PlayerPrivateProfileError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "membershipId": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  },
+                  "required": ["membershipId"]
                 }
               }
             }
@@ -2752,16 +2805,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
                         "membershipId": {
                           "type": "string",
                           "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["notFound", "membershipId"]
+                      "required": ["membershipId"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -2774,34 +2823,41 @@
         }
       }
     },
-    "/activity/search": {
-      "post": {
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ActivitySearchBody"
-              }
-            }
+    "/player/{membershipId}/teammates": {
+      "get": {
+        "summary": "/player/{membershipId}/teammates",
+        "description": "",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": true,
+            "name": "membershipId",
+            "in": "path"
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActivitySearchResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PlayerTeammatesResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2812,6 +2868,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "PlayerPrivateProfileError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "membershipId": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
+                    }
+                  },
+                  "required": ["membershipId"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["membershipId"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
                 }
               }
             }
@@ -2821,6 +2918,8 @@
     },
     "/activity/{instanceId}": {
       "get": {
+        "summary": "/activity/{instanceId}",
+        "description": "This endpoint replaces the PGCR endpoint. It returns an object with a shape more aligned with how RaidHub displays PGCRs.",
         "parameters": [
           {
             "schema": {
@@ -2838,7 +2937,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActivityResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/ActivityResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -2862,16 +2974,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
                         "instanceId": {
                           "type": "string",
                           "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["notFound", "instanceId"]
+                      "required": ["instanceId"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -2884,28 +2992,29 @@
         }
       }
     },
-    "/leaderboard/search": {
+    "/leaderboard/individual/global/{category}": {
       "get": {
+        "summary": "/leaderboard/individual/global/{category}",
+        "description": "Individual leaderboards across all raids",
         "parameters": [
           {
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "enum": ["worldfirst"]
-                },
-                {
-                  "type": "string",
-                  "enum": ["individual"]
-                },
-                {
-                  "type": "string",
-                  "enum": ["global"]
-                }
-              ]
+              "type": "string",
+              "enum": ["clears", "freshClears", "sherpas", "speedrun"]
             },
             "required": true,
-            "name": "type",
+            "name": "category",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
             "in": "query"
           },
           {
@@ -2913,61 +3022,20 @@
               "type": "string",
               "pattern": "^\\d+n?$"
             },
-            "required": true,
-            "name": "membershipId",
+            "required": false,
+            "name": "search",
             "in": "query"
           },
           {
             "schema": {
               "type": "integer",
-              "minimum": 5,
+              "minimum": 0,
               "exclusiveMinimum": true,
-              "maximum": 100,
-              "default": 25
+              "default": 1,
+              "description": "Page number of leaderboard data. Ignored if `search` is provided. Defaults to 1"
             },
             "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "enum": ["normal", "prestige", "challenge", "master"]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "fresh",
-                    "total",
-                    "sherpas",
-                    "trios",
-                    "duos",
-                    "solos"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "total-clears",
-                    "sherpas",
-                    "full-clears",
-                    "cumulative-speedrun"
-                  ]
-                }
-              ]
-            },
-            "required": true,
-            "name": "category",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "number"
-            },
-            "required": false,
-            "name": "raid",
+            "name": "page",
             "in": "query"
           }
         ],
@@ -2977,283 +3045,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LeaderboardSearchResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "LeaderboardNotFoundError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
-                        "params": {
-                          "type": "object",
-                          "properties": {
-                            "membershipId": {
-                              "type": "string",
-                              "pattern": "^\\d+n?$"
-                            },
-                            "count": {
-                              "type": "integer",
-                              "minimum": 5,
-                              "exclusiveMinimum": true,
-                              "maximum": 100,
-                              "default": 25
-                            },
-                            "type": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "enum": ["individual"]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": ["worldfirst"]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": ["global"]
-                                }
-                              ]
-                            },
-                            "category": {
-                              "type": "string"
-                            },
-                            "raid": {
-                              "$ref": "#/components/schemas/RaidEnum"
-                            }
-                          },
-                          "required": ["membershipId", "type", "category"],
-                          "additionalProperties": false
-                        }
-                      },
-                      "required": ["notFound", "params"],
-                      "additionalProperties": false
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
                     },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
-                        "params": {
-                          "type": "object",
-                          "properties": {
-                            "membershipId": {
-                              "type": "string",
-                              "pattern": "^\\d+n?$"
-                            },
-                            "count": {
-                              "type": "integer",
-                              "minimum": 5,
-                              "exclusiveMinimum": true,
-                              "maximum": 100,
-                              "default": 25
-                            },
-                            "type": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "enum": ["individual"]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": ["worldfirst"]
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": ["global"]
-                                }
-                              ]
-                            },
-                            "category": {
-                              "type": "string"
-                            },
-                            "raid": {
-                              "$ref": "#/components/schemas/RaidEnum"
-                            }
-                          },
-                          "required": ["membershipId", "type", "category"],
-                          "additionalProperties": false
-                        }
-                      },
-                      "required": ["notFound", "params"],
-                      "additionalProperties": false
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/LeaderboardIndividualGlobalResponse"
                     }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/leaderboard/global/{category}": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "total-clears",
-                "sherpas",
-                "full-clears",
-                "cumulative-speedrun"
-              ]
-            },
-            "required": true,
-            "name": "category",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
-              "maximum": 100,
-              "default": 50
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LeaderboardGlobalResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/leaderboard/{raid}/worldfirst/{category}": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/components/schemas/RaidPath"
-            },
-            "required": true,
-            "name": "raid",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": ["normal", "prestige", "challenge", "master"]
-            },
-            "required": true,
-            "name": "category",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
-              "maximum": 100,
-              "default": 50
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LeaderboardWorldfirstResponse"
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -3287,45 +3092,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
-                        "params": {
-                          "type": "object",
-                          "properties": {
-                            "raid": {
-                              "$ref": "#/components/schemas/RaidPath"
-                            },
-                            "category": {
-                              "type": "string",
-                              "enum": [
-                                "normal",
-                                "prestige",
-                                "challenge",
-                                "master"
-                              ]
-                            },
-                            "count": {
-                              "type": "integer",
-                              "minimum": 25,
-                              "exclusiveMinimum": true,
-                              "maximum": 100,
-                              "default": 50
-                            },
-                            "page": {
-                              "type": "integer",
-                              "minimum": 0,
-                              "exclusiveMinimum": true,
-                              "default": 1
-                            }
-                          },
-                          "required": ["raid", "category"],
-                          "additionalProperties": false
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["notFound", "params"],
-                      "additionalProperties": false
+                      "required": ["membershipId"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -3338,12 +3110,14 @@
         }
       }
     },
-    "/leaderboard/{raid}/individual/{category}": {
+    "/leaderboard/individual/raid/{raid}/{category}": {
       "get": {
+        "summary": "/leaderboard/individual/raid/{raid}/{category}",
+        "description": "Individual leaderboards for a specific raid",
         "parameters": [
           {
             "schema": {
-              "$ref": "#/components/schemas/RaidPath"
+              "type": "string"
             },
             "required": true,
             "name": "raid",
@@ -3352,7 +3126,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["fresh", "total", "sherpas", "trios", "duos", "solos"]
+              "enum": ["clears", "freshClears", "sherpas"]
             },
             "required": true,
             "name": "category",
@@ -3361,8 +3135,7 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
+              "minimum": 10,
               "maximum": 100,
               "default": 50
             },
@@ -3372,10 +3145,20 @@
           },
           {
             "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
               "type": "integer",
               "minimum": 0,
               "exclusiveMinimum": true,
-              "default": 1
+              "default": 1,
+              "description": "Page number of leaderboard data. Ignored if `search` is provided. Defaults to 1"
             },
             "required": false,
             "name": "page",
@@ -3388,7 +3171,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LeaderboardIndividualResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/LeaderboardIndividualRaidResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -3422,12 +3218,21 @@
                     {
                       "type": "object",
                       "properties": {
-                        "unavailable": {
-                          "type": "boolean",
-                          "enum": [true]
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["unavailable"]
+                      "required": ["membershipId"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "raid": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["raid"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -3440,171 +3245,23 @@
         }
       }
     },
-    "/leaderboard/pantheon/{version}/first": {
+    "/leaderboard/individual/pantheon/{version}/{category}": {
       "get": {
+        "summary": "/leaderboard/individual/pantheon/{version}/{category}",
+        "description": "Individual leaderboards for a specific pantheon version",
         "parameters": [
           {
             "schema": {
-              "$ref": "#/components/schemas/PantheonPath"
+              "type": "string"
             },
             "required": true,
             "name": "version",
             "in": "path"
           },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
-              "maximum": 100,
-              "default": 50
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LeaderboardPantheonFirstResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/leaderboard/pantheon/{version}/speedrun": {
-      "get": {
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/components/schemas/PantheonPath"
-            },
-            "required": true,
-            "name": "version",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
-              "maximum": 100,
-              "default": 50
-            },
-            "required": false,
-            "name": "count",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
-              "default": 1
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LeaderboardPantheonSpeedrunResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/leaderboard/pantheon/all/{category}": {
-      "get": {
-        "parameters": [
           {
             "schema": {
               "type": "string",
-              "enum": ["fresh", "total", "sherpas", "trios", "duos"]
+              "enum": ["clears", "freshClears", "score"]
             },
             "required": true,
             "name": "category",
@@ -3613,8 +3270,7 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 25,
-              "exclusiveMinimum": true,
+              "minimum": 10,
               "maximum": 100,
               "default": 50
             },
@@ -3624,10 +3280,20 @@
           },
           {
             "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
               "type": "integer",
               "minimum": 0,
               "exclusiveMinimum": true,
-              "default": 1
+              "default": 1,
+              "description": "Page number of leaderboard data. Ignored if `search` is provided. Defaults to 1"
             },
             "required": false,
             "name": "page",
@@ -3640,7 +3306,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LeaderboardPantheonAllResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/LeaderboardIndividualPantheonResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -3670,7 +3349,293 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PathValidationError"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["membershipId"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["path"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard/team/first/{activity}/{version}": {
+      "get": {
+        "summary": "/leaderboard/team/first/{activity}/{version}",
+        "description": "Ranking of the first 1000 completions of each activity version. \nUse the /contest endpoint instead to get the full rankings for the duration of the contest.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "activity",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "version",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "default": 1,
+              "description": "Page number of leaderboard data. Ignored if `search` is provided. Defaults to 1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/LeaderboardTeamFirstResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["membershipId"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "activity": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["activity", "version"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard/team/contest/{raid}": {
+      "get": {
+        "summary": "/leaderboard/team/contest/{raid}",
+        "description": "Ranking of all teams which completed the official contest version of the raid during the contest period.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "raid",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "default": 1,
+              "description": "Page number of leaderboard data. Ignored if `search` is provided. Defaults to 1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/LeaderboardTeamContestResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "membershipId": {
+                          "type": "string",
+                          "pattern": "^\\d+n?$"
+                        }
+                      },
+                      "required": ["membershipId"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "raid": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["raid"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/PathValidationError"
+                    }
+                  ]
                 }
               }
             }
@@ -3680,6 +3645,8 @@
     },
     "/pgcr/{instanceId}": {
       "get": {
+        "summary": "/pgcr/{instanceId}",
+        "description": "Get a raw post game carnage report by instanceId. \nThis is essentially the raw data from the Bungie API, with a few fields trimmed off. \nIt should be a subset of the data returned by the Bungie API. \nUseful if you need to access PGCRs when Bungie's API is down.",
         "parameters": [
           {
             "schema": {
@@ -3697,7 +3664,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PgcrResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/PgcrResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -3721,16 +3701,12 @@
                     {
                       "type": "object",
                       "properties": {
-                        "notFound": {
-                          "type": "boolean",
-                          "enum": [true]
-                        },
                         "instanceId": {
                           "type": "string",
                           "pattern": "^\\d+n?$"
                         }
                       },
-                      "required": ["notFound", "instanceId"]
+                      "required": ["instanceId"]
                     },
                     {
                       "$ref": "#/components/schemas/PathValidationError"
@@ -3745,6 +3721,8 @@
     },
     "/admin/query": {
       "post": {
+        "summary": "/admin/query",
+        "description": "Run a query against the database",
         "security": [
           {
             "Administrator Token": []
@@ -3779,7 +3757,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminQueryResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/AdminQueryResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }
@@ -3819,7 +3810,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminQuerySyntaxError"
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    }
+                  },
+                  "required": ["name", "code", "line", "position"]
                 }
               }
             }
@@ -3827,19 +3835,25 @@
         }
       }
     },
-    "/authorize": {
+    "/authorize/admin": {
       "post": {
+        "summary": "/authorize/admin",
+        "description": "Authorize an admin user. Requires the client secret.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
+                  "bungieMembershipId": {
+                    "type": "string",
+                    "pattern": "^\\d+n?$"
+                  },
                   "clientSecret": {
                     "type": "string"
                   }
                 },
-                "required": ["clientSecret"]
+                "required": ["bungieMembershipId", "clientSecret"]
               }
             }
           }
@@ -3850,7 +3864,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthorizeResponse"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/AuthorizeAdminResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }

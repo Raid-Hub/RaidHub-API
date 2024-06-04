@@ -1,41 +1,18 @@
-import {
-    PrismaClientInitializationError,
-    PrismaClientKnownRequestError,
-    PrismaClientUnknownRequestError,
-    PrismaClientValidationError
-} from "@prisma/client/runtime/library"
 import { ErrorRequestHandler } from "express"
-import { zServerError } from "../RaidHubErrors"
-import { ErrorCode } from "../schema/common"
-import { z } from "../schema/zod"
+import { ErrorCode } from "../schema/errors/ErrorCode"
+import { zInternalServerError } from "../schema/errors/InternalServerError"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
-    let details: z.infer<typeof zServerError>["error"] & Record<string, unknown> = {
-        type: ErrorCode.InternalServerError,
-        at: null
-    }
-
-    if (
-        err instanceof PrismaClientInitializationError ||
-        err instanceof PrismaClientValidationError ||
-        err instanceof PrismaClientUnknownRequestError ||
-        err instanceof PrismaClientKnownRequestError
-    ) {
-        details = {
-            type: ErrorCode.InternalServerError,
-            cause: err.name,
-            at: err.message.split("`")[1]
-        }
-    }
-
     /* istanbul ignore next */
     !process.env.TS_JEST && console.error(err)
 
     res.status(500).send({
-        message: "Something went wrong.",
         minted: new Date(),
         success: false,
-        error: details
-    } satisfies (typeof zServerError)["_input"])
+        code: ErrorCode.InternalServerError,
+        error: {
+            message: "Internal Server Error"
+        }
+    } satisfies (typeof zInternalServerError)["_input"])
 }

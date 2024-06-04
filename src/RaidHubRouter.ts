@@ -37,8 +37,8 @@ export class RaidHubRouter implements IRaidHubRoute {
         return (this.parent ? this.parent.getFullPath(this) : "") + path
     }
 
-    openApiRoutes(): RouteConfig[] {
-        return this.routes.flatMap(({ route }) => route.openApiRoutes())
+    $generateOpenApiRoutes(): RouteConfig[] {
+        return this.routes.flatMap(({ route }) => route.$generateOpenApiRoutes())
     }
 
     setParent(parent: RaidHubRouter) {

@@ -1,11 +1,11 @@
 import { RequestHandler } from "express"
-import { sendAsyncPlayerRequest } from "../services/rabbitmq/player"
+import { playersQueue } from "../services/rabbitmq/queues/player"
 
 export const processPlayerAsync: RequestHandler<{ membershipId: bigint }> = async (
     req,
     res,
     next
 ) => {
-    res.on("finish", () => sendAsyncPlayerRequest({ membershipId: req.params.membershipId }))
+    res.on("finish", () => playersQueue.send({ membershipId: req.params.membershipId }))
     next()
 }

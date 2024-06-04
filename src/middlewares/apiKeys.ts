@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 import { z } from "zod"
-import { zApiKeyError } from "../RaidHubErrors"
-import { ErrorCode } from "../schema/common"
+import { zApiKeyError } from "../schema/errors/ApiKeyError"
+import { ErrorCode } from "../schema/errors/ErrorCode"
 
 const KeySchema = z.object({
     contact: z.string().default(""),
@@ -62,11 +62,11 @@ export const verifyApiKey: RequestHandler = async (req, res, next) => {
         next()
     } else {
         res.status(401).send({
-            message: req.headers["x-api-key"] ? "Invalid API Key" : "Missing API Key",
+            code: ErrorCode.ApiKeyError,
             minted: new Date(),
             success: false,
             error: {
-                type: ErrorCode.ApiKeyError,
+                message: req.headers["x-api-key"] ? "Invalid API Key" : "Missing API Key",
                 origin: req.headers.origin || null,
                 apiKey: req.headers["x-api-key"]?.toString() || null
             }

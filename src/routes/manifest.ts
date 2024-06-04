@@ -1,289 +1,144 @@
+import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
 import {
-    GlobalBoard,
-    GlobalBoardNames,
-    GlobalBoards,
-    IndividualBoard,
-    IndividualBoardNames,
-    IndividualClearsBoards,
-    IndividualClearsLeaderboardsForRaid,
-    IndividualPantheonBoards,
-    UrlPathsToPantheonVersion,
-    UrlPathsToRaid,
-    WorldFirstBoards,
-    WorldFirstBoardsMap
-} from "../data/leaderboards"
-import {
-    Activity,
-    ContestRaids,
-    ListedRaid,
-    ListedRaids,
-    MasterRaids,
-    PantheonModes,
-    PrestigeRaids,
-    ReprisedRaidDifficultyPairings,
-    SunsetRaids
-} from "../data/raids"
+    listActivityDefinitions,
+    listHashes,
+    listVersionDefinitions
+} from "../data-access-layer/definitions"
 import { cacheControl } from "../middlewares/cache-control"
-import { registry, zActivityEnum, zRaidEnum, zVersionEnum } from "../schema/common"
-import { z, zISODateString, zNumberEnum } from "../schema/zod"
-import { prisma } from "../services/prisma"
-import { groupBy } from "../util/helpers"
-import { ok } from "../util/response"
-import { zPantheonPath, zRaidPath } from "./leaderboard/_schema"
-
-// todo: add to DB
-const checkpoints: Record<ListedRaid, string> = {
-    [Activity.LEVIATHAN]: "Calus",
-    [Activity.EATER_OF_WORLDS]: "Argos",
-    [Activity.SPIRE_OF_STARS]: "Val Ca'uor",
-    [Activity.LAST_WISH]: "Queenswalk",
-    [Activity.SCOURGE_OF_THE_PAST]: "Insurrection Prime",
-    [Activity.CROWN_OF_SORROW]: "Gahlran",
-    [Activity.GARDEN_OF_SALVATION]: "Sanctified Mind",
-    [Activity.DEEP_STONE_CRYPT]: "Taniks",
-    [Activity.VAULT_OF_GLASS]: "Atheon",
-    [Activity.VOW_OF_THE_DISCIPLE]: "Rhulk",
-    [Activity.KINGS_FALL]: "Oryx",
-    [Activity.ROOT_OF_NIGHTMARES]: "Nezarec",
-    [Activity.CROTAS_END]: "Crota"
-}
-
-const zPantheonEnum = registry.register("PantheonEnum", zNumberEnum(PantheonModes))
-const zSunsetRaidEnum = registry.register("SunsetRaidEnum", zNumberEnum(SunsetRaids))
-const zMasterRaidEnum = registry.register("MasterRaidEnum", zNumberEnum(MasterRaids))
-const zPrestigeRaidEnum = registry.register("PrestigeRaidEnum", zNumberEnum(PrestigeRaids))
-const zContestRaidEnum = registry.register("ContestRaidEnum", zNumberEnum(ContestRaids))
+import { zActivityDefinition } from "../schema/components/ActivityDefinition"
+import { zVersionDefinition } from "../schema/components/VersionDefinition"
+import { zNaturalNumber } from "../schema/util"
 
 export const manifestRoute = new RaidHubRoute({
     method: "get",
-    middlewares: [cacheControl(60)],
-    handler: async () => {
-        const [worldFirstLeaderboards, activities, versions, hashes, pantheon] = await Promise.all([
-            listWFLeaderboards(),
-            prisma.activityDefinition.findMany({
-                select: {
-                    id: true,
-                    name: true
-                }
-            }),
-            prisma.versionDefinition.findMany({
-                select: {
-                    id: true,
-                    name: true
-                }
-            }),
-            prisma.activityHash.findMany({
-                select: {
-                    hash: true,
-                    versionId: true,
-                    activityId: true
-                }
-            }),
-            prisma.activityHash.findMany({
-                select: {
-                    versionDefinition: true
-                },
-                where: {
-                    activityId: Activity.THE_PANTHEON
-                }
-            })
-        ])
-        return ok({
-            activityStrings: Object.fromEntries(activities.map(a => [a.id, a.name])),
-            versionStrings: Object.fromEntries(versions.map(a => [a.id, a.name])),
-            hashes: Object.fromEntries(
-                hashes.map(h => [h.hash, { activityId: h.activityId, versionId: h.versionId }])
-            ),
-            pantheonId: Activity.THE_PANTHEON,
-            pantheonModes: [...PantheonModes],
-            listed: [...ListedRaids],
-            sunset: [...SunsetRaids],
-            contest: [...ContestRaids],
-            master: [...MasterRaids],
-            prestige: [...PrestigeRaids],
-            reprisedChallengePairings: ReprisedRaidDifficultyPairings.map(
-                ([raid, version, triumphName]) => ({
-                    raid,
-                    version,
-                    triumphName
-                })
-            ),
-            raidUrlPaths: Object.fromEntries(
-                Object.entries(UrlPathsToRaid).map(([k, v]) => [
-                    v,
-                    k as keyof typeof UrlPathsToRaid
-                ])
-            ),
-            pantheonUrlPaths: Object.fromEntries(
-                Object.entries(UrlPathsToPantheonVersion).map(([k, v]) => [
-                    v,
-                    k as keyof typeof UrlPathsToPantheonVersion
-                ])
-            ),
-            leaderboards: {
-                worldFirst: worldFirstLeaderboards,
-                global: Object.entries(GlobalBoardNames).map(
-                    ([category, { displayName, format }]) => ({
-                        category: category as GlobalBoard,
-                        displayName,
-                        format
-                    })
-                ),
-                individual: {
-                    clears: Object.fromEntries(
-                        Object.entries(IndividualClearsLeaderboardsForRaid).map(
-                            ([raid, boards]) => [
-                                raid,
-                                Object.entries(boards)
-                                    .filter(([_, v]) => v)
-                                    .map(([k, _]) => ({
-                                        displayName: IndividualBoardNames[k as IndividualBoard],
-                                        category: k as Exclude<IndividualBoard, "sherpas">
-                                    }))
-                            ]
-                        )
-                    )
-                },
-                pantheon: {
-                    individual: [
-                        {
-                            displayName: "Total Clears",
-                            category: "total" as const
-                        },
-                        {
-                            displayName: "Total Sherpas",
-                            category: "sherpas" as const
-                        },
-                        {
-                            displayName: "Total Trios",
-                            category: "trios" as const
-                        },
-                        {
-                            displayName: "Total Duos",
-                            category: "duos" as const
-                        }
-                    ],
-                    first: pantheon.map(p => ({
-                        displayName: p.versionDefinition.name,
-                        path: Object.entries(UrlPathsToPantheonVersion).find(
-                            ([, v]) => v == p.versionDefinition.id
-                        )![0],
-                        versionId: p.versionDefinition.id
-                    })),
-                    speedrun: pantheon.map(p => ({
-                        displayName: p.versionDefinition.name,
-                        path: Object.entries(UrlPathsToPantheonVersion).find(
-                            ([, v]) => v == p.versionDefinition.id
-                        )![0],
-                        versionId: p.versionDefinition.id
-                    }))
-                }
-            },
-            checkpointNames: checkpoints
-        })
-    },
+    description: `The RaidHub manifest provides definitions for all activities and versions in the RaidHub database.`,
+    middleware: [cacheControl(30)],
     response: {
         success: {
             statusCode: 200,
             schema: z
                 .object({
-                    hashes: z.record(
-                        z.object({
-                            activityId: zActivityEnum,
-                            versionId: zVersionEnum
-                        })
-                    ),
-                    listed: z.array(zRaidEnum),
-                    pantheonId: zActivityEnum,
-                    pantheonModes: z.array(zPantheonEnum),
-                    sunset: z.array(zSunsetRaidEnum),
-                    contest: z.array(zContestRaidEnum),
-                    master: z.array(zMasterRaidEnum),
-                    prestige: z.array(zPrestigeRaidEnum),
-                    reprisedChallengePairings: z.array(
-                        z.object({
-                            raid: zRaidEnum,
-                            version: zVersionEnum,
-                            triumphName: z.string()
-                        })
-                    ),
-                    leaderboards: z.object({
-                        global: z.array(
+                    hashes: z
+                        .record(
                             z.object({
-                                category: z.enum(GlobalBoards),
-                                displayName: z.string(),
-                                format: z.enum(["number", "time"])
+                                activityId: zNaturalNumber(),
+                                versionId: zNaturalNumber()
                             })
-                        ),
-                        worldFirst: z.record(
-                            z.array(
-                                z.object({
-                                    id: z.string(),
-                                    displayName: z.string(),
-                                    category: z.enum(WorldFirstBoards),
-                                    date: zISODateString()
-                                })
-                            )
-                        ),
-                        individual: z.object({
-                            clears: z.record(
-                                z.array(
-                                    z.object({
-                                        displayName: z.string(),
-                                        category: z.enum(IndividualClearsBoards)
-                                    })
-                                )
-                            )
+                        )
+                        .openapi({
+                            description:
+                                "The mapping of each Bungie.net hash to a RaidHub activityId and versionId"
                         }),
-                        pantheon: z.object({
-                            individual: z.array(
-                                z.object({
-                                    displayName: z.string(),
-                                    category: z.enum(IndividualPantheonBoards)
-                                })
-                            ),
-                            first: z.array(
-                                z.object({
-                                    versionId: zPantheonEnum,
-                                    path: z.string(),
-                                    displayName: z.string()
-                                })
-                            ),
-                            speedrun: z.array(
-                                z.object({
-                                    versionId: zPantheonEnum,
-                                    path: z.string(),
-                                    displayName: z.string()
-                                })
-                            )
-                        })
+                    activityDefinitions: z.record(zActivityDefinition).openapi({
+                        description: "The mapping of each RaidHub activityId to its definition"
                     }),
-                    raidUrlPaths: z.record(zRaidPath),
-                    pantheonUrlPaths: z.record(zPantheonPath),
-                    activityStrings: z.record(z.string()),
-                    versionStrings: z.record(z.string()),
-                    checkpointNames: z.record(z.string())
+                    versionDefinitions: z.record(zVersionDefinition).openapi({
+                        description: "The mapping of each RaidHub versionId to its definition"
+                    }),
+                    listedRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of all activityId in order of newest to oldest"
+                        })
+                        .min(8),
+                    sunsetRaidIds: z.array(zNaturalNumber()).openapi({
+                        description: "The list of inactive raid activityId"
+                    }),
+                    prestigeRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of raid activityId which had a prestige mode"
+                        })
+                        .min(3),
+                    masterRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of raid activityId which have a master mode"
+                        })
+                        .min(5),
+                    contestRaidIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of raid activityId which had a contest mode"
+                        })
+                        .min(8),
+                    resprisedRaidIds: z.array(zNaturalNumber()).min(3).openapi({
+                        description:
+                            "The list of raid activityId which have been reprised from Destiny 1"
+                    }),
+                    resprisedChallengeVersionIds: z.array(zNaturalNumber()).min(3).openapi({
+                        description:
+                            "The list of version versionId which are the challenge mode for reprised raids"
+                    }),
+                    pantheonIds: z
+                        .array(zNaturalNumber())
+                        .openapi({
+                            description: "The list of activityId for Pantheon"
+                        })
+                        .min(1),
+                    versionsForActivity: z.record(z.array(zNaturalNumber()).min(1)).openapi({
+                        description: "The set of versionId for each activityId"
+                    })
                 })
                 .strict()
         }
+    },
+    handler: async () => {
+        const [activities, versions, hashes] = await Promise.all([
+            listActivityDefinitions(),
+            listVersionDefinitions(),
+            listHashes()
+        ])
+        const raids = activities.filter(a => a.isRaid)
+        const pantheonId = 101
+        const versionsSetForActivity: Record<number, Set<number>> = {}
+        for (const { activityId, versionId } of hashes) {
+            if (!versionsSetForActivity[activityId]) {
+                versionsSetForActivity[activityId] = new Set()
+            }
+            versionsSetForActivity[activityId].add(versionId)
+        }
+        const versionsForActivity: Record<number, number[]> = {}
+        Object.entries(versionsSetForActivity).forEach(([activityId, set]) => {
+            versionsForActivity[parseInt(activityId)] = [...set]
+        })
+
+        return RaidHubRoute.ok({
+            hashes: Object.fromEntries(
+                hashes.map(h => [
+                    h.hash,
+                    {
+                        activityId: h.activityId,
+                        versionId: h.versionId
+                    }
+                ])
+            ),
+            activityDefinitions: Object.fromEntries(activities.map(data => [data.id, data])),
+            versionDefinitions: Object.fromEntries(versions.map(data => [data.id, data])),
+            listedRaidIds: raids
+                .sort((a, b) => {
+                    if (+a.isSunset ^ +b.isSunset) {
+                        return a.isSunset ? 1 : -1
+                    } else {
+                        return b.id - a.id
+                    }
+                })
+                .map(a => a.id),
+            sunsetRaidIds: raids.filter(a => a.isSunset).map(a => a.id),
+            prestigeRaidIds: [
+                ...new Set(hashes.filter(h => h.versionId === 3).map(h => h.activityId))
+            ],
+            masterRaidIds: [
+                ...new Set(hashes.filter(h => h.versionId === 4).map(h => h.activityId))
+            ],
+            contestRaidIds: raids.filter(a => a.contestEnd !== null).map(a => a.id),
+            resprisedRaidIds: versions
+                .filter(v => v.associatedActivityId && v.associatedActivityId < 100)
+                .map(a => a.associatedActivityId!),
+            resprisedChallengeVersionIds: versions.filter(v => v.isChallengeMode).map(v => v.id),
+            pantheonIds: [pantheonId],
+            versionsForActivity: versionsForActivity
+        })
     }
 })
-
-async function listWFLeaderboards() {
-    const boards = await prisma.activityLeaderboard.findMany({})
-    const formatted = boards.map(b => ({
-        raidId: b.raidId,
-        id: b.id,
-        date: b.date,
-        category: WorldFirstBoardsMap.find(([, type]) => type === b.type)![0],
-        displayName:
-            b.type === "Challenge"
-                ? ReprisedRaidDifficultyPairings.find(([raid]) => raid === b.raidId)![2]
-                : b.type
-    }))
-
-    return groupBy<(typeof formatted)[number], "raidId", ListedRaid>(formatted, "raidId", {
-        remove: true
-    })
-}

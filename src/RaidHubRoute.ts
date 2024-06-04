@@ -1,23 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
-import { ZodObject, ZodType, ZodTypeAny, ZodUnknown } from "zod"
-import {
-    zApiKeyError,
-    zBodyValidationError,
-    zInsufficientPermissionsError,
-    zPathValidationError,
-    zQueryValidationError
-} from "./RaidHubErrors"
+import { ZodObject, ZodType, ZodTypeAny, ZodUnknown, z } from "zod"
 import { RaidHubRouter } from "./RaidHubRouter"
-import {
-    IRaidHubRoute,
-    RaidHubHandler,
-    RaidHubHandlerReturn,
-    RaidHubResponse
-} from "./RaidHubRouterTypes"
-import { measureDuration } from "./middlewares/metrics/duration"
-import { ErrorCode } from "./schema/common"
-import { z } from "./schema/zod"
+import { IRaidHubRoute, RaidHubHandler, RaidHubHandlerReturn } from "./RaidHubRouterTypes"
+import { RaidHubResponse, registerResponse } from "./schema/RaidHubResponse"
+import { zApiKeyError } from "./schema/errors/ApiKeyError"
+import { zBodyValidationError } from "./schema/errors/BodyValidationError"
+import { ErrorCode } from "./schema/errors/ErrorCode"
+import { zInsufficientPermissionsError } from "./schema/errors/InsufficientPermissionsError"
+import { zPathValidationError } from "./schema/errors/PathValidationError"
+import { zQueryValidationError } from "./schema/errors/QueryValidationError"
+import { httpRequestTimer } from "./services/prometheus/metrics"
 
 // This class is used to define type-safe a route in the RaidHub API
 export class RaidHubRoute<
@@ -42,14 +35,19 @@ export class RaidHubRoute<
     ErrorType extends ErrorCode = never
 > implements IRaidHubRoute
 {
-    private parent: RaidHubRouter | null = null
-    private readonly router: Router
     readonly method: M
-    readonly description?: string
-    readonly summary?: string
+    readonly description: string
     readonly paramsSchema: Params | null
     readonly querySchema: Query | null
     readonly bodySchema: Body | null
+    readonly responseSchema: ResponseBody
+    readonly errors: [
+        400 | 401 | 403 | 404 | 501 | 503,
+        type: ErrorType,
+        schema: ErrorResponseBody[number]
+    ][]
+    readonly successCode: 200 | 201 | 207
+    private parent: RaidHubRouter | null = null
     private readonly isAdministratorRoute: boolean = false
     private readonly middlewares: RequestHandler<
         z.infer<Params>,
@@ -65,31 +63,24 @@ export class RaidHubRoute<
         ErrorResponseBody[number]["_input"],
         ErrorType
     >
-    readonly responseSchema: ResponseBody
-    readonly errors: [
-        400 | 401 | 403 | 404 | 501 | 503,
-        type: ErrorType,
-        schema: ErrorResponseBody[number]
-    ][]
-    readonly successCode: 200 | 201 | 207
+    private readonly router: Router
 
     // Construct a new route for the API and attach it into a router with myRoute.express
     constructor(args: {
         method: M
-        description?: string
-        summary?: string
+        description: string
         params?: Params
         query?: Query
         body?: Body
         isAdministratorRoute?: boolean
-        middlewares?: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>>[]
+        middleware?: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>>[]
         handler: RaidHubHandler<
             Params,
             Query,
             Body,
             ResponseBody["_input"],
-            ErrorResponseBody[number]["_input"],
-            ErrorType
+            NoInfer<ErrorResponseBody[number]["_input"]>,
+            NoInfer<ErrorType>
         >
         response: {
             success: {
@@ -98,7 +89,7 @@ export class RaidHubRoute<
             }
             errors?: {
                 statusCode: 400 | 401 | 403 | 404 | 501 | 503
-                type: ErrorType
+                code: ErrorType
                 schema: ErrorResponseBody[number]
             }[]
         }
@@ -109,16 +100,30 @@ export class RaidHubRoute<
         })
         this.method = args.method
         this.description = args.description
-        this.summary = args.summary
         this.paramsSchema = args.params ?? null
         this.querySchema = args.query ?? null
         this.bodySchema = args.body ?? null
         this.isAdministratorRoute = args.isAdministratorRoute ?? false
-        this.middlewares = args.middlewares ?? []
+        this.middlewares = args.middleware ?? []
         this.handler = args.handler
         this.responseSchema = args.response.success.schema
-        this.errors = args.response.errors?.map(e => [e.statusCode, e.type, e.schema]) ?? []
+        this.errors = args.response.errors?.map(e => [e.statusCode, e.code, e.schema]) ?? []
         this.successCode = args.response.success.statusCode
+    }
+
+    static ok<T>(response: T): RaidHubHandlerReturn<T, never, never> {
+        return {
+            response,
+            success: true
+        }
+    }
+
+    static fail<E, C extends ErrorCode>(code: C, error: E): RaidHubHandlerReturn<never, E, C> {
+        return {
+            error,
+            success: false,
+            code
+        }
     }
 
     private validateParams: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
@@ -138,9 +143,8 @@ export class RaidHubRoute<
             const result: (typeof zPathValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
-                message: "Invalid path params",
+                code: ErrorCode.PathValidationError,
                 error: {
-                    type: ErrorCode.PathValidationError,
                     issues: parsed.error.issues
                 }
             }
@@ -165,9 +169,8 @@ export class RaidHubRoute<
             const result: (typeof zQueryValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
-                message: "Invalid query params",
+                code: ErrorCode.QueryValidationError,
                 error: {
-                    type: ErrorCode.QueryValidationError,
                     issues: parsed.error.issues
                 }
             }
@@ -189,9 +192,8 @@ export class RaidHubRoute<
             const result: (typeof zBodyValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
-                message: "Invalid JSON body",
+                code: ErrorCode.BodyValidationError,
                 error: {
-                    type: ErrorCode.BodyValidationError,
                     issues: parsed.error.issues
                 }
             }
@@ -202,8 +204,7 @@ export class RaidHubRoute<
     // This is the express router that is returned and used to create the actual express route
     get express() {
         const args = [
-            // @ts-expect-error Generic hell here
-            measureDuration(this),
+            this.measureDuration,
             this.validateParams,
             this.validateQuery,
             this.validateBody,
@@ -225,7 +226,7 @@ export class RaidHubRoute<
                 if (result.success) {
                     res.status(this.successCode).json(response)
                 } else {
-                    res.status(this.errors.find(([_, type]) => type === result.type)![0]).json(
+                    res.status(this.errors.find(([_, type]) => type === result.code)![0]).json(
                         response
                     )
                 }
@@ -240,26 +241,40 @@ export class RaidHubRoute<
             ErrorResponseBody[number]["_input"],
             ErrorType
         >
-    ): RaidHubResponse<ResponseBody["_input"], ErrorResponseBody[number]["_input"]> {
+    ): RaidHubResponse<ResponseBody["_input"], ErrorResponseBody[number]["_input"], ErrorType> {
         const minted = new Date()
         if (result.success) {
             return {
                 minted,
-                message: result.message,
                 success: true,
                 response: result.response
             } as const
         } else {
             return {
                 minted,
-                message: result.message,
                 success: false,
-                error: {
-                    type: result.type,
-                    ...result.error
-                }
+                code: result.code,
+                error: result.error
             } as const
         }
+    }
+
+    private measureDuration: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
+        _,
+        res,
+        next
+    ) => {
+        const start = Date.now()
+        res.on("finish", () => {
+            const responseTimeInMs = Date.now() - start
+            const path = this.getFullPath()
+            const code = res.statusCode.toString()
+            if (!process.env.PROD && !process.env.TS_JEST) {
+                console.log(`Request to ${path} took ${responseTimeInMs}ms`)
+            }
+            httpRequestTimer.labels(path, code).observe(responseTimeInMs)
+        })
+        next()
     }
 
     setParent(parent: RaidHubRouter) {
@@ -274,9 +289,19 @@ export class RaidHubRoute<
         return this.parent ? this.parent.getFullPath(this) : "/"
     }
 
-    openApiRoutes() {
+    $generateOpenApiRoutes() {
+        const path = this.getFullPath().replace(/\/:(\w+)/g, "/{$1}")
+
         const allResponses = [
-            [this.successCode, "Success", this.responseSchema],
+            [
+                this.successCode,
+                "Success",
+                z.object({
+                    minted: z.date(),
+                    success: z.literal(true),
+                    response: registerResponse(path, this.responseSchema)
+                })
+            ],
             ...this.errors,
             [401, "Unauthorized", zApiKeyError],
             this.isAdministratorRoute ? [403, "Forbidden", zInsufficientPermissionsError] : null,
@@ -302,13 +327,12 @@ export class RaidHubRoute<
               ]
             : undefined
 
-        const path = this.getFullPath().replace(/\/:(\w+)/g, "/{$1}")
         return [
             {
                 path,
+                summary: path,
                 method: this.method,
                 description: this.description,
-                summary: this.summary,
                 security,
                 request: {
                     params: this.paramsSchema ?? undefined,
@@ -372,11 +396,13 @@ export class RaidHubRoute<
                     ? z.never()
                     : this.errors.length > 1
                       ? z.union(
-                            this.errors.map(([_, type, schema]) =>
-                                schema.extend({ type: z.literal(type) })
-                            ) as unknown as readonly [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]
+                            this.errors.map(([, , schema]) => schema) as unknown as readonly [
+                                ZodTypeAny,
+                                ZodTypeAny,
+                                ...ZodTypeAny[]
+                            ]
                         )
-                      : this.errors[0][2].extend({ type: z.literal(this.errors[0][1]) })
+                      : this.errors[0][2]
             return {
                 type: "err",
                 parsed: schema.parse(res.error)
