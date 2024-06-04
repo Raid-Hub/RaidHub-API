@@ -87,7 +87,7 @@ export const getPlayerGlobalStats = async (membershipId: bigint | string) => {
                 'value', speed,
                 'rank', speed_rank
             ) ELSE NULL END AS "sumOfBest"
-        FROM global_leaderboard
+        FROM individual_global_leaderboard
         WHERE membership_id = $1::bigint`,
         {
             params: [membershipId]

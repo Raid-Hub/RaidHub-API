@@ -28,9 +28,9 @@ export const getIndividualGlobalLeaderboard = async ({
 
     return await postgres.queryRows<IndividualLeaderboardEntry>(
         `SELECT
-            global_leaderboard.${column}_position AS "position",
-            global_leaderboard.${column}_rank AS "rank",
-            global_leaderboard.${column} AS "value",
+            individual_global_leaderboard.${column}_position AS "position",
+            individual_global_leaderboard.${column}_rank AS "rank",
+            individual_global_leaderboard.${column} AS "value",
             JSONB_BUILD_OBJECT(
                 'membershipId', membership_id::text,
                 'membershipType', membership_type,
@@ -41,7 +41,7 @@ export const getIndividualGlobalLeaderboard = async ({
                 'lastSeen', last_seen,
                 'isPrivate', is_private
             ) as "playerInfo"
-        FROM global_leaderboard
+        FROM individual_global_leaderboard
         JOIN player USING (membership_id)
         WHERE ${column}_position > $1 AND ${column}_position <= ($1 + $2)
         ORDER BY ${column}_position ASC`,
@@ -64,8 +64,8 @@ export const searchIndividualGlobalLeaderboard = async ({
     validateColumn(column)
 
     const result = await postgres.queryRow<{ position: number }>(
-        `SELECT global_leaderboard.${column}_position AS "position" 
-        FROM global_leaderboard 
+        `SELECT individual_global_leaderboard.${column}_position AS "position" 
+        FROM individual_global_leaderboard 
         WHERE membership_id = $1::bigint
         ORDER BY position ASC
         LIMIT 1`,
