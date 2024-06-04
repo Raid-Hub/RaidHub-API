@@ -6,7 +6,7 @@ import { zInsufficientPermissionsError } from "../schema/errors/InsufficientPerm
 const error = (): (typeof zInsufficientPermissionsError)["_input"] => ({
     minted: new Date(),
     success: false,
-    errorCode: ErrorCode.InsufficientPermissionsError,
+    code: ErrorCode.InsufficientPermissionsError,
     error: {
         message: "Forbidden"
     }

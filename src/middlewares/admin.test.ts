@@ -16,14 +16,14 @@ describe("admin protected", () => {
         const res = await request(app).get("/admin")
         expect(res.status).toBe(403)
         expect(res.body.success).toBe(false)
-        expect(res.body.errorCode).toBe("InsufficientPermissionsError")
+        expect(res.body.code).toBe("InsufficientPermissionsError")
     })
 
     test("should return 403 if invalid authorization is provided", async () => {
         const res = await request(app).get("/admin").set("Authorization", "Bearer 123")
         expect(res.status).toBe(403)
         expect(res.body.success).toBe(false)
-        expect(res.body.errorCode).toBe("InsufficientPermissionsError")
+        expect(res.body.code).toBe("InsufficientPermissionsError")
     })
 
     test("should return 200 if valid authorization is provided", async () => {

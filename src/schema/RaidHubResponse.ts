@@ -17,7 +17,7 @@ export const zRaidHubResponse = registry.register(
             .object({
                 minted: zISODateString(),
                 success: z.literal(false),
-                errorCode: zErrorCode,
+                code: zErrorCode,
                 error: z.unknown()
             })
             .strict()
@@ -41,7 +41,7 @@ export const registerError = <T extends ZodRawShape>(code: ErrorCode, schema: Zo
         z.object({
             minted: zISODateString(),
             success: z.literal(false),
-            errorCode: z.literal(code),
+            code: z.literal(code),
             error: schema
         })
     )

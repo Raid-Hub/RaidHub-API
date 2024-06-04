@@ -151,7 +151,7 @@ describe("raidhub route middleware validators", () => {
 
     test("fails query parsing", async () => {
         const res = await request(app).get("/test/123").query({ hello: "world", yolo: 2 })
-        expect(res.body.errorCode).toBe("QueryValidationError")
+        expect(res.body.code).toBe("QueryValidationError")
         expect(res.body.error).toHaveProperty("issues")
         expect(res.body.error.issues).toHaveProperty("0")
         expect(res.body.error.issues[0].path).toEqual(["count"])
@@ -162,7 +162,7 @@ describe("raidhub route middleware validators", () => {
 
     test("fails params parsing", async () => {
         const res = await request(app).get("/test/abc").query({ count: 5, hello: "sup" })
-        expect(res.body.errorCode).toBe("PathValidationError")
+        expect(res.body.code).toBe("PathValidationError")
         expect(res.body.error).toHaveProperty("issues")
         expect(res.body.error.issues).toHaveProperty("0")
         expect(res.body.error.issues[0].path).toEqual(["testId"])
@@ -181,7 +181,7 @@ describe("raidhub route middleware validators", () => {
                     }
                 })
             )
-        expect(res.body.errorCode).toBe("BodyValidationError")
+        expect(res.body.code).toBe("BodyValidationError")
         expect(res.body.error).toHaveProperty("issues")
         expect(res.body.error.issues).toHaveProperty("0")
         expect(res.body.error.issues[0].path).toEqual(["count"])
@@ -241,7 +241,7 @@ describe("raidhub route unhandled error", () => {
     test("unhandled error thrown ", async () => {
         const res = await request(app).get("/test/fail").query({ fail: "d2" })
 
-        expect(res.body.errorCode).toBe("InternalServerError")
+        expect(res.body.code).toBe("InternalServerError")
     })
 
     test("no error thrown ", async () => {

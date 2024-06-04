@@ -143,7 +143,7 @@ export class RaidHubRoute<
             const result: (typeof zPathValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
-                errorCode: ErrorCode.PathValidationError,
+                code: ErrorCode.PathValidationError,
                 error: {
                     issues: parsed.error.issues
                 }
@@ -169,7 +169,7 @@ export class RaidHubRoute<
             const result: (typeof zQueryValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
-                errorCode: ErrorCode.QueryValidationError,
+                code: ErrorCode.QueryValidationError,
                 error: {
                     issues: parsed.error.issues
                 }
@@ -192,7 +192,7 @@ export class RaidHubRoute<
             const result: (typeof zBodyValidationError)["_input"] = {
                 minted: new Date(),
                 success: false,
-                errorCode: ErrorCode.BodyValidationError,
+                code: ErrorCode.BodyValidationError,
                 error: {
                     issues: parsed.error.issues
                 }

@@ -10,7 +10,7 @@ export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
     res.status(500).send({
         minted: new Date(),
         success: false,
-        errorCode: ErrorCode.InternalServerError,
+        code: ErrorCode.InternalServerError,
         error: {
             message: "Internal Server Error"
         }

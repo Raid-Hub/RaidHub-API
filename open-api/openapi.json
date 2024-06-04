@@ -75,14 +75,14 @@
                 "type": "boolean",
                 "enum": [false]
               },
-              "errorCode": {
+              "code": {
                 "$ref": "#/components/schemas/ErrorCode"
               },
               "error": {
                 "nullable": true
               }
             },
-            "required": ["minted", "success", "errorCode"],
+            "required": ["minted", "success", "code"],
             "additionalProperties": false
           }
         ]
@@ -98,7 +98,7 @@
             "type": "boolean",
             "enum": [false]
           },
-          "errorCode": {
+          "code": {
             "type": "string",
             "enum": ["ApiKeyError"]
           },
@@ -129,7 +129,7 @@
             "required": ["message", "apiKey", "origin"]
           }
         },
-        "required": ["minted", "success", "errorCode", "error"]
+        "required": ["minted", "success", "code", "error"]
       },
       "ZodIssue": {
         "type": "object",
@@ -188,7 +188,7 @@
             "type": "boolean",
             "enum": [false]
           },
-          "errorCode": {
+          "code": {
             "type": "string",
             "enum": ["BodyValidationError"]
           },
@@ -205,7 +205,7 @@
             "required": ["issues"]
           }
         },
-        "required": ["minted", "success", "errorCode", "error"]
+        "required": ["minted", "success", "code", "error"]
       },
       "InsufficientPermissionsError": {
         "type": "object",
@@ -218,7 +218,7 @@
             "type": "boolean",
             "enum": [false]
           },
-          "errorCode": {
+          "code": {
             "type": "string",
             "enum": ["InsufficientPermissionsError"]
           },
@@ -233,7 +233,7 @@
             "required": ["message"]
           }
         },
-        "required": ["minted", "success", "errorCode", "error"]
+        "required": ["minted", "success", "code", "error"]
       },
       "PathValidationError": {
         "type": "object",
@@ -246,7 +246,7 @@
             "type": "boolean",
             "enum": [false]
           },
-          "errorCode": {
+          "code": {
             "type": "string",
             "enum": ["PathValidationError"]
           },
@@ -263,7 +263,7 @@
             "required": ["issues"]
           }
         },
-        "required": ["minted", "success", "errorCode", "error"]
+        "required": ["minted", "success", "code", "error"]
       },
       "QueryValidationError": {
         "type": "object",
@@ -276,7 +276,7 @@
             "type": "boolean",
             "enum": [false]
           },
-          "errorCode": {
+          "code": {
             "type": "string",
             "enum": ["QueryValidationError"]
           },
@@ -293,7 +293,7 @@
             "required": ["issues"]
           }
         },
-        "required": ["minted", "success", "errorCode", "error"]
+        "required": ["minted", "success", "code", "error"]
       },
       "DestinyMembershipType": {
         "type": "integer",

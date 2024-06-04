@@ -62,7 +62,7 @@ export const verifyApiKey: RequestHandler = async (req, res, next) => {
         next()
     } else {
         res.status(401).send({
-            errorCode: ErrorCode.ApiKeyError,
+            code: ErrorCode.ApiKeyError,
             minted: new Date(),
             success: false,
             error: {
