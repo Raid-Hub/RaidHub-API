@@ -5,18 +5,25 @@ export const servePrometheus = () => {
     Bun.serve({
         port: port,
         async fetch(req) {
-            const url = new URL(req.url)
-            if (url.pathname === "/metrics") {
-                const body = await prometheusRegistry.metrics()
-                return new Response(body, {
-                    headers: {
-                        "Content-Type": prometheusRegistry.contentType
-                    }
+            try {
+                const url = new URL(req.url)
+                if (url.pathname === "/metrics") {
+                    const body = await prometheusRegistry.metrics()
+                    return new Response(body, {
+                        headers: {
+                            "Content-Type": prometheusRegistry.contentType
+                        }
+                    })
+                } else {
+                    return new Response(undefined, {
+                        status: 404
+                    })
+                }
+            } catch {
+                return new Response(undefined, {
+                    status: 500
                 })
             }
-            return new Response(undefined, {
-                status: 404
-            })
         }
     })
 
