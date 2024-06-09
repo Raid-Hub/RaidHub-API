@@ -20,8 +20,8 @@ export async function getInstance(instanceId: bigint | string): Promise<Instance
             date_completed AS "dateCompleted",
             duration AS "duration",
             platform_type AS "platformType",
-            date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isDayOne",
-            date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isContest",
+            date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isDayOne",
+            date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isContest",
             date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') AS "isWeekOne"
         FROM activity
         INNER JOIN activity_hash USING (hash)

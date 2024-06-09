@@ -49,8 +49,8 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
                     'dateCompleted', fastest.date_completed,
                     'duration', fastest.duration,
                     'platformType', fastest.platform_type,
-                    'isDayOne', date_completed < COALESCE(contest_end, TIMESTAMP 'epoch'),
-                    'isContest', date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch'),
+                    'isDayOne', date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch'),
+                    'isContest', date_completed < COALESCE(contest_end, TIMESTAMP 'epoch'),
                     'isWeekOne', date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch')
                 ) 
                 ELSE NULL 
@@ -115,8 +115,8 @@ export const getWorldFirstEntries = async (membershipId: bigint | string) => {
             rank,
             instance_id::text AS "instanceId",
             time_after_launch AS "timeAfterLaunch",
-            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') ELSE false END) AS "isDayOne",
-            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') ELSE false END) AS "isContest",
+            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') ELSE false END) AS "isDayOne",
+            (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') ELSE false END) AS "isContest",
             (CASE WHEN instance_id IS NOT NULL THEN date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') ELSE false END) AS "isWeekOne",
             COALESCE(is_challenge_mode, false) AS "isChallengeMode"
         FROM activity_definition
