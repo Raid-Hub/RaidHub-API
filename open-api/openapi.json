@@ -3000,7 +3000,13 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["clears", "freshClears", "sherpas", "speedrun"]
+              "enum": [
+                "clears",
+                "freshClears",
+                "sherpas",
+                "speedrun",
+                "powerRankings"
+              ]
             },
             "required": true,
             "name": "category",

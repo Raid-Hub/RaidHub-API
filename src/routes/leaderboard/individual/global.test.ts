@@ -46,6 +46,28 @@ describe("global leaderboard 200", () => {
                 search: "4611686018488107374"
             }
         ))
+
+    test("power rankings", () =>
+        t(
+            {
+                category: "powerRankings"
+            },
+            {
+                count: 14,
+                page: 4
+            }
+        ))
+
+    test("search power rankings", () =>
+        t(
+            {
+                category: "powerRankings"
+            },
+            {
+                count: 11,
+                search: "4611686018488107374"
+            }
+        ))
 })
 
 describe("global leaderboard 404", () => {
