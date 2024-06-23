@@ -47,7 +47,9 @@ export const playerTeammatesRoute = new RaidHubRoute({
             return RaidHubRoute.fail(ErrorCode.PlayerPrivateProfileError, { membershipId })
         }
 
-        const teamates = await getTeammates(membershipId)
+        const teamates = await getTeammates(membershipId, {
+            count: 100
+        })
 
         return RaidHubRoute.ok(teamates)
     }

@@ -1,6 +1,6 @@
 import { Histogram } from "prom-client"
 
-export const withTimer = async <K extends string, T>(
+export const withHistogramTimer = async <K extends string, T>(
     metric: Histogram<K>,
     labels: Partial<Record<K, string | number>>,
     fn: () => Promise<T>

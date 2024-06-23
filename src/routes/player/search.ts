@@ -13,7 +13,7 @@ Players who have not attempted a raid may not appear in the search results.
 Results are ordered by a combination of the number of raid completions and last played date.`,
     query: z.object({
         count: z.coerce.number().int().min(1).max(50).default(20),
-        query: z.string().min(1),
+        query: z.string().min(1).max(40),
         membershipType: zDestinyMembershipType.default(-1).openapi({
             description:
                 "Filter by Destiny membership type. Defaults to -1 (all). Note that the membership type of an account is determined by the platform the was first created on"
