@@ -6,7 +6,7 @@ import {
 } from "../schema/components/PlayerProfile"
 import { postgres } from "../services/postgres"
 import { playerProfileQueryTimer } from "../services/prometheus/metrics"
-import { withTimer } from "../services/prometheus/util"
+import { withHistogramTimer } from "../services/prometheus/util"
 
 export const getPlayer = async (membershipId: bigint | string) => {
     return await postgres.queryRow<PlayerInfo>(
@@ -27,7 +27,7 @@ export const getPlayer = async (membershipId: bigint | string) => {
     )
 }
 export const getPlayerActivityStats = async (membershipId: bigint | string) => {
-    return await withTimer(
+    return await withHistogramTimer(
         playerProfileQueryTimer,
         {
             method: "getPlayerActivityStats"
@@ -78,7 +78,7 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
 }
 
 export const getPlayerGlobalStats = async (membershipId: bigint | string) => {
-    return await withTimer(
+    return await withHistogramTimer(
         playerProfileQueryTimer,
         {
             method: "getPlayerGlobalStats"
@@ -112,7 +112,7 @@ export const getPlayerGlobalStats = async (membershipId: bigint | string) => {
 }
 
 export const getWorldFirstEntries = async (membershipId: bigint | string) => {
-    return await withTimer(
+    return await withHistogramTimer(
         playerProfileQueryTimer,
         {
             method: "getWorldFirstEntries"

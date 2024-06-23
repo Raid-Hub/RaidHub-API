@@ -2451,7 +2451,8 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 40
             },
             "required": true,
             "name": "query",

@@ -1,6 +1,8 @@
 import { PlayerInfo } from "../schema/components/PlayerInfo"
 import { DestinyMembershipType } from "../schema/enums/DestinyMembershipType"
 import { postgres } from "../services/postgres"
+import { playerSearchQueryTimer } from "../services/prometheus/metrics"
+import { withHistogramTimer } from "../services/prometheus/util"
 
 /**
  * Case insensitive search
@@ -18,8 +20,12 @@ export async function searchForPlayer(
 }> {
     const searchTerm = query.trim().toLowerCase()
 
-    const results = await postgres.queryRows<PlayerInfo>(
-        `SELECT 
+    const results = await withHistogramTimer(
+        playerSearchQueryTimer,
+        { prefixLength: searchTerm.split("#")[0]?.length ?? 0 },
+        () =>
+            postgres.queryRows<PlayerInfo>(
+                `SELECT 
             membership_id::text AS "membershipId",
             membership_type AS "membershipType",
             icon_path AS "iconPath",
@@ -34,13 +40,15 @@ export async function searchForPlayer(
             AND last_seen > TIMESTAMP 'epoch'
         ORDER BY _search_score DESC 
         LIMIT $2;`,
-        {
-            params: opts.membershipType
-                ? [searchTerm + "%", opts.count, opts.membershipType]
-                : [searchTerm + "%", opts.count],
-            fetchCount: opts.count
-        }
+                {
+                    params: opts.membershipType
+                        ? [searchTerm + "%", opts.count, opts.membershipType]
+                        : [searchTerm + "%", opts.count],
+                    fetchCount: opts.count
+                }
+            )
     )
+
     return {
         searchTerm,
         results
