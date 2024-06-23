@@ -45,6 +45,7 @@ Results are ordered by a combination of the number of raid completions and last 
             membershipType: membershipType === -1 ? undefined : membershipType,
             global
         })
+
         return RaidHubRoute.ok({
             params: { count, query: searchTerm },
             results
