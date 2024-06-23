@@ -1,7 +1,7 @@
 import { Teammate } from "../schema/components/Teammate"
 import { postgres } from "../services/postgres"
 
-export const getTeammates = async (membershipId: bigint | string) => {
+export const getTeammates = async (membershipId: bigint | string, { count }: { count: number }) => {
     return await postgres.queryRows<Teammate>(
         `WITH self AS (
             SELECT 
@@ -18,6 +18,8 @@ export const getTeammates = async (membershipId: bigint | string) => {
             JOIN activity_player AS teammate USING (instance_id)
             WHERE membership_id <> $1::bigint
             GROUP BY (membership_id)
+            ORDER BY clears DESC, time_played DESC
+            LIMIT $2
         )
         SELECT  
             agg_data.time_played as "estimatedTimePlayedSeconds",
@@ -34,12 +36,10 @@ export const getTeammates = async (membershipId: bigint | string) => {
                 'isPrivate', "is_private"
             ) AS "playerInfo"
         FROM agg_data
-        JOIN player USING (membership_id)
-        ORDER BY clears DESC, time_played DESC
-        LIMIT 100;`,
+        JOIN player USING (membership_id);`,
         {
-            params: [membershipId],
-            fetchCount: 100
+            params: [membershipId, count],
+            fetchCount: count
         }
     )
 }
