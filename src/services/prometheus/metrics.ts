@@ -16,7 +16,7 @@ export const activityHistoryQueryTimer = new Histogram({
 
 export const playerProfileQueryTimer = new Histogram({
     name: "player_profile_query_duration_ms",
-    help: "Duration of SQL request in ms",
+    help: "Duration of player profile queries in ms",
     labelNames: ["method"],
     buckets: [0.1, 0.5, 1, 5, 10, 50, 100, 250, 500, 1000, 5000, 10000]
 })
