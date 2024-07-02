@@ -12,9 +12,6 @@ export const zPlayerProfileActivityStats = registry.register(
         freshClears: zWholeNumber(),
         clears: zWholeNumber(),
         sherpas: zWholeNumber(),
-        trios: zWholeNumber(),
-        duos: zWholeNumber(),
-        solos: zWholeNumber(),
         fastestInstance: zInstance.nullable()
     })
 )

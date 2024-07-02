@@ -1201,18 +1201,6 @@
             "type": "integer",
             "minimum": 0
           },
-          "trios": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "duos": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "solos": {
-            "type": "integer",
-            "minimum": 0
-          },
           "fastestInstance": {
             "allOf": [
               {
@@ -1229,9 +1217,6 @@
           "freshClears",
           "clears",
           "sherpas",
-          "trios",
-          "duos",
-          "solos",
           "fastestInstance"
         ]
       },
