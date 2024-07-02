@@ -39,9 +39,6 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
                     COALESCE(player_stats.fresh_clears, 0) AS "freshClears",
                     COALESCE(player_stats.clears, 0) AS "clears",
                     COALESCE(player_stats.sherpas, 0) AS "sherpas",
-                    COALESCE(player_stats.trios, 0) AS "trios",
-                    COALESCE(player_stats.duos, 0) AS "duos",
-                    COALESCE(player_stats.solos, 0) AS "solos",
                     CASE WHEN fastest_instance_id IS NOT NULL 
                         THEN JSONB_BUILD_OBJECT(
                             'instanceId', fastest.instance_id::text,
