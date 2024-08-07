@@ -1,6 +1,6 @@
 import express from "express"
 import request from "supertest"
-import { generateJWT } from "../routes/authorize/admin"
+import { generateJWT } from "../util/auth"
 import { adminProtected } from "./admin"
 
 const app = express()
@@ -27,7 +27,13 @@ describe("admin protected", () => {
     })
 
     test("should return 200 if valid authorization is provided", async () => {
-        const token = generateJWT("234671294")
+        const token = generateJWT({
+            isAdmin: true,
+            bungieMembershipId: "123",
+            destinyMembershipIds: [],
+            durationSeconds: 600
+        })
+
         const res = await request(app)
             .get("/admin")
             .set("Authorization", "Bearer " + token)
