@@ -24,8 +24,8 @@ export const adminProtected: RequestHandler = (req, res, next) => {
     jwt.verify(token, process.env.JWT_SECRET!, (err, _) => {
         if (err) {
             res.status(403).json(error())
+        } else {
+            next()
         }
-
-        next()
     })
 }

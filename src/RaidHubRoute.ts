@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
+import { IncomingHttpHeaders } from "http"
 import { ZodObject, ZodType, ZodTypeAny, ZodUnknown, z } from "zod"
 import { RaidHubRouter } from "./RaidHubRouter"
 import { IRaidHubRoute, RaidHubHandler, RaidHubHandlerReturn } from "./RaidHubRouterTypes"
@@ -269,6 +270,7 @@ export class RaidHubRoute<
             const responseTimeInMs = Date.now() - start
             const path = this.getFullPath()
             const code = res.statusCode.toString()
+            /* istanbul ignore next */
             if (!process.env.PROD && !process.env.TS_JEST) {
                 console.log(`Request to ${path} took ${responseTimeInMs}ms`)
             }
@@ -375,11 +377,17 @@ export class RaidHubRoute<
 
     /* istanbul ignore next */
     // Used for testing to mock a request by passing the data directly to the handler
-    async $mock(req: { params?: unknown; query?: unknown; body?: unknown }) {
+    async $mock(req: {
+        params?: unknown
+        query?: unknown
+        body?: unknown
+        headers?: IncomingHttpHeaders
+    }) {
         const res = await this.handler({
             params: this.paramsSchema?.parse(req.params) ?? {},
             query: this.querySchema?.parse(req.query) ?? {},
-            body: this.bodySchema?.parse(req.body) ?? {}
+            body: this.bodySchema?.parse(req.body) ?? {},
+            headers: req.headers ?? {}
         }).then(this.buildResponse)
 
         // We essentially can use this type to narrow down the type of res in our unit tests

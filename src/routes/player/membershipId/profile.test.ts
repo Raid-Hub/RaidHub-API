@@ -1,3 +1,4 @@
+import { generateJWT } from "../../../util/auth"
 import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
 import { playerProfileRoute } from "./profile"
 
@@ -40,4 +41,24 @@ describe("player profile 403", () => {
     }
 
     test("4611686018467346804", () => t("4611686018467346804"))
+})
+
+describe("player profile authorized", () => {
+    const token = generateJWT({
+        isAdmin: false,
+        bungieMembershipId: "123",
+        destinyMembershipIds: ["4611686018467346804"],
+        durationSeconds: 600
+    })
+
+    playerProfileRoute
+        .$mock({
+            params: {
+                membershipId: "4611686018467346804"
+            },
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
+        .then(result => expectOk(result))
 })
