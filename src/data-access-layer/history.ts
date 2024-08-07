@@ -7,7 +7,7 @@ export const getActivities = async (
     membershipId: bigint | string,
     {
         count,
-        cursor = new Date(),
+        cursor,
         cutoff
     }: {
         count: number
@@ -19,7 +19,7 @@ export const getActivities = async (
         activityHistoryQueryTimer,
         {
             count: count,
-            cursor: String(cursor.getTime() !== 0),
+            cursor: String(!!cursor),
             cutoff: String(!!cutoff)
         },
         () =>
@@ -58,8 +58,8 @@ export const getActivities = async (
                 LIMIT $3;`,
                 {
                     params: cutoff
-                        ? [membershipId, cursor, count, cutoff]
-                        : [membershipId, cursor, count],
+                        ? [membershipId, cursor ?? new Date(), count, cutoff]
+                        : [membershipId, cursor ?? new Date(), count],
                     fetchCount: count
                 }
             )
