@@ -270,6 +270,7 @@ export class RaidHubRoute<
             const responseTimeInMs = Date.now() - start
             const path = this.getFullPath()
             const code = res.statusCode.toString()
+            /* istanbul ignore next */
             if (!process.env.PROD && !process.env.TS_JEST) {
                 console.log(`Request to ${path} took ${responseTimeInMs}ms`)
             }

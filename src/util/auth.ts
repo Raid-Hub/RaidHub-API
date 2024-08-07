@@ -39,10 +39,10 @@ export const canAccessPrivateProfile = async (
     if (format !== "Bearer") return false
 
     try {
-        return new Promise<boolean>((resolve, reject) =>
+        return await new Promise<boolean>(resolve =>
             jwt.verify(token, process.env.JWT_SECRET!, (err, result) => {
                 if (err) {
-                    reject(err)
+                    resolve(false)
                 } else {
                     const data = zJWTAuthFormat.parse(result)
                     resolve(
