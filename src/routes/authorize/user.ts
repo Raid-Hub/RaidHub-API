@@ -1,17 +1,18 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { ErrorCode } from "../../schema/errors/ErrorCode"
-import { zDigitString, zISODateString } from "../../schema/util"
+import { zBigIntString, zDigitString, zISODateString } from "../../schema/util"
 import { generateJWT } from "../../util/auth"
 
-const TOKEN_EXPIRY = 3600
+const TOKEN_EXPIRY = 30 * 24 * 3600
 
-export const adminAuthorizationRoute = new RaidHubRoute({
+export const userAuthorizationRoute = new RaidHubRoute({
     method: "post",
-    description: "Authorize an admin user. Requires the client secret.",
+    description: "Authenticate a user. Grants permission to access restricted resources.",
     body: z.object({
         bungieMembershipId: zDigitString(),
-        adminClientSecret: z.string()
+        destinyMembershipIds: z.array(zBigIntString()),
+        clientSecret: z.string()
     }),
     response: {
         success: {
@@ -30,12 +31,12 @@ export const adminAuthorizationRoute = new RaidHubRoute({
         ]
     },
     async handler({ body }) {
-        if (body.adminClientSecret === process.env.ADMIN_CLIENT_SECRET) {
+        if (body.clientSecret === process.env.CLIENT_SECRET) {
             return RaidHubRoute.ok({
                 value: generateJWT({
                     bungieMembershipId: body.bungieMembershipId,
-                    isAdmin: true,
-                    destinyMembershipIds: [],
+                    destinyMembershipIds: body.destinyMembershipIds.map(String),
+                    isAdmin: false,
                     durationSeconds: TOKEN_EXPIRY
                 }),
                 expires: new Date(Date.now() + TOKEN_EXPIRY * 1000)

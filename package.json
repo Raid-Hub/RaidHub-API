@@ -14,7 +14,7 @@
   },
   "scripts": {
     "prepare": "husky",
-    "dev": "bun run ./src/index.ts",
+    "dev": "bun --watch ./src/index.ts",
     "test": "bun --env-file=.env jest --maxWorkers=50%",
     "types": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.json",

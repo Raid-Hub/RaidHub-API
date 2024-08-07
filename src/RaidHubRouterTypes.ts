@@ -1,5 +1,6 @@
 import { RouteConfig } from "@asteasolutions/zod-to-openapi"
 import { Router } from "express"
+import { IncomingHttpHeaders } from "http"
 import { ZodType, z } from "zod"
 import { RaidHubRouter } from "./RaidHubRouter"
 import { ErrorCode } from "./schema/errors/ErrorCode"
@@ -26,4 +27,5 @@ export type RaidHubHandler<
     params: z.infer<Params>
     query: z.infer<Query>
     body: z.infer<Body>
+    headers: IncomingHttpHeaders
 }) => Promise<RaidHubHandlerReturn<T, E, C>>
