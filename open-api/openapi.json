@@ -3,7 +3,7 @@
   "info": {
     "title": "RaidHub API",
     "description": "The Semi-public API for RaidHub",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "contact": {
       "name": "RaidHub Admin",
       "email": "admin@raidhub.io"
@@ -2358,6 +2358,19 @@
           }
         },
         "required": ["value", "expires"]
+      },
+      "AuthorizeUserResponse": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "expires": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["value", "expires"]
       }
     },
     "parameters": {},
@@ -3841,11 +3854,11 @@
                     "type": "string",
                     "pattern": "^\\d+n?$"
                   },
-                  "clientSecret": {
+                  "adminClientSecret": {
                     "type": "string"
                   }
                 },
-                "required": ["bungieMembershipId", "clientSecret"]
+                "required": ["bungieMembershipId", "adminClientSecret"]
               }
             }
           }
@@ -3900,13 +3913,99 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "unauthorized": {
-                      "type": "boolean",
-                      "enum": [true]
+                  "properties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authorize/user": {
+      "post": {
+        "summary": "/authorize/user",
+        "description": "Authenticate a user. Grants permission to access restricted resources.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bungieMembershipId": {
+                    "type": "string",
+                    "pattern": "^\\d+n?$"
+                  },
+                  "destinyMembershipIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^\\d+n?$"
                     }
                   },
-                  "required": ["unauthorized"]
+                  "clientSecret": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "bungieMembershipId",
+                  "destinyMembershipIds",
+                  "clientSecret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/AuthorizeUserResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "InvalidClientSecretError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
                 }
               }
             }
