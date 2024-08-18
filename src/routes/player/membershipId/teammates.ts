@@ -6,10 +6,12 @@ import { cacheControl } from "../../../middlewares/cache-control"
 import { zTeammate } from "../../../schema/components/Teammate"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
 import { zBigIntString } from "../../../schema/util"
+import { canAccessPrivateProfile } from "../../../util/auth"
 
 export const playerTeammatesRoute = new RaidHubRoute({
     method: "get",
-    description: ``,
+    description: `Get a list of a player's top 100 teammates.`,
+    isProtectedPlayerRoute: true,
     params: z.object({
         membershipId: zBigIntString()
     }),
@@ -21,14 +23,14 @@ export const playerTeammatesRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PlayerNotFoundError,
+                type: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                code: ErrorCode.PlayerPrivateProfileError,
+                type: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
@@ -43,7 +45,10 @@ export const playerTeammatesRoute = new RaidHubRoute({
 
         if (!player) {
             return RaidHubRoute.fail(ErrorCode.PlayerNotFoundError, { membershipId })
-        } else if (player.isPrivate) {
+        } else if (
+            player.isPrivate &&
+            !(await canAccessPrivateProfile(membershipId, req.headers.authorization ?? ""))
+        ) {
             return RaidHubRoute.fail(ErrorCode.PlayerPrivateProfileError, { membershipId })
         }
 

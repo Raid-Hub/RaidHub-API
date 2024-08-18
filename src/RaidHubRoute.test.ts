@@ -40,14 +40,14 @@ const testGetRoute = new RaidHubRoute({
         },
         errors: [
             {
-                code: ErrorCode.PlayerNotFoundError,
+                type: ErrorCode.PlayerNotFoundError,
                 statusCode: 404,
                 schema: z.object({
                     playerId: zBigIntString()
                 })
             },
             {
-                code: ErrorCode.InstanceNotFoundError,
+                type: ErrorCode.InstanceNotFoundError,
                 statusCode: 404,
                 schema: z.object({
                     activityId: zBigIntString()

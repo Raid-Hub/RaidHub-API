@@ -44,12 +44,14 @@ describe("player profile 403", () => {
 })
 
 describe("player profile authorized", () => {
-    const token = generateJWT({
-        isAdmin: false,
-        bungieMembershipId: "123",
-        destinyMembershipIds: ["4611686018467346804"],
-        durationSeconds: 600
-    })
+    const token = generateJWT(
+        {
+            isAdmin: false,
+            bungieMembershipId: "123",
+            destinyMembershipIds: ["4611686018467346804"]
+        },
+        600
+    )
 
     playerProfileRoute
         .$mock({

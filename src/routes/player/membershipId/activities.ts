@@ -13,6 +13,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
 The first request should not include a cursor. Subsequent requests should include the \`nextCursor\` 
 value from the previous response. Note that the first request may not return the full number of activities requested
 in order to optimize performance. Subsequent requests will return the full number of activities requested.`,
+    isProtectedPlayerRoute: true,
     params: z.object({
         membershipId: zBigIntString()
     }),
@@ -35,14 +36,14 @@ in order to optimize performance. Subsequent requests will return the full numbe
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PlayerNotFoundError,
+                type: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                code: ErrorCode.PlayerPrivateProfileError,
+                type: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

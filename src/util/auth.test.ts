@@ -3,12 +3,14 @@ import { canAccessPrivateProfile, generateJWT } from "./auth"
 
 describe("auth", () => {
     it("should generate a valid JWT token", async () => {
-        const token = generateJWT({
-            isAdmin: false,
-            bungieMembershipId: "123",
-            destinyMembershipIds: ["4611686018467346804"],
-            durationSeconds: 1
-        })
+        const token = generateJWT(
+            {
+                isAdmin: false,
+                bungieMembershipId: "123",
+                destinyMembershipIds: ["4611686018467346804"]
+            },
+            1
+        )
 
         expect(token).toBeTruthy()
 
@@ -39,13 +41,33 @@ describe("auth", () => {
         })
     })
 
-    it("does not work with invalid secret", async () => {
-        const token = generateJWT({
-            isAdmin: false,
-            bungieMembershipId: "123",
-            destinyMembershipIds: ["4611686018467346804"],
-            durationSeconds: 1
+    it("does not work with malformed token", async () => {
+        const token = jwt.sign(
+            {
+                destinyMembershipIds: ["4611686018467346804"]
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: 10
+            }
+        )
+
+        expect(token).toBeTruthy()
+
+        canAccessPrivateProfile("4611686018467346804", `Bearer ${token}`).then(result => {
+            expect(result).toBe(false)
         })
+    })
+
+    it("does not work with invalid client secret", async () => {
+        const token = generateJWT(
+            {
+                isAdmin: false,
+                bungieMembershipId: "123",
+                destinyMembershipIds: ["4611686018467346804"]
+            },
+            10
+        )
 
         expect(token).toBeTruthy()
 

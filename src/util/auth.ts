@@ -8,26 +8,11 @@ const zJWTAuthFormat = z.object({
     destinyMembershipIds: z.array(zDigitString())
 })
 
-export const generateJWT = ({
-    isAdmin = false,
-    bungieMembershipId,
-    destinyMembershipIds,
-    durationSeconds
-}: {
-    isAdmin: boolean
-    bungieMembershipId: string
-    destinyMembershipIds: string[]
-    durationSeconds: number
-}) =>
-    jwt.sign(
-        { isAdmin, bungieMembershipId, destinyMembershipIds } satisfies z.infer<
-            typeof zJWTAuthFormat
-        >,
-        process.env.JWT_SECRET,
-        {
-            expiresIn: durationSeconds
-        }
-    )
+export const generateJWT = (data: z.infer<typeof zJWTAuthFormat>, expiresIn: number) => {
+    return jwt.sign(data, process.env.JWT_SECRET, {
+        expiresIn
+    })
+}
 
 export const canAccessPrivateProfile = async (
     destinyMembershipId: string | bigint,
@@ -36,7 +21,7 @@ export const canAccessPrivateProfile = async (
     if (!authHeader) return false
 
     const [format, token] = authHeader ? authHeader.split(" ") : ["", ""]
-    if (format !== "Bearer") return false
+    if (format !== "Bearer" || !token) return false
 
     try {
         return await new Promise<boolean>(resolve =>

@@ -24,14 +24,14 @@ Use the /contest endpoint instead to get the full rankings for the duration of t
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PlayerNotOnLeaderboardError,
+                type: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 404,
-                code: ErrorCode.InvalidActivityVersionComboError,
+                type: ErrorCode.InvalidActivityVersionComboError,
                 schema: z.object({
                     activity: z.string(),
                     version: z.string()

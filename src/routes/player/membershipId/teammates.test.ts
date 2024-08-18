@@ -1,5 +1,6 @@
+import { generateJWT } from "../../../util/auth"
 import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
-import { playerTeammatesRoute } from "./teamates"
+import { playerTeammatesRoute } from "./teammates"
 
 cleanupPostgresAfterAll()
 
@@ -39,4 +40,26 @@ describe("teammates 404", () => {
     }
 
     test("1", () => t("1"))
+})
+
+describe("teammates authorized", () => {
+    const token = generateJWT(
+        {
+            isAdmin: false,
+            bungieMembershipId: "123",
+            destinyMembershipIds: ["4611686018467346804"]
+        },
+        600
+    )
+
+    playerTeammatesRoute
+        .$mock({
+            params: {
+                membershipId: "4611686018467346804"
+            },
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
+        .then(result => expectOk(result))
 })

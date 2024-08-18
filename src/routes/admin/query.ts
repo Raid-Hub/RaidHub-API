@@ -38,7 +38,7 @@ export const adminQueryRoute = new RaidHubRoute({
         },
         errors: [
             {
-                code: ErrorCode.AdminQuerySyntaxError,
+                type: ErrorCode.AdminQuerySyntaxError,
                 statusCode: 501,
                 schema: z.object({
                     name: z.string(),
