@@ -23,14 +23,14 @@ export const playerTeammatesRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PlayerNotFoundError,
+                type: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                code: ErrorCode.PlayerPrivateProfileError,
+                type: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

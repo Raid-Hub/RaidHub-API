@@ -30,7 +30,7 @@ Useful if you need to access PGCRs when Bungie's API is down.`,
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PGCRNotFoundError,
+                type: ErrorCode.PGCRNotFoundError,
                 schema: z.object({
                     instanceId: zBigIntString()
                 })

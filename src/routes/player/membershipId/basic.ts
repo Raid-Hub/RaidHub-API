@@ -24,7 +24,7 @@ you only have the membershipId available.`,
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PlayerNotFoundError,
+                type: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

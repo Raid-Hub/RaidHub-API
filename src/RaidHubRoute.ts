@@ -4,7 +4,7 @@ import { IncomingHttpHeaders } from "http"
 import { ZodObject, ZodType, ZodTypeAny, ZodUnknown, z } from "zod"
 import { RaidHubRouter } from "./RaidHubRouter"
 import { IRaidHubRoute, RaidHubHandler, RaidHubHandlerReturn } from "./RaidHubRouterTypes"
-import { RaidHubResponse, registerResponse } from "./schema/RaidHubResponse"
+import { RaidHubResponse, registerError, registerResponse } from "./schema/RaidHubResponse"
 import { zApiKeyError } from "./schema/errors/ApiKeyError"
 import { zBodyValidationError } from "./schema/errors/BodyValidationError"
 import { ErrorCode } from "./schema/errors/ErrorCode"
@@ -42,11 +42,11 @@ export class RaidHubRoute<
     readonly querySchema: Query | null
     readonly bodySchema: Body | null
     readonly responseSchema: ResponseBody
-    readonly errors: [
-        400 | 401 | 403 | 404 | 501 | 503,
-        type: ErrorType,
+    readonly errors: {
+        statusCode: 400 | 401 | 403 | 404 | 501 | 503
+        type: ErrorType
         schema: ErrorResponseBody[number]
-    ][]
+    }[]
     readonly successCode: 200 | 201 | 207
     private parent: RaidHubRouter | null = null
     private readonly isAdministratorRoute: boolean = false
@@ -92,7 +92,7 @@ export class RaidHubRoute<
             }
             errors?: {
                 statusCode: 400 | 401 | 403 | 404 | 501 | 503
-                code: ErrorType
+                type: ErrorType
                 schema: ErrorResponseBody[number]
             }[]
         }
@@ -111,7 +111,7 @@ export class RaidHubRoute<
         this.middlewares = args.middleware ?? []
         this.handler = args.handler
         this.responseSchema = args.response.success.schema
-        this.errors = args.response.errors?.map(e => [e.statusCode, e.code, e.schema]) ?? []
+        this.errors = args.response.errors ?? []
         this.successCode = args.response.success.statusCode
     }
 
@@ -230,9 +230,9 @@ export class RaidHubRoute<
                 if (result.success) {
                     res.status(this.successCode).json(response)
                 } else {
-                    res.status(this.errors.find(([_, type]) => type === result.code)![0]).json(
-                        response
-                    )
+                    res.status(
+                        this.errors.find(({ type }) => type === result.code)!.statusCode
+                    ).json(response)
                 }
             } catch (e) {
                 next(e)
@@ -298,16 +298,12 @@ export class RaidHubRoute<
         const path = this.getFullPath().replace(/\/:(\w+)/g, "/{$1}")
 
         const allResponses = [
-            [
-                this.successCode,
-                "Success",
-                z.object({
-                    minted: z.date(),
-                    success: z.literal(true),
-                    response: registerResponse(path, this.responseSchema)
-                })
-            ],
-            ...this.errors,
+            [this.successCode, "Success", registerResponse(path, this.responseSchema)],
+            ...this.errors.map(({ statusCode, schema, type }) => [
+                statusCode,
+                type,
+                registerError(type, schema)
+            ]),
             [401, "Unauthorized", zApiKeyError],
             this.isAdministratorRoute ? [403, "Forbidden", zInsufficientPermissionsError] : null,
             this.paramsSchema ? [404, "Not found", zPathValidationError] : null,
@@ -413,13 +409,13 @@ export class RaidHubRoute<
                     ? z.never()
                     : this.errors.length > 1
                       ? z.union(
-                            this.errors.map(([, , schema]) => schema) as unknown as readonly [
+                            this.errors.map(err => err.schema) as unknown as readonly [
                                 ZodTypeAny,
                                 ZodTypeAny,
                                 ...ZodTypeAny[]
                             ]
                         )
-                      : this.errors[0][2]
+                      : this.errors[0].schema
             return {
                 type: "err",
                 parsed: schema.parse(res.error)

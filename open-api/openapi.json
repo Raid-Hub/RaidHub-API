@@ -90,46 +90,28 @@
       "ApiKeyError": {
         "type": "object",
         "properties": {
-          "minted": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "success": {
-            "type": "boolean",
-            "enum": [false]
-          },
-          "code": {
-            "type": "string",
-            "enum": ["ApiKeyError"]
-          },
-          "error": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "enum": ["Invalid API Key"]
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["Missing API Key"]
-                  }
-                ]
-              },
-              "apiKey": {
+          "message": {
+            "anyOf": [
+              {
                 "type": "string",
-                "nullable": true
+                "enum": ["Invalid API Key"]
               },
-              "origin": {
+              {
                 "type": "string",
-                "nullable": true
+                "enum": ["Missing API Key"]
               }
-            },
-            "required": ["message", "apiKey", "origin"]
+            ]
+          },
+          "apiKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "origin": {
+            "type": "string",
+            "nullable": true
           }
         },
-        "required": ["minted", "success", "code", "error"]
+        "required": ["message", "apiKey", "origin"]
       },
       "ZodIssue": {
         "type": "object",
@@ -180,120 +162,48 @@
       "BodyValidationError": {
         "type": "object",
         "properties": {
-          "minted": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "success": {
-            "type": "boolean",
-            "enum": [false]
-          },
-          "code": {
-            "type": "string",
-            "enum": ["BodyValidationError"]
-          },
-          "error": {
-            "type": "object",
-            "properties": {
-              "issues": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ZodIssue"
-                }
-              }
-            },
-            "required": ["issues"]
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZodIssue"
+            }
           }
         },
-        "required": ["minted", "success", "code", "error"]
+        "required": ["issues"]
       },
       "InsufficientPermissionsError": {
         "type": "object",
         "properties": {
-          "minted": {
+          "message": {
             "type": "string",
-            "format": "date-time"
-          },
-          "success": {
-            "type": "boolean",
-            "enum": [false]
-          },
-          "code": {
-            "type": "string",
-            "enum": ["InsufficientPermissionsError"]
-          },
-          "error": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "enum": ["Forbidden"]
-              }
-            },
-            "required": ["message"]
+            "enum": ["Forbidden"]
           }
         },
-        "required": ["minted", "success", "code", "error"]
+        "required": ["message"]
       },
       "PathValidationError": {
         "type": "object",
         "properties": {
-          "minted": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "success": {
-            "type": "boolean",
-            "enum": [false]
-          },
-          "code": {
-            "type": "string",
-            "enum": ["PathValidationError"]
-          },
-          "error": {
-            "type": "object",
-            "properties": {
-              "issues": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ZodIssue"
-                }
-              }
-            },
-            "required": ["issues"]
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZodIssue"
+            }
           }
         },
-        "required": ["minted", "success", "code", "error"]
+        "required": ["issues"]
       },
       "QueryValidationError": {
         "type": "object",
         "properties": {
-          "minted": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "success": {
-            "type": "boolean",
-            "enum": [false]
-          },
-          "code": {
-            "type": "string",
-            "enum": ["QueryValidationError"]
-          },
-          "error": {
-            "type": "object",
-            "properties": {
-              "issues": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ZodIssue"
-                }
-              }
-            },
-            "required": ["issues"]
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZodIssue"
+            }
           }
         },
-        "required": ["minted", "success", "code", "error"]
+        "required": ["issues"]
       },
       "DestinyMembershipType": {
         "type": "integer",
@@ -1586,6 +1496,26 @@
         "required": ["membershipId", "nextCursor", "activities"],
         "additionalProperties": false
       },
+      "PlayerNotFoundError": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["membershipId"]
+      },
+      "PlayerPrivateProfileError": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["membershipId"]
+      },
       "PlayerBasicResponse": {
         "type": "object",
         "properties": {
@@ -1724,6 +1654,16 @@
           }
         ]
       },
+      "InstanceNotFoundError": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["instanceId"]
+      },
       "LeaderboardIndividualGlobalResponse": {
         "oneOf": [
           {
@@ -1787,6 +1727,16 @@
             "required": ["type", "format", "page", "count", "entries"]
           }
         ]
+      },
+      "PlayerNotOnLeaderboardError": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["membershipId"]
       },
       "LeaderboardIndividualRaidResponse": {
         "oneOf": [
@@ -1852,6 +1802,15 @@
           }
         ]
       },
+      "RaidNotFoundError": {
+        "type": "object",
+        "properties": {
+          "raid": {
+            "type": "string"
+          }
+        },
+        "required": ["raid"]
+      },
       "LeaderboardIndividualPantheonResponse": {
         "oneOf": [
           {
@@ -1916,6 +1875,15 @@
           }
         ]
       },
+      "PantheonVersionNotFoundError": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": ["path"]
+      },
       "LeaderboardTeamFirstResponse": {
         "oneOf": [
           {
@@ -1979,6 +1947,18 @@
             "required": ["type", "format", "page", "count", "entries"]
           }
         ]
+      },
+      "InvalidActivityVersionComboError": {
+        "type": "object",
+        "properties": {
+          "activity": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": ["activity", "version"]
       },
       "LeaderboardTeamContestResponse": {
         "oneOf": [
@@ -2288,6 +2268,16 @@
           "url": "https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData"
         }
       },
+      "PGCRNotFoundError": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["instanceId"]
+      },
       "AdminQueryResponse": {
         "oneOf": [
           {
@@ -2346,6 +2336,26 @@
           }
         ]
       },
+      "AdminQuerySyntaxError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          }
+        },
+        "required": ["name", "code", "line", "position"]
+      },
       "AuthorizeAdminResponse": {
         "type": "object",
         "properties": {
@@ -2358,6 +2368,10 @@
           }
         },
         "required": ["value", "expires"]
+      },
+      "InvalidClientSecretError": {
+        "type": "object",
+        "properties": {}
       },
       "AuthorizeUserResponse": {
         "type": "object",
@@ -2408,7 +2422,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2428,7 +2443,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2498,7 +2531,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2518,7 +2552,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2528,7 +2580,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2585,7 +2655,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2605,7 +2676,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2615,7 +2704,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2627,12 +2734,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "membershipId": {
+                    "minted": {
                       "type": "string",
-                      "pattern": "^\\d+n?$"
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["PlayerPrivateProfileError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/PlayerPrivateProfileError"
                     }
                   },
-                  "required": ["membershipId"]
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2646,15 +2764,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotFoundError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -2688,7 +2835,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2708,7 +2856,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2722,15 +2888,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotFoundError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -2769,7 +2964,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2789,7 +2985,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2801,12 +3015,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "membershipId": {
+                    "minted": {
                       "type": "string",
-                      "pattern": "^\\d+n?$"
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["PlayerPrivateProfileError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/PlayerPrivateProfileError"
                     }
                   },
-                  "required": ["membershipId"]
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2820,15 +3045,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotFoundError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -2867,7 +3121,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2887,7 +3142,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2899,12 +3172,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "membershipId": {
+                    "minted": {
                       "type": "string",
-                      "pattern": "^\\d+n?$"
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["PlayerPrivateProfileError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/PlayerPrivateProfileError"
                     }
                   },
-                  "required": ["membershipId"]
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2918,15 +3202,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotFoundError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -2960,7 +3273,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -2980,7 +3294,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -2994,15 +3326,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "instanceId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["InstanceNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/InstanceNotFoundError"
                         }
                       },
-                      "required": ["instanceId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3074,7 +3435,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3094,7 +3456,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3104,7 +3484,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3118,15 +3516,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotOnLeaderboardError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotOnLeaderboardError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3200,7 +3627,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3220,7 +3648,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3230,7 +3676,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3244,24 +3708,65 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotOnLeaderboardError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotOnLeaderboardError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
                       "type": "object",
                       "properties": {
-                        "raid": {
-                          "type": "string"
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["RaidNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/RaidNotFoundError"
                         }
                       },
-                      "required": ["raid"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3335,7 +3840,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3355,7 +3861,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3365,7 +3889,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3379,24 +3921,65 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotOnLeaderboardError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotOnLeaderboardError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
                       "type": "object",
                       "properties": {
-                        "path": {
-                          "type": "string"
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PantheonVersionNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PantheonVersionNotFoundError"
                         }
                       },
-                      "required": ["path"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3469,7 +4052,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3489,7 +4073,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3499,7 +4101,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3513,27 +4133,65 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotOnLeaderboardError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotOnLeaderboardError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
                       "type": "object",
                       "properties": {
-                        "activity": {
-                          "type": "string"
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
                         },
-                        "version": {
-                          "type": "string"
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["InvalidActivityVersionComboError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/InvalidActivityVersionComboError"
                         }
                       },
-                      "required": ["activity", "version"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3598,7 +4256,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3618,7 +4277,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3628,7 +4305,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3642,24 +4337,65 @@
                     {
                       "type": "object",
                       "properties": {
-                        "membershipId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PlayerNotOnLeaderboardError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PlayerNotOnLeaderboardError"
                         }
                       },
-                      "required": ["membershipId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
                       "type": "object",
                       "properties": {
-                        "raid": {
-                          "type": "string"
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["RaidNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/RaidNotFoundError"
                         }
                       },
-                      "required": ["raid"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3693,7 +4429,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3713,7 +4450,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3727,15 +4482,44 @@
                     {
                       "type": "object",
                       "properties": {
-                        "instanceId": {
+                        "minted": {
                           "type": "string",
-                          "pattern": "^\\d+n?$"
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PGCRNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PGCRNotFoundError"
                         }
                       },
-                      "required": ["instanceId"]
+                      "required": ["minted", "success", "code", "error"]
                     },
                     {
-                      "$ref": "#/components/schemas/PathValidationError"
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
                     }
                   ]
                 }
@@ -3786,7 +4570,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3806,7 +4591,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["BodyValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/BodyValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3816,7 +4619,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3826,7 +4647,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InsufficientPermissionsError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InsufficientPermissionsError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InsufficientPermissionsError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3838,22 +4677,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "name": {
-                      "type": "string"
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
                     },
                     "code": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": ["AdminQuerySyntaxError"]
                     },
-                    "line": {
-                      "type": "string"
-                    },
-                    "position": {
-                      "type": "integer",
-                      "minimum": 0,
-                      "exclusiveMinimum": true
+                    "error": {
+                      "$ref": "#/components/schemas/AdminQuerySyntaxError"
                     }
                   },
-                  "required": ["name", "code", "line", "position"]
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3893,7 +4733,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -3913,7 +4754,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["BodyValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/BodyValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3923,7 +4782,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3934,7 +4811,24 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {}
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InvalidClientSecretError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InvalidClientSecretError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -3985,7 +4879,8 @@
                   "type": "object",
                   "properties": {
                     "minted": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "success": {
                       "type": "boolean",
@@ -4005,7 +4900,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BodyValidationError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["BodyValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/BodyValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -4015,7 +4928,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiKeyError"
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }
@@ -4026,7 +4957,24 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {}
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InvalidClientSecretError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InvalidClientSecretError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
                 }
               }
             }

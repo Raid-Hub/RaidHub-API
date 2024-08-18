@@ -35,14 +35,14 @@ export const leaderboardIndividualPantheonRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                code: ErrorCode.PlayerNotOnLeaderboardError,
+                type: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 404,
-                code: ErrorCode.PantheonVersionNotFoundError,
+                type: ErrorCode.PantheonVersionNotFoundError,
                 schema: z.object({
                     path: z.string()
                 })
