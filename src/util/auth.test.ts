@@ -3,12 +3,14 @@ import { canAccessPrivateProfile, generateJWT } from "./auth"
 
 describe("auth", () => {
     it("should generate a valid JWT token", async () => {
-        const token = generateJWT({
-            isAdmin: false,
-            bungieMembershipId: "123",
-            destinyMembershipIds: ["4611686018467346804"],
-            durationSeconds: 1
-        })
+        const token = generateJWT(
+            {
+                isAdmin: false,
+                bungieMembershipId: "123",
+                destinyMembershipIds: ["4611686018467346804"]
+            },
+            1
+        )
 
         expect(token).toBeTruthy()
 
@@ -40,12 +42,14 @@ describe("auth", () => {
     })
 
     it("does not work with invalid secret", async () => {
-        const token = generateJWT({
-            isAdmin: false,
-            bungieMembershipId: "123",
-            destinyMembershipIds: ["4611686018467346804"],
-            durationSeconds: 1
-        })
+        const token = generateJWT(
+            {
+                isAdmin: false,
+                bungieMembershipId: "123",
+                destinyMembershipIds: ["4611686018467346804"]
+            },
+            1
+        )
 
         expect(token).toBeTruthy()
 

@@ -6,6 +6,7 @@ import { cacheControl } from "../../../middlewares/cache-control"
 import { zTeammate } from "../../../schema/components/Teammate"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
 import { zBigIntString } from "../../../schema/util"
+import { canAccessPrivateProfile } from "../../../util/auth"
 
 export const playerTeammatesRoute = new RaidHubRoute({
     method: "get",
@@ -43,7 +44,10 @@ export const playerTeammatesRoute = new RaidHubRoute({
 
         if (!player) {
             return RaidHubRoute.fail(ErrorCode.PlayerNotFoundError, { membershipId })
-        } else if (player.isPrivate) {
+        } else if (
+            player.isPrivate &&
+            !(await canAccessPrivateProfile(membershipId, req.headers.authorization ?? ""))
+        ) {
             return RaidHubRoute.fail(ErrorCode.PlayerPrivateProfileError, { membershipId })
         }
 

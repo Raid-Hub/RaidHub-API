@@ -32,12 +32,14 @@ export const adminAuthorizationRoute = new RaidHubRoute({
     async handler({ body }) {
         if (body.adminClientSecret === process.env.ADMIN_CLIENT_SECRET) {
             return RaidHubRoute.ok({
-                value: generateJWT({
-                    bungieMembershipId: body.bungieMembershipId,
-                    isAdmin: true,
-                    destinyMembershipIds: [],
-                    durationSeconds: TOKEN_EXPIRY
-                }),
+                value: generateJWT(
+                    {
+                        bungieMembershipId: body.bungieMembershipId,
+                        isAdmin: true,
+                        destinyMembershipIds: []
+                    },
+                    TOKEN_EXPIRY
+                ),
                 expires: new Date(Date.now() + TOKEN_EXPIRY * 1000)
             })
         } else {

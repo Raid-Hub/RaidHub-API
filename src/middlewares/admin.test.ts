@@ -27,12 +27,14 @@ describe("admin protected", () => {
     })
 
     test("should return 200 if valid authorization is provided", async () => {
-        const token = generateJWT({
-            isAdmin: true,
-            bungieMembershipId: "123",
-            destinyMembershipIds: [],
-            durationSeconds: 600
-        })
+        const token = generateJWT(
+            {
+                isAdmin: true,
+                bungieMembershipId: "123",
+                destinyMembershipIds: []
+            },
+            600
+        )
 
         const res = await request(app)
             .get("/admin")

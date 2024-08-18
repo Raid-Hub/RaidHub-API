@@ -30,7 +30,7 @@ describe("first leaderboard 200", () => {
         t(
             {
                 activity: "leviathan",
-                version: "guided"
+                version: "prestige"
             },
             {
                 count: 14,
