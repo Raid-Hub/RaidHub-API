@@ -40,7 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "bun-types": "^1.0.35",
-    "bungie-net-core": "^2.1.1",
+    "bungie-net-core": "2.1.3",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
