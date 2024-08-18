@@ -9,6 +9,7 @@ import { zApiKeyError } from "./schema/errors/ApiKeyError"
 import { zBodyValidationError } from "./schema/errors/BodyValidationError"
 import { ErrorCode } from "./schema/errors/ErrorCode"
 import { zInsufficientPermissionsError } from "./schema/errors/InsufficientPermissionsError"
+import { zInternalServerError } from "./schema/errors/InternalServerError"
 import { zPathValidationError } from "./schema/errors/PathValidationError"
 import { zQueryValidationError } from "./schema/errors/QueryValidationError"
 import { httpRequestTimer } from "./services/prometheus/metrics"
@@ -308,7 +309,8 @@ export class RaidHubRoute<
             this.isAdministratorRoute ? [403, "Forbidden", zInsufficientPermissionsError] : null,
             this.paramsSchema ? [404, "Not found", zPathValidationError] : null,
             this.querySchema ? [400, "Bad request", zQueryValidationError] : null,
-            this.bodySchema ? [400, "Bad request", zBodyValidationError] : null
+            this.bodySchema ? [400, "Bad request", zBodyValidationError] : null,
+            [500, "Internal Server Error", zInternalServerError]
         ].filter(Boolean) as [number, string, ZodObject<any>][]
 
         const byCode: { [statusCode: string]: ZodType<unknown>[] } = {}
