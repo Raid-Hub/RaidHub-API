@@ -13,6 +13,7 @@ export const playerActivitiesRoute = new RaidHubRoute({
 The first request should not include a cursor. Subsequent requests should include the \`nextCursor\` 
 value from the previous response. Note that the first request may not return the full number of activities requested
 in order to optimize performance. Subsequent requests will return the full number of activities requested.`,
+    isProtectedPlayerRoute: true,
     params: z.object({
         membershipId: zBigIntString()
     }),

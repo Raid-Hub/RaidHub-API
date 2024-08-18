@@ -50,6 +50,7 @@ export class RaidHubRoute<
     readonly successCode: 200 | 201 | 207
     private parent: RaidHubRouter | null = null
     private readonly isAdministratorRoute: boolean = false
+    private readonly isProtectedPlayerRoute: boolean = false
     private readonly middlewares: RequestHandler<
         z.infer<Params>,
         any,
@@ -74,6 +75,7 @@ export class RaidHubRoute<
         query?: Query
         body?: Body
         isAdministratorRoute?: boolean
+        isProtectedPlayerRoute?: boolean
         middleware?: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>>[]
         handler: RaidHubHandler<
             Params,
@@ -105,6 +107,7 @@ export class RaidHubRoute<
         this.querySchema = args.query ?? null
         this.bodySchema = args.body ?? null
         this.isAdministratorRoute = args.isAdministratorRoute ?? false
+        this.isProtectedPlayerRoute = args.isProtectedPlayerRoute ?? false
         this.middlewares = args.middleware ?? []
         this.handler = args.handler
         this.responseSchema = args.response.success.schema
@@ -321,13 +324,19 @@ export class RaidHubRoute<
             }
         })
 
-        const security = this.isAdministratorRoute
+        const security = this.isProtectedPlayerRoute
             ? [
                   {
-                      "Administrator Token": []
+                      "Bearer Token": []
                   }
               ]
-            : undefined
+            : this.isAdministratorRoute
+              ? [
+                    {
+                        "Administrator Token": []
+                    }
+                ]
+              : undefined
 
         return [
             {

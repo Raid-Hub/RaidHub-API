@@ -17,6 +17,7 @@ export const playerProfileRoute = new RaidHubRoute({
     method: "get",
     description: `Get a player's profile information. This includes global stats, activity stats, and world first entries. 
 This is used to hydrate the RaidHub profile page`,
+    isProtectedPlayerRoute: true,
     params: z.object({
         membershipId: zBigIntString()
     }),

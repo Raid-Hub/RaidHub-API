@@ -10,7 +10,8 @@ import { canAccessPrivateProfile } from "../../../util/auth"
 
 export const playerTeammatesRoute = new RaidHubRoute({
     method: "get",
-    description: ``,
+    description: `Get a list of a player's top 100 teammates.`,
+    isProtectedPlayerRoute: true,
     params: z.object({
         membershipId: zBigIntString()
     }),

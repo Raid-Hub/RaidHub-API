@@ -36,6 +36,12 @@ doc.components!.securitySchemes = {
         name: "X-API-KEY",
         in: "header"
     },
+    "Bearer Token": {
+        type: "http",
+        name: "Authorization",
+        scheme: "bearer",
+        in: "header"
+    },
     "Administrator Token": {
         type: "http",
         name: "Authorization",

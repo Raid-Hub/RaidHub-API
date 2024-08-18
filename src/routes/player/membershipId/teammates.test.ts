@@ -1,6 +1,6 @@
 import { generateJWT } from "../../../util/auth"
 import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
-import { playerTeammatesRoute } from "./teamates"
+import { playerTeammatesRoute } from "./teammates"
 
 cleanupPostgresAfterAll()
 

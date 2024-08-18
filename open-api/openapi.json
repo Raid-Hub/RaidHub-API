@@ -2380,6 +2380,12 @@
         "name": "X-API-KEY",
         "in": "header"
       },
+      "Bearer Token": {
+        "type": "http",
+        "name": "Authorization",
+        "scheme": "bearer",
+        "in": "header"
+      },
       "Administrator Token": {
         "type": "http",
         "name": "Authorization",
@@ -2534,6 +2540,11 @@
       "get": {
         "summary": "/player/{membershipId}/activities",
         "description": "Get a player's activity history. This endpoint uses date cursors to paginate through a player's activity history. \nThe first request should not include a cursor. Subsequent requests should include the `nextCursor` \nvalue from the previous response. Note that the first request may not return the full number of activities requested\nin order to optimize performance. Subsequent requests will return the full number of activities requested.",
+        "security": [
+          {
+            "Bearer Token": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -2733,6 +2744,11 @@
       "get": {
         "summary": "/player/{membershipId}/profile",
         "description": "Get a player's profile information. This includes global stats, activity stats, and world first entries. \nThis is used to hydrate the RaidHub profile page",
+        "security": [
+          {
+            "Bearer Token": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
@@ -2825,7 +2841,12 @@
     "/player/{membershipId}/teammates": {
       "get": {
         "summary": "/player/{membershipId}/teammates",
-        "description": "",
+        "description": "Get a list of a player's top 100 teammates.",
+        "security": [
+          {
+            "Bearer Token": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
