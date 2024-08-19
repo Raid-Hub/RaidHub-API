@@ -36,6 +36,7 @@
           "RaidNotFoundError",
           "PantheonVersionNotFoundError",
           "InvalidActivityVersionComboError",
+          "ClanNotFoundError",
           "AdminQuerySyntaxError",
           "InsufficientPermissionsError",
           "InvalidClientSecretError",
@@ -580,6 +581,149 @@
             "required": ["leaderboardRank", "metadata", "players"],
             "additionalProperties": false
           }
+        ]
+      },
+      "ClanBannerData": {
+        "type": "object",
+        "properties": {
+          "decalId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "decalColorId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "decalBackgroundColorId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gonfalonId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gonfalonColorId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gonfalonDetailId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gonfalonDetailColorId": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "decalId",
+          "decalColorId",
+          "decalBackgroundColorId",
+          "gonfalonId",
+          "gonfalonColorId",
+          "gonfalonDetailId",
+          "gonfalonDetailColorId"
+        ],
+        "additionalProperties": false
+      },
+      "Clan": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "callSign": {
+            "type": "string"
+          },
+          "motto": {
+            "type": "string"
+          },
+          "clanBannerData": {
+            "$ref": "#/components/schemas/ClanBannerData"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "groupId",
+          "name",
+          "callSign",
+          "motto",
+          "clanBannerData",
+          "lastUpdated"
+        ]
+      },
+      "ClanLeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "clan": {
+            "$ref": "#/components/schemas/Clan"
+          },
+          "knownMemberCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "freshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageFreshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageSherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageTimePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalContestScore": {
+            "type": "number",
+            "minimum": 0
+          },
+          "weightedContestScore": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "clan",
+          "knownMemberCount",
+          "clears",
+          "averageClears",
+          "freshClears",
+          "averageFreshClears",
+          "sherpas",
+          "averageSherpas",
+          "timePlayedSeconds",
+          "averageTimePlayedSeconds",
+          "totalContestScore",
+          "weightedContestScore"
         ]
       },
       "TeamLeaderboardEntry": {
@@ -2032,6 +2176,12 @@
           }
         ]
       },
+      "LeaderboardClanResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ClanLeaderboardEntry"
+        }
+      },
       "PgcrResponse": {
         "type": "object",
         "properties": {
@@ -2285,6 +2435,83 @@
           }
         },
         "required": ["instanceId"]
+      },
+      "ClanResponse": {
+        "type": "object",
+        "properties": {
+          "clan": {
+            "$ref": "#/components/schemas/Clan"
+          },
+          "knownMemberCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "freshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageFreshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageSherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageTimePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalContestScore": {
+            "type": "number",
+            "minimum": 0
+          },
+          "weightedContestScore": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "clan",
+          "knownMemberCount",
+          "clears",
+          "averageClears",
+          "freshClears",
+          "averageFreshClears",
+          "sherpas",
+          "averageSherpas",
+          "timePlayedSeconds",
+          "averageTimePlayedSeconds",
+          "totalContestScore",
+          "weightedContestScore"
+        ]
+      },
+      "ClanNotFoundError": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "pattern": "^\\d+n?$"
+          }
+        },
+        "required": ["groupId"]
       },
       "AdminQueryResponse": {
         "oneOf": [
@@ -4749,6 +4976,167 @@
         }
       }
     },
+    "/leaderboard/clan": {
+      "get": {
+        "summary": "/leaderboard/clan",
+        "description": "Get a page of the clan leaderboard based on query parameters",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "count",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "clears",
+                "average_clears",
+                "fresh_clears",
+                "average_fresh_clears",
+                "sherpas",
+                "average_sherpas",
+                "time_played_seconds",
+                "average_time_played_seconds",
+                "total_contest_score",
+                "weighted_contest_score"
+              ],
+              "default": "weighted_contest_score"
+            },
+            "required": false,
+            "name": "column",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/LeaderboardClanResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["QueryValidationError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/QueryValidationError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InternalServerError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InternalServerError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/pgcr/{instanceId}": {
       "get": {
         "summary": "/pgcr/{instanceId}",
@@ -4840,6 +5228,158 @@
                         },
                         "error": {
                           "$ref": "#/components/schemas/PGCRNotFoundError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["PathValidationError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/PathValidationError"
+                        }
+                      },
+                      "required": ["minted", "success", "code", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InternalServerError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InternalServerError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clan/{groupId}": {
+      "get": {
+        "summary": "/clan/{groupId}",
+        "description": "Get the stats for a clan. Data updates weekly.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+n?$"
+            },
+            "required": true,
+            "name": "groupId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/ClanResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "minted": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": ["ClanNotFoundError"]
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/ClanNotFoundError"
                         }
                       },
                       "required": ["minted", "success", "code", "error"]

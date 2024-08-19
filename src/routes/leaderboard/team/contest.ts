@@ -7,8 +7,8 @@ import {
 } from "../../../data-access-layer/leaderboard/team/contest"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
+import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
-import { zLeaderboardPagination } from "../../../schema/query.ts/LeaderboardPagination"
 import { zBigIntString } from "../../../schema/util"
 
 export const leaderboardTeamContestRoute = new RaidHubRoute({

@@ -17,6 +17,7 @@ export enum ErrorCode {
     RaidNotFoundError = "RaidNotFoundError",
     PantheonVersionNotFoundError = "PantheonVersionNotFoundError",
     InvalidActivityVersionComboError = "InvalidActivityVersionComboError",
+    ClanNotFound = "ClanNotFoundError",
     AdminQuerySyntaxError = "AdminQuerySyntaxError",
     /** Auth */
     InsufficientPermissionsError = "InsufficientPermissionsError",
