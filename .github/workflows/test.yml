@@ -54,7 +54,7 @@ jobs:
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
                   BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
-              run: bun test --bail=1 --testTimeout=30000
+              run: bun test  --coverage --bail=1 --testTimeout=30000
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report
