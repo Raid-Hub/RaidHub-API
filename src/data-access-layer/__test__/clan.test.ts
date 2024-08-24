@@ -1,14 +1,16 @@
-import { cleanupPostgresAfterAll } from "../../routes/testUtil"
-import { zClanLeaderboardEntry } from "../../schema/components/Clan"
+import { describe, expect, it } from "bun:test"
+import { zClanStats } from "../../schema/components/Clan"
+import { getClanMembers } from "../../services/bungie/getClanMembers"
 import { getClanStats } from "../clan"
-
-cleanupPostgresAfterAll()
 
 describe("getClanStats", () => {
     it("returns the correct shape", async () => {
-        const data = await getClanStats("3148408").catch(console.error)
+        const members = await getClanMembers("3148408")
+        const data = await getClanStats(members.map(m => m.destinyUserInfo.membershipId)).catch(
+            console.error
+        )
 
-        const parsed = zClanLeaderboardEntry.safeParse(data)
+        const parsed = zClanStats.safeParse(data)
         if (!parsed.success) {
             expect(parsed.error.errors).toHaveLength(0)
         } else {

@@ -1,7 +1,6 @@
+import { test } from "bun:test"
 import { manifestRoute } from "./manifest"
-import { cleanupPostgresAfterAll, expectOk } from "./testUtil"
-
-cleanupPostgresAfterAll()
+import { expectOk } from "./testUtil"
 
 test("manifest 200", async () => {
     const result = await manifestRoute.$mock({})

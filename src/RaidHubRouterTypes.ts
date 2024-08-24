@@ -12,20 +12,34 @@ export interface IRaidHubRoute {
     getParent(): RaidHubRouter | null
 }
 
-export type RaidHubHandlerReturn<T, E, C extends ErrorCode> =
-    | { success: true; response: T }
-    | { success: false; error: E; code: C }
+export type ErrorData = readonly [
+    ...{
+        statusCode: 400 | 401 | 403 | 404 | 501 | 503
+        code: ErrorCode
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        schema: z.ZodObject<any>
+    }[]
+]
 
 export type RaidHubHandler<
     Params extends ZodType,
     Query extends ZodType,
     Body extends ZodType,
     T,
-    E,
-    C extends ErrorCode
+    ErrorResponse extends ErrorData
 > = (req: {
     params: z.infer<Params>
     query: z.infer<Query>
     body: z.infer<Body>
     headers: IncomingHttpHeaders
-}) => Promise<RaidHubHandlerReturn<T, E, C>>
+}) => Promise<RaidHubHandlerReturn<T, ErrorResponse>>
+
+export type RaidHubHandlerReturn<T, E extends ErrorData> =
+    | { success: true; response: T }
+    | {
+          [K in keyof E]: {
+              success: false
+              error: E[K]["schema"]["_input"]
+              code: E[K]["code"]
+          }
+      }[number]

@@ -23,7 +23,9 @@ export enum ErrorCode {
     InsufficientPermissionsError = "InsufficientPermissionsError",
     InvalidClientSecretError = "InvalidClientSecretError",
     /** RaidHub error */
-    InternalServerError = "InternalServerError"
+    InternalServerError = "InternalServerError",
+    /** Bungie */
+    BungieServiceOffline = "BungieServiceOffline"
 }
 
 export const zErrorCode = registry.register("ErrorCode", z.nativeEnum(ErrorCode))

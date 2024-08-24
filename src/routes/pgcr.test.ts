@@ -1,8 +1,6 @@
+import { describe, test } from "bun:test"
 import { pgcrRoute } from "./pgcr"
-
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "./testUtil"
-
-cleanupPostgresAfterAll()
+import { expectErr, expectOk } from "./testUtil"
 
 describe("pgcr 200", () => {
     const t = async (instanceId: string) => {

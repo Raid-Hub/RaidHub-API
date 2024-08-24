@@ -1,7 +1,6 @@
+import { describe, test } from "bun:test"
 import { activityRoute } from "./activity"
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "./testUtil"
-
-cleanupPostgresAfterAll()
+import { expectErr, expectOk } from "./testUtil"
 
 describe("activity 200", () => {
     const t = async (instanceId: string) => {

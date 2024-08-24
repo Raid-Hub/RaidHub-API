@@ -29,14 +29,14 @@ This is used to hydrate the RaidHub profile page`,
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotFoundError,
+                code: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                type: ErrorCode.PlayerPrivateProfileError,
+                code: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

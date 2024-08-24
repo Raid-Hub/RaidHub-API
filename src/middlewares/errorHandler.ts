@@ -4,15 +4,14 @@ import { zInternalServerError } from "../schema/errors/InternalServerError"
 
 // This is the final middleware run, so it cannot point to next
 export const errorHandler: ErrorRequestHandler = (err: Error, _, res, __) => {
-    /* istanbul ignore next */
-    !process.env.TS_JEST && console.error(err)
+    process.env.NODE_ENV !== "test" && console.error(err)
 
     res.status(500).send({
         minted: new Date(),
         success: false,
         code: ErrorCode.InternalServerError,
         error: {
-            message: "Internal Server Error"
+            message: process.env.PROD ? "Internal Server Error" : err.message
         }
     } satisfies (typeof zInternalServerError)["_input"])
 }

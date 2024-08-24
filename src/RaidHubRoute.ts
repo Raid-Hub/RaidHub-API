@@ -3,7 +3,12 @@ import { RequestHandler, Router } from "express"
 import { IncomingHttpHeaders } from "http"
 import { ZodObject, ZodType, ZodTypeAny, ZodUnknown, z } from "zod"
 import { RaidHubRouter } from "./RaidHubRouter"
-import { IRaidHubRoute, RaidHubHandler, RaidHubHandlerReturn } from "./RaidHubRouterTypes"
+import {
+    ErrorData,
+    IRaidHubRoute,
+    RaidHubHandler,
+    RaidHubHandlerReturn
+} from "./RaidHubRouterTypes"
 import { RaidHubResponse, registerError, registerResponse } from "./schema/RaidHubResponse"
 import { zApiKeyError } from "./schema/errors/ApiKeyError"
 import { zBodyValidationError } from "./schema/errors/BodyValidationError"
@@ -18,7 +23,7 @@ import { httpRequestTimer } from "./services/prometheus/metrics"
 export class RaidHubRoute<
     M extends "get" | "post",
     ResponseBody extends ZodType,
-    ErrorResponseBody extends readonly z.ZodObject<any>[],
+    ErrorResponse extends ErrorData,
     Params extends ZodObject<
         any,
         any,
@@ -33,8 +38,7 @@ export class RaidHubRoute<
         { [x: string]: any },
         { [x: string]: any }
     > = ZodObject<any>,
-    Body extends ZodType = ZodUnknown,
-    ErrorType extends ErrorCode = never
+    Body extends ZodType = ZodUnknown
 > implements IRaidHubRoute
 {
     readonly method: M
@@ -43,11 +47,7 @@ export class RaidHubRoute<
     readonly querySchema: Query | null
     readonly bodySchema: Body | null
     readonly responseSchema: ResponseBody
-    readonly errors: {
-        statusCode: 400 | 401 | 403 | 404 | 501 | 503
-        type: ErrorType
-        schema: ErrorResponseBody[number]
-    }[]
+    readonly errors: ErrorResponse | never[]
     readonly successCode: 200 | 201 | 207
     private parent: RaidHubRouter | null = null
     private readonly isAdministratorRoute: boolean = false
@@ -63,8 +63,7 @@ export class RaidHubRoute<
         Query,
         Body,
         ResponseBody["_input"],
-        ErrorResponseBody[number]["_input"],
-        ErrorType
+        ErrorResponse
     >
     private readonly router: Router
 
@@ -82,20 +81,15 @@ export class RaidHubRoute<
             Params,
             Query,
             Body,
-            ResponseBody["_input"],
-            NoInfer<ErrorResponseBody[number]["_input"]>,
-            NoInfer<ErrorType>
+            NoInfer<ResponseBody["_input"]>,
+            NoInfer<ErrorResponse>
         >
         response: {
             success: {
                 statusCode: 200 | 201 | 207
                 schema: ResponseBody
             }
-            errors?: {
-                statusCode: 400 | 401 | 403 | 404 | 501 | 503
-                type: ErrorType
-                schema: ErrorResponseBody[number]
-            }[]
+            errors?: ErrorResponse
         }
     }) {
         this.router = Router({
@@ -116,17 +110,17 @@ export class RaidHubRoute<
         this.successCode = args.response.success.statusCode
     }
 
-    static ok<T>(response: T): RaidHubHandlerReturn<T, never, never> {
+    static ok<T>(response: T) {
         return {
             response,
-            success: true
+            success: true as const
         }
     }
 
-    static fail<E, C extends ErrorCode>(code: C, error: E): RaidHubHandlerReturn<never, E, C> {
+    static fail<E, C extends ErrorCode>(code: C, error: E) {
         return {
             error,
-            success: false,
+            success: false as const,
             code
         }
     }
@@ -232,7 +226,7 @@ export class RaidHubRoute<
                     res.status(this.successCode).json(response)
                 } else {
                     res.status(
-                        this.errors.find(({ type }) => type === result.code)!.statusCode
+                        this.errors.find(({ code }) => code === result.code)!.statusCode
                     ).json(response)
                 }
             } catch (e) {
@@ -241,12 +235,8 @@ export class RaidHubRoute<
         }
 
     private buildResponse(
-        result: RaidHubHandlerReturn<
-            ResponseBody["_input"],
-            ErrorResponseBody[number]["_input"],
-            ErrorType
-        >
-    ): RaidHubResponse<ResponseBody["_input"], ErrorResponseBody[number]["_input"], ErrorType> {
+        result: RaidHubHandlerReturn<ResponseBody["_input"], ErrorResponse>
+    ): RaidHubResponse<ResponseBody["_input"], ErrorData> {
         const minted = new Date()
         if (result.success) {
             return {
@@ -274,8 +264,7 @@ export class RaidHubRoute<
             const responseTimeInMs = Date.now() - start
             const path = this.getFullPath()
             const code = res.statusCode.toString()
-            /* istanbul ignore next */
-            if (!process.env.PROD && !process.env.TS_JEST) {
+            if (!process.env.PROD && process.env.NODE_ENV !== "test") {
                 console.log(`Request to ${path} took ${responseTimeInMs}ms`)
             }
             httpRequestTimer.labels(path, code).observe(responseTimeInMs)
@@ -300,10 +289,10 @@ export class RaidHubRoute<
 
         const allResponses = [
             [this.successCode, "Success", registerResponse(path, this.responseSchema)],
-            ...this.errors.map(({ statusCode, schema, type }) => [
+            ...this.errors.map(({ statusCode, schema, code }) => [
                 statusCode,
-                type,
-                registerError(type, schema)
+                code,
+                registerError(code, schema)
             ]),
             [401, "Unauthorized", zApiKeyError],
             this.isAdministratorRoute ? [403, "Forbidden", zInsufficientPermissionsError] : null,
@@ -382,7 +371,6 @@ export class RaidHubRoute<
         ]
     }
 
-    /* istanbul ignore next */
     // Used for testing to mock a request by passing the data directly to the handler
     async $mock(req: {
         params?: unknown
@@ -411,13 +399,13 @@ export class RaidHubRoute<
                     ? z.never()
                     : this.errors.length > 1
                       ? z.union(
-                            this.errors.map(err => err.schema) as unknown as readonly [
+                            this.errors.map(err => err.schema.strict()) as unknown as readonly [
                                 ZodTypeAny,
                                 ZodTypeAny,
                                 ...ZodTypeAny[]
                             ]
                         )
-                      : this.errors[0].schema
+                      : this.errors[0].schema.strict()
             return {
                 type: "err",
                 parsed: schema.parse(res.error)

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "bun:test"
 import jwt from "jsonwebtoken"
 import { canAccessPrivateProfile, generateJWT } from "./auth"
 

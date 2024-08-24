@@ -24,7 +24,7 @@ export const adminAuthorizationRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 403,
-                type: ErrorCode.InvalidClientSecretError,
+                code: ErrorCode.InvalidClientSecretError,
                 schema: z.object({})
             }
         ]

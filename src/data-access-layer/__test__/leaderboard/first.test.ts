@@ -1,13 +1,11 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../../routes/testUtil"
 import { zTeamLeaderboardEntry } from "../../../schema/components/LeaderboardData"
 import { zNaturalNumber } from "../../../schema/util"
 import {
     getFirstTeamActivityVersionLeaderboard,
     searchFirstTeamActivityVersionLeaderboard
 } from "../../leaderboard/team/first"
-
-cleanupPostgresAfterAll()
 
 describe("getFirstTeamActivityVersionLeaderboard", () => {
     it("returns the correct shape", async () => {

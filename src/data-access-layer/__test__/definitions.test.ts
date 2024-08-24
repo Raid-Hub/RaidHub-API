@@ -1,5 +1,5 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../routes/testUtil"
 import { zActivityDefinition } from "../../schema/components/ActivityDefinition"
 import { zVersionDefinition } from "../../schema/components/VersionDefinition"
 import { zBigIntString, zNaturalNumber } from "../../schema/util"
@@ -11,8 +11,6 @@ import {
     listHashes,
     listVersionDefinitions
 } from "../definitions"
-
-cleanupPostgresAfterAll()
 
 describe("getRaidId", () => {
     it("returns the correct shape", async () => {

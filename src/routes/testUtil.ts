@@ -1,7 +1,4 @@
-export const cleanupPostgresAfterAll = () =>
-    afterAll(async () => {
-        await import("../services/postgres").then(({ postgres }) => postgres.close())
-    })
+import { expect } from "bun:test"
 
 export const expectOk = (
     result:

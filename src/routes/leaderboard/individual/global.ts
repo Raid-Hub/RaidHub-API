@@ -34,7 +34,7 @@ export const leaderboardIndividualGlobalRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotOnLeaderboardError,
+                code: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

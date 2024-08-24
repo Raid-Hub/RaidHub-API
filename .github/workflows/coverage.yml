@@ -44,7 +44,7 @@ jobs:
                   JWT_SECRET: "jwt-secret"
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
-              run: bun run test --coverage --coverageReporters=lcov --coverageReporters=html --bail=false --testTimeout=30000 --ci
+              run: bun test --testTimeout=30000
               continue-on-error: true
 
             - name: Upload coverage reports

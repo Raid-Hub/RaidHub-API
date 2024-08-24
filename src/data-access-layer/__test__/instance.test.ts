@@ -1,5 +1,5 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../routes/testUtil"
 import { zInstance } from "../../schema/components/Instance"
 import { zInstanceExtended } from "../../schema/components/InstanceExtended"
 import { zInstanceMetadata } from "../../schema/components/InstanceMetadata"
@@ -9,8 +9,6 @@ import {
     getInstanceMetadataByHash,
     getLeaderboardEntryForInstance
 } from "../instance"
-
-cleanupPostgresAfterAll()
 
 describe("getInstance", () => {
     it("returns the correct shape", async () => {

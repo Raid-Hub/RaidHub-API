@@ -53,7 +53,7 @@ jobs:
                   JWT_SECRET: "jwt-secret"
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
-              run: bun run test --coverage --coverageReporters="lcov" --bail=10 --reporters="github-actions" --testTimeout=60000 --ci
+              run: bun test --bail=1 --testTimeout=30000
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report

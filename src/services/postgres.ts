@@ -10,8 +10,7 @@ class RaidHubPool extends Pool {
             ...options,
             objectRows: true
         })
-        if (!process.env.PROD && !process.env.TS_JEST) {
-            /* istanbul ignore next */
+        if (!process.env.PROD && process.env.NODE_ENV !== "test") {
             console.log(executeTime, sql)
         }
 
@@ -28,8 +27,7 @@ class RaidHubPool extends Pool {
             ...options,
             objectRows: true
         })
-        if (!process.env.PROD && !process.env.TS_JEST) {
-            /* istanbul ignore next */
+        if (!process.env.PROD && process.env.NODE_ENV !== "test") {
             console.log(executeTime, sql)
         }
 

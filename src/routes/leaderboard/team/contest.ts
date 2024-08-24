@@ -22,14 +22,14 @@ export const leaderboardTeamContestRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotOnLeaderboardError,
+                code: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 404,
-                type: ErrorCode.RaidNotFoundError,
+                code: ErrorCode.RaidNotFoundError,
                 schema: z.object({
                     raid: z.string()
                 })

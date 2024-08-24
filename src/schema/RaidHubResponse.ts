@@ -1,5 +1,6 @@
 import { ZodObject, ZodRawShape, ZodType, z } from "zod"
 import { registry } from "."
+import { ErrorData } from "../RaidHubRouterTypes"
 import { ErrorCode, zErrorCode } from "./errors/ErrorCode"
 import { zISODateString } from "./util"
 
@@ -47,6 +48,15 @@ export const registerError = <T extends ZodRawShape>(code: ErrorCode, schema: Zo
         error: registry.register(code, schema)
     })
 
-export type RaidHubResponse<T, E, C extends ErrorCode> = {
+export type RaidHubResponse<T, E extends ErrorData> = {
     minted: Date
-} & ({ success: true; response: T } | { success: false; error: E; code: C })
+} & (
+    | { success: true; response: T }
+    | {
+          [K in keyof E]: {
+              success: false
+              error: E[K]["schema"]["_input"]
+              code: E[K]["code"]
+          }
+      }[number]
+)

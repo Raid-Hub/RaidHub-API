@@ -22,7 +22,7 @@ export const activityRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.InstanceNotFoundError,
+                code: ErrorCode.InstanceNotFoundError,
                 schema: z.object({
                     instanceId: zBigIntString()
                 })

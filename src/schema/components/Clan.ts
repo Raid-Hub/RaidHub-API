@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { registry } from ".."
 import { zBigIntString, zISODateString, zNaturalNumber, zWholeNumber } from "../util"
+import { zPlayerInfo } from "./PlayerInfo"
 
 export type ClanBannerData = z.infer<typeof zClanBannerData>
 export const zClanBannerData = registry.register(
@@ -27,16 +28,15 @@ export const zClan = registry.register(
         callSign: z.string(),
         motto: z.string(),
         clanBannerData: zClanBannerData,
-        lastUpdated: zISODateString()
+        lastUpdated: zISODateString(),
+        knownMemberCount: zNaturalNumber()
     })
 )
 
-export type ClanLeaderboardEntry = z.infer<typeof zClanLeaderboardEntry>
-export const zClanLeaderboardEntry = registry.register(
-    "ClanLeaderboardEntry",
+export type ClanAggregateStats = z.infer<typeof zClanAggregateStats>
+export const zClanAggregateStats = registry.register(
+    "ClanAggregateStats",
     z.object({
-        clan: zClan,
-        knownMemberCount: zNaturalNumber(),
         clears: zWholeNumber(),
         averageClears: zWholeNumber(),
         freshClears: zWholeNumber(),
@@ -47,5 +47,41 @@ export const zClanLeaderboardEntry = registry.register(
         averageTimePlayedSeconds: zWholeNumber(),
         totalContestScore: z.number().nonnegative(),
         weightedContestScore: z.number().nonnegative()
+    })
+)
+
+export type ClanLeaderboardEntry = z.infer<typeof zClanLeaderboardEntry>
+export const zClanLeaderboardEntry = registry.register(
+    "ClanLeaderboardEntry",
+    z
+        .object({
+            clan: zClan
+        })
+        .merge(zClanAggregateStats)
+)
+
+export type ClanMemberStats = z.infer<typeof zClanMemberStats>
+export const zClanMemberStats = registry.register(
+    "ClanMemberStats",
+    z.object({
+        clears: zWholeNumber(),
+        freshClears: zWholeNumber(),
+        sherpas: zWholeNumber(),
+        totalTimePlayedSeconds: zWholeNumber(),
+        contestScore: z.number().nonnegative()
+    })
+)
+
+export type ClanStats = z.infer<typeof zClanStats>
+export const zClanStats = registry.register(
+    "ClanStats",
+    z.object({
+        aggregateStats: zClanAggregateStats,
+        members: z.array(
+            z.object({
+                playerInfo: zPlayerInfo.nullable(),
+                stats: zClanMemberStats
+            })
+        )
     })
 )

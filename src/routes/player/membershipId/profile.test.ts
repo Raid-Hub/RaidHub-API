@@ -1,8 +1,7 @@
+import { describe, test } from "bun:test"
 import { generateJWT } from "../../../util/auth"
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
+import { expectErr, expectOk } from "../../testUtil"
 import { playerProfileRoute } from "./profile"
-
-cleanupPostgresAfterAll()
 
 describe("player profile 200", () => {
     const t = async (membershipId: string) => {

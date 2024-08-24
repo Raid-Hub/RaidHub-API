@@ -1,7 +1,6 @@
+import { describe, test } from "bun:test"
 import { clanStatsRoute } from "./clan"
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "./testUtil"
-
-cleanupPostgresAfterAll()
+import { expectErr, expectOk } from "./testUtil"
 
 describe("clan 200", () => {
     const t = async (groupId: string) => {

@@ -19,7 +19,6 @@ export class RabbitQueue<T> {
                 this.isConnecting = false
             })
         }
-        await this.channel
     }
 
     async send(message: T) {
@@ -32,7 +31,11 @@ export class RabbitQueue<T> {
 
             return channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(message)))
         } catch (err) {
-            console.error(new Error("Failed to connect to RabbitMQ"))
+            console.error(
+                new Error("Failed to send message via RabbitMQ", {
+                    cause: err
+                })
+            )
         }
     }
 }

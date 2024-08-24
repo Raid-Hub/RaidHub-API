@@ -1,9 +1,8 @@
+import { describe, expect, test } from "bun:test"
 import express from "express"
 import request from "supertest"
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
+import { expectErr, expectOk } from "../../testUtil"
 import { playerActivitiesRoute } from "./activities"
-
-cleanupPostgresAfterAll()
 
 describe("player activities 200", () => {
     const t = async (membershipId: string, cursor?: Date) => {

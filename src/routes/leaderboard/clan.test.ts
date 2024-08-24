@@ -1,7 +1,6 @@
-import { cleanupPostgresAfterAll, expectOk } from "../testUtil"
+import { describe, expect, test } from "bun:test"
+import { expectOk } from "../testUtil"
 import { clanLeaderboardRoute } from "./clan"
-
-cleanupPostgresAfterAll()
 
 describe("clan leaderboard 200", () => {
     const t = async (query?: Record<string, unknown>) => {
