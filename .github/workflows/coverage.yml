@@ -44,6 +44,7 @@ jobs:
                   JWT_SECRET: "jwt-secret"
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
+                  BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
               run: bun test --testTimeout=30000
               continue-on-error: true
 
