@@ -1,11 +1,11 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getRaidId } from "../../../data-access-layer/definitions"
+import { getRaidId } from "../../../data/definitions"
 import {
     getIndividualRaidLeaderboard,
     individualRaidLeaderboardSortColumns,
     searchIndividualRaidLeaderboard
-} from "../../../data-access-layer/leaderboard/individual/raid"
+} from "../../../data/leaderboard/individual/raid"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"

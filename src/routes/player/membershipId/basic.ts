@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getPlayer } from "../../../data-access-layer/player"
+import { getPlayer } from "../../../data/player"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { processPlayerAsync } from "../../../middlewares/processPlayerAsync"
 import { zPlayerInfo } from "../../../schema/components/PlayerInfo"

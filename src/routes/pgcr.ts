@@ -1,7 +1,7 @@
 import { gunzipSync } from "zlib"
 import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
-import { getRawCompressedPGCR } from "../data-access-layer/pgcr"
+import { getRawCompressedPGCR } from "../data/pgcr"
 import { cacheControl } from "../middlewares/cache-control"
 import {
     RaidHubPostGameCarnageReport,

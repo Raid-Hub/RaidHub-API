@@ -3,11 +3,11 @@ import { RaidHubRoute } from "../../../RaidHubRoute"
 import {
     getIndividualGlobalLeaderboard,
     searchIndividualGlobalLeaderboard
-} from "../../../data-access-layer/leaderboard/individual/global"
+} from "../../../data/leaderboard/individual/global"
 import {
     getIndividualWorldFirstPowerRankingsLeaderboard,
     searchIndividualWorldFirstPowerRankingsLeaderboard
-} from "../../../data-access-layer/leaderboard/individual/power-rankings"
+} from "../../../data/leaderboard/individual/power-rankings"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"

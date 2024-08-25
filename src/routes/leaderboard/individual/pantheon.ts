@@ -1,11 +1,11 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getVersionId } from "../../../data-access-layer/definitions"
+import { getVersionId } from "../../../data/definitions"
 import {
     getIndividualPantheonLeaderboard,
     individualPantheonLeaderboardSortColumns,
     searchIndividualPantheonLeaderboard
-} from "../../../data-access-layer/leaderboard/individual/pantheon"
+} from "../../../data/leaderboard/individual/pantheon"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"

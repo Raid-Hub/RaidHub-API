@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getRaidId } from "../../../data-access-layer/definitions"
+import { getRaidId } from "../../../data/definitions"
 import {
     getContestTeamLeaderboard,
     searchContestTeamLeaderboard
-} from "../../../data-access-layer/leaderboard/team/contest"
+} from "../../../data/leaderboard/team/contest"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"

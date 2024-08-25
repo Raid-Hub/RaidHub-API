@@ -1,10 +1,6 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
-import {
-    listActivityDefinitions,
-    listHashes,
-    listVersionDefinitions
-} from "../data-access-layer/definitions"
+import { listActivityDefinitions, listHashes, listVersionDefinitions } from "../data/definitions"
 import { cacheControl } from "../middlewares/cache-control"
 import { zActivityDefinition } from "../schema/components/ActivityDefinition"
 import { zVersionDefinition } from "../schema/components/VersionDefinition"
