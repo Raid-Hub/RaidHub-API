@@ -30,9 +30,8 @@ export const bungiePlatformHttp: BungieClientProtocol = {
             }
 
             if (data.ErrorCode !== 1) {
-                throw new BungieApiError(data.Message, {
+                throw new BungieApiError({
                     cause: data,
-                    code: data.ErrorCode,
                     url: config.url
                 })
             } else {

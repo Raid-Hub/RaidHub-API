@@ -6,7 +6,7 @@
     "esModuleInterop": true,
 
     "types": ["bun-types"],
-    "lib": ["ES6", "ESNext"],
+    "lib": ["ES6", "ESNext", "DOM"],
 
     "strict": true,
     "allowJs": true,

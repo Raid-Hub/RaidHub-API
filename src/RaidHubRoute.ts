@@ -408,6 +408,7 @@ export class RaidHubRoute<
                       : this.errors[0].schema.strict()
             return {
                 type: "err",
+                code: res.code,
                 parsed: schema.parse(res.error)
             } as const
         }

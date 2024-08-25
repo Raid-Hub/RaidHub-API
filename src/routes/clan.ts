@@ -72,13 +72,13 @@ export const clanStatsRoute = new RaidHubRoute({
 const handleErr = (err: unknown, groupId: bigint) => {
     if (err instanceof BungieApiError) {
         if (
-            err.code === PlatformErrorCodes.ClanNotFound ||
-            err.code === PlatformErrorCodes.GroupNotFound
+            err.cause.ErrorCode === PlatformErrorCodes.ClanNotFound ||
+            err.cause.ErrorCode === PlatformErrorCodes.GroupNotFound
         ) {
             return RaidHubRoute.fail(ErrorCode.ClanNotFound, {
                 groupId
             })
-        } else if (err.code === PlatformErrorCodes.SystemDisabled) {
+        } else if (err.cause.ErrorCode === PlatformErrorCodes.SystemDisabled) {
             return RaidHubRoute.fail(ErrorCode.BungieServiceOffline, {
                 message: err.message,
                 route: err.url.pathname + err.url.searchParams.toString()
