@@ -45,7 +45,7 @@ jobs:
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
                   BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
-              run: bun test --testTimeout=30000 --coverage
+              run: bun test ---timeout=30000 --coverage
               continue-on-error: true
 
             - name: Upload coverage reports
