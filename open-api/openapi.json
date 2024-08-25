@@ -40,7 +40,8 @@
           "AdminQuerySyntaxError",
           "InsufficientPermissionsError",
           "InvalidClientSecretError",
-          "InternalServerError"
+          "InternalServerError",
+          "BungieServiceOffline"
         ]
       },
       "RaidHubResponse": {
@@ -184,8 +185,7 @@
         "type": "object",
         "properties": {
           "message": {
-            "type": "string",
-            "enum": ["Internal Server Error"]
+            "type": "string"
           }
         },
         "required": ["message"]
@@ -648,6 +648,11 @@
           "lastUpdated": {
             "type": "string",
             "format": "date-time"
+          },
+          "knownMemberCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
           }
         },
         "required": [
@@ -656,7 +661,65 @@
           "callSign",
           "motto",
           "clanBannerData",
-          "lastUpdated"
+          "lastUpdated",
+          "knownMemberCount"
+        ]
+      },
+      "ClanAggregateStats": {
+        "type": "object",
+        "properties": {
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "freshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageFreshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageSherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "averageTimePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalContestScore": {
+            "type": "number",
+            "minimum": 0
+          },
+          "weightedContestScore": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "clears",
+          "averageClears",
+          "freshClears",
+          "averageFreshClears",
+          "sherpas",
+          "averageSherpas",
+          "timePlayedSeconds",
+          "averageTimePlayedSeconds",
+          "totalContestScore",
+          "weightedContestScore"
         ]
       },
       "ClanLeaderboardEntry": {
@@ -664,11 +727,6 @@
         "properties": {
           "clan": {
             "$ref": "#/components/schemas/Clan"
-          },
-          "knownMemberCount": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
           },
           "clears": {
             "type": "integer",
@@ -713,7 +771,6 @@
         },
         "required": [
           "clan",
-          "knownMemberCount",
           "clears",
           "averageClears",
           "freshClears",
@@ -725,6 +782,69 @@
           "totalContestScore",
           "weightedContestScore"
         ]
+      },
+      "ClanMemberStats": {
+        "type": "object",
+        "properties": {
+          "clears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "freshClears": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sherpas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalTimePlayedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "contestScore": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "clears",
+          "freshClears",
+          "sherpas",
+          "totalTimePlayedSeconds",
+          "contestScore"
+        ]
+      },
+      "ClanStats": {
+        "type": "object",
+        "properties": {
+          "aggregateStats": {
+            "$ref": "#/components/schemas/ClanAggregateStats"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "playerInfo": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PlayerInfo"
+                    },
+                    {
+                      "nullable": true
+                    }
+                  ]
+                },
+                "stats": {
+                  "$ref": "#/components/schemas/ClanMemberStats"
+                }
+              },
+              "required": ["playerInfo", "stats"]
+            }
+          }
+        },
+        "required": ["aggregateStats", "members"]
       },
       "TeamLeaderboardEntry": {
         "type": "object",
@@ -2439,69 +2559,33 @@
       "ClanResponse": {
         "type": "object",
         "properties": {
-          "clan": {
-            "$ref": "#/components/schemas/Clan"
+          "aggregateStats": {
+            "$ref": "#/components/schemas/ClanAggregateStats"
           },
-          "knownMemberCount": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "clears": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "averageClears": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "freshClears": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "averageFreshClears": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "sherpas": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "averageSherpas": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "timePlayedSeconds": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "averageTimePlayedSeconds": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "totalContestScore": {
-            "type": "number",
-            "minimum": 0
-          },
-          "weightedContestScore": {
-            "type": "number",
-            "minimum": 0
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "playerInfo": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PlayerInfo"
+                    },
+                    {
+                      "nullable": true
+                    }
+                  ]
+                },
+                "stats": {
+                  "$ref": "#/components/schemas/ClanMemberStats"
+                }
+              },
+              "required": ["playerInfo", "stats"]
+            }
           }
         },
-        "required": [
-          "clan",
-          "knownMemberCount",
-          "clears",
-          "averageClears",
-          "freshClears",
-          "averageFreshClears",
-          "sherpas",
-          "averageSherpas",
-          "timePlayedSeconds",
-          "averageTimePlayedSeconds",
-          "totalContestScore",
-          "weightedContestScore"
-        ]
+        "required": ["aggregateStats", "members"]
       },
       "ClanNotFoundError": {
         "type": "object",
@@ -2512,6 +2596,18 @@
           }
         },
         "required": ["groupId"]
+      },
+      "BungieServiceOffline": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          }
+        },
+        "required": ["message", "route"]
       },
       "AdminQueryResponse": {
         "oneOf": [
@@ -2589,7 +2685,7 @@
             "exclusiveMinimum": true
           }
         },
-        "required": ["name", "code", "line", "position"]
+        "required": ["name"]
       },
       "AuthorizeAdminResponse": {
         "type": "object",
@@ -5431,6 +5527,34 @@
                     },
                     "error": {
                       "$ref": "#/components/schemas/InternalServerError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "BungieServiceOffline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["BungieServiceOffline"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/BungieServiceOffline"
                     }
                   },
                   "required": ["minted", "success", "code", "error"]

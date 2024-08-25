@@ -5,7 +5,7 @@ import {
     getPlayerActivityStats,
     getPlayerGlobalStats,
     getWorldFirstEntries
-} from "../../../data-access-layer/player"
+} from "../../../data/player"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { processPlayerAsync } from "../../../middlewares/processPlayerAsync"
 import { WorldFirstEntry, zPlayerProfile } from "../../../schema/components/PlayerProfile"
@@ -29,14 +29,14 @@ This is used to hydrate the RaidHub profile page`,
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotFoundError,
+                code: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                type: ErrorCode.PlayerPrivateProfileError,
+                code: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

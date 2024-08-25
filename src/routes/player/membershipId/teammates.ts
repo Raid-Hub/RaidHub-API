@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getPlayer } from "../../../data-access-layer/player"
-import { getTeammates } from "../../../data-access-layer/teammates"
+import { getPlayer } from "../../../data/player"
+import { getTeammates } from "../../../data/teammates"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zTeammate } from "../../../schema/components/Teammate"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
@@ -23,14 +23,14 @@ export const playerTeammatesRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotFoundError,
+                code: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                type: ErrorCode.PlayerPrivateProfileError,
+                code: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })

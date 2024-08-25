@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getRaidId } from "../../../data-access-layer/definitions"
+import { getRaidId } from "../../../data/definitions"
 import {
     getContestTeamLeaderboard,
     searchContestTeamLeaderboard
-} from "../../../data-access-layer/leaderboard/team/contest"
+} from "../../../data/leaderboard/team/contest"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"
@@ -22,14 +22,14 @@ export const leaderboardTeamContestRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotOnLeaderboardError,
+                code: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 404,
-                type: ErrorCode.RaidNotFoundError,
+                code: ErrorCode.RaidNotFoundError,
                 schema: z.object({
                     raid: z.string()
                 })

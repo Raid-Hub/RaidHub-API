@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getActivityVersion } from "../../../data-access-layer/definitions"
+import { getActivityVersion } from "../../../data/definitions"
 import {
     getFirstTeamActivityVersionLeaderboard,
     searchFirstTeamActivityVersionLeaderboard
-} from "../../../data-access-layer/leaderboard/team/first"
+} from "../../../data/leaderboard/team/first"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"
@@ -24,14 +24,14 @@ Use the /contest endpoint instead to get the full rankings for the duration of t
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotOnLeaderboardError,
+                code: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 404,
-                type: ErrorCode.InvalidActivityVersionComboError,
+                code: ErrorCode.InvalidActivityVersionComboError,
                 schema: z.object({
                     activity: z.string(),
                     version: z.string()

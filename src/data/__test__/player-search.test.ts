@@ -1,9 +1,7 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../routes/testUtil"
 import { zPlayerInfo } from "../../schema/components/PlayerInfo"
 import { searchForPlayer } from "../player-search"
-
-cleanupPostgresAfterAll()
 
 describe("searchForPlayer", () => {
     it("returns the correct shape", async () => {

@@ -1,13 +1,11 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../../routes/testUtil"
 import { zIndividualLeaderboardEntry } from "../../../schema/components/LeaderboardData"
 import { zNaturalNumber } from "../../../schema/util"
 import {
     getIndividualRaidLeaderboard,
     searchIndividualRaidLeaderboard
 } from "../../leaderboard/individual/raid"
-
-cleanupPostgresAfterAll()
 
 describe("getIndividualRaidLeaderboard", () => {
     it("returns the correct shape", async () => {

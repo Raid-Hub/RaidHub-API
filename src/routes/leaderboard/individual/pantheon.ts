@@ -1,11 +1,11 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getVersionId } from "../../../data-access-layer/definitions"
+import { getVersionId } from "../../../data/definitions"
 import {
     getIndividualPantheonLeaderboard,
     individualPantheonLeaderboardSortColumns,
     searchIndividualPantheonLeaderboard
-} from "../../../data-access-layer/leaderboard/individual/pantheon"
+} from "../../../data/leaderboard/individual/pantheon"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
 import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"
@@ -35,14 +35,14 @@ export const leaderboardIndividualPantheonRoute = new RaidHubRoute({
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotOnLeaderboardError,
+                code: ErrorCode.PlayerNotOnLeaderboardError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 404,
-                type: ErrorCode.PantheonVersionNotFoundError,
+                code: ErrorCode.PantheonVersionNotFoundError,
                 schema: z.object({
                     path: z.string()
                 })

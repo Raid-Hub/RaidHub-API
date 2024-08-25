@@ -1,7 +1,6 @@
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
+import { describe, test } from "bun:test"
+import { expectErr, expectOk } from "../../../util.test"
 import { playerBasicRoute } from "./basic"
-
-cleanupPostgresAfterAll()
 
 describe("player basic 200", () => {
     const t = async (membershipId: string) => {

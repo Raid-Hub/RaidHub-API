@@ -38,8 +38,7 @@ export const canAccessPrivateProfile = async (
             })
         )
     } catch (err) {
-        // TODO: Log error
-        console.error(err)
+        process.env.NODE_ENV !== "test" && console.error(err)
         return false
     }
 }

@@ -1,20 +1,17 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../../routes/testUtil"
 import { zIndividualLeaderboardEntry } from "../../../schema/components/LeaderboardData"
 import { zNaturalNumber } from "../../../schema/util"
 import {
-    getIndividualPantheonLeaderboard,
-    searchIndividualPantheonLeaderboard
-} from "../../leaderboard/individual/pantheon"
+    getIndividualGlobalLeaderboard,
+    searchIndividualGlobalLeaderboard
+} from "../../leaderboard/individual/global"
 
-cleanupPostgresAfterAll()
-
-describe("getIndividualPantheonLeaderboard", () => {
+describe("getIndividualGlobalLeaderboard", () => {
     it("returns the correct shape", async () => {
-        const data = await getIndividualPantheonLeaderboard({
-            versionId: 129,
-            skip: 13,
-            take: 10,
+        const data = await getIndividualGlobalLeaderboard({
+            skip: 24921,
+            take: 27,
             column: "clears"
         }).catch(console.error)
 
@@ -28,11 +25,10 @@ describe("getIndividualPantheonLeaderboard", () => {
     })
 })
 
-describe("searchIndividualPantheonLeaderboard", () => {
+describe("searchIndividualGlobalLeaderboard", () => {
     it("returns the correct shape", async () => {
-        const data = await searchIndividualPantheonLeaderboard({
-            versionId: 129,
-            take: 15,
+        const data = await searchIndividualGlobalLeaderboard({
+            take: 4,
             column: "clears",
             membershipId: "4611686018488107374"
         }).catch(console.error)

@@ -1,7 +1,6 @@
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "../../testUtil"
+import { describe, expect, test } from "bun:test"
+import { expectErr, expectOk } from "../../../util.test"
 import { leaderboardIndividualPantheonRoute } from "./pantheon"
-
-cleanupPostgresAfterAll()
 
 describe("pantheon leaderboard 200", () => {
     const t = async (

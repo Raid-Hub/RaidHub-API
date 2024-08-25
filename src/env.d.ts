@@ -8,5 +8,6 @@ declare module "bun" {
         JWT_SECRET: string
         PROD?: boolean
         PORT?: number
+        NODE_ENV: "development" | "production" | "test"
     }
 }

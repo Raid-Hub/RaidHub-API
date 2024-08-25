@@ -5,6 +5,6 @@ import { ErrorCode } from "./ErrorCode"
 export const zInternalServerError = registerError(
     ErrorCode.InternalServerError,
     z.object({
-        message: z.literal("Internal Server Error")
+        message: z.string()
     })
 )

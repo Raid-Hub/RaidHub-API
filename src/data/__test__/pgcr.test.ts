@@ -1,8 +1,7 @@
+import { describe, expect, it } from "bun:test"
 import { z } from "zod"
-import { cleanupPostgresAfterAll } from "../../routes/testUtil"
 import { getRawCompressedPGCR } from "../pgcr"
 
-cleanupPostgresAfterAll()
 describe("getRawCompressedPGCR", () => {
     it("returns the correct shape", async () => {
         const data = await getRawCompressedPGCR("12685770593").catch(console.error)

@@ -40,9 +40,9 @@ export const getClanLeaderboard = async ({
                 'callSign', clan.call_sign,
                 'motto', clan."motto",
                 'clanBannerData', clan."clan_banner_data",
-                'lastUpdated', TO_CHAR(clan."updated_at" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+                'lastUpdated', TO_CHAR(clan."updated_at" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+                'knownMemberCount', clan_leaderboard."known_member_count"
             ) AS "clan",
-            "known_member_count" AS "knownMemberCount",
             "clears",
             "average_clears" AS "averageClears",
             "fresh_clears" AS "freshClears",

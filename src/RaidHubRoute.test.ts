@@ -1,3 +1,4 @@
+import { describe, expect, test } from "bun:test"
 import express from "express"
 import request from "supertest"
 import { z } from "zod"
@@ -40,14 +41,14 @@ const testGetRoute = new RaidHubRoute({
         },
         errors: [
             {
-                type: ErrorCode.PlayerNotFoundError,
+                code: ErrorCode.PlayerNotFoundError,
                 statusCode: 404,
                 schema: z.object({
                     playerId: zBigIntString()
                 })
             },
             {
-                type: ErrorCode.InstanceNotFoundError,
+                code: ErrorCode.InstanceNotFoundError,
                 statusCode: 404,
                 schema: z.object({
                     activityId: zBigIntString()

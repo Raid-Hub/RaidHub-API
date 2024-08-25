@@ -6,6 +6,8 @@ export const processPlayerAsync: RequestHandler<{ membershipId: bigint }> = asyn
     res,
     next
 ) => {
-    res.on("finish", () => playersQueue.send({ membershipId: req.params.membershipId }))
+    res.on("finish", () => {
+        playersQueue.send({ membershipId: req.params.membershipId })
+    })
     next()
 }

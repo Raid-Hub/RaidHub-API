@@ -5,8 +5,8 @@
     "moduleResolution": "Node",
     "esModuleInterop": true,
 
-    "types": ["bun-types", "jest"],
-    "lib": ["ES6", "ESNext"],
+    "types": ["bun-types"],
+    "lib": ["ES6", "ESNext", "DOM"],
 
     "strict": true,
     "allowJs": true,

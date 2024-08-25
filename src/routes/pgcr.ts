@@ -1,7 +1,7 @@
 import { gunzipSync } from "zlib"
 import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
-import { getRawCompressedPGCR } from "../data-access-layer/pgcr"
+import { getRawCompressedPGCR } from "../data/pgcr"
 import { cacheControl } from "../middlewares/cache-control"
 import {
     RaidHubPostGameCarnageReport,
@@ -30,7 +30,7 @@ Useful if you need to access PGCRs when Bungie's API is down.`,
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PGCRNotFoundError,
+                code: ErrorCode.PGCRNotFoundError,
                 schema: z.object({
                     instanceId: zBigIntString()
                 })

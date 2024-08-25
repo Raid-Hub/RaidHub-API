@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getPlayer } from "../../../data-access-layer/player"
+import { getPlayer } from "../../../data/player"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { processPlayerAsync } from "../../../middlewares/processPlayerAsync"
 import { zPlayerInfo } from "../../../schema/components/PlayerInfo"
@@ -24,7 +24,7 @@ you only have the membershipId available.`,
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotFoundError,
+                code: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
@@ -36,7 +36,6 @@ you only have the membershipId available.`,
 
         if (!member) {
             return RaidHubRoute.fail(ErrorCode.PlayerNotFoundError, {
-                notFound: true,
                 membershipId: req.params.membershipId
             })
         } else {

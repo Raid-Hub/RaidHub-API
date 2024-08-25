@@ -1,7 +1,6 @@
-import { cleanupPostgresAfterAll, expectErr, expectOk } from "../testUtil"
+import { describe, test } from "bun:test"
+import { expectErr, expectOk } from "../../util.test"
 import { adminQueryRoute } from "./query"
-
-cleanupPostgresAfterAll()
 
 describe("admin query 200", () => {
     const t = async (query: string, type: string, ignoreCost?: boolean) => {

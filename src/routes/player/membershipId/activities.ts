@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { RaidHubRoute } from "../../../RaidHubRoute"
-import { getActivities } from "../../../data-access-layer/history"
-import { getPlayer } from "../../../data-access-layer/player"
+import { getActivities } from "../../../data/history"
+import { getPlayer } from "../../../data/player"
 import { zInstanceForPlayer } from "../../../schema/components/InstanceForPlayer"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
 import { zBigIntString, zISODateString } from "../../../schema/util"
@@ -36,14 +36,14 @@ in order to optimize performance. Subsequent requests will return the full numbe
         errors: [
             {
                 statusCode: 404,
-                type: ErrorCode.PlayerNotFoundError,
+                code: ErrorCode.PlayerNotFoundError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
             },
             {
                 statusCode: 403,
-                type: ErrorCode.PlayerPrivateProfileError,
+                code: ErrorCode.PlayerPrivateProfileError,
                 schema: z.object({
                     membershipId: zBigIntString()
                 })
