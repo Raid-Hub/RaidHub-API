@@ -1,6 +1,6 @@
 import { test } from "bun:test"
+import { expectOk } from "../util.test"
 import { manifestRoute } from "./manifest"
-import { expectOk } from "./testUtil"
 
 test("manifest 200", async () => {
     const result = await manifestRoute.$mock({})

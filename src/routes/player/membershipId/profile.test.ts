@@ -1,6 +1,6 @@
 import { describe, test } from "bun:test"
+import { expectErr, expectOk } from "../../../util.test"
 import { generateJWT } from "../../../util/auth"
-import { expectErr, expectOk } from "../../testUtil"
 import { playerProfileRoute } from "./profile"
 
 describe("player profile 200", () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
 import { getDestinyManifest, transferItem } from "bungie-net-core/endpoints/Destiny2"
 import { bungiePlatformHttp } from "./client"
 import { BungieApiError } from "./error"
@@ -38,6 +38,47 @@ describe("bungie http client", () => {
         } catch (err: any) {
             expect(err).toBeInstanceOf(Error)
             expect(err.cause).toContain("html")
+        }
+    })
+
+    test("json error", async () => {
+        const mockResponse = new Response(JSON.stringify({ ok: true }), {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResponse)
+
+        try {
+            const res = await bungiePlatformHttp.fetch({
+                url: new URL("http://localhost/mocked"),
+                method: "GET"
+            })
+
+            expect(res).toBe(null)
+        } catch (err: any) {
+            expect(err).toBeInstanceOf(Error)
+            expect(err.message).toBe("Invalid JSON response")
+        }
+    })
+
+    test("http error", async () => {
+        const mockResponse = new Response(null, {
+            status: 504,
+            statusText: "Gateway Timeout"
+        })
+        spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResponse)
+
+        try {
+            const res = await bungiePlatformHttp.fetch({
+                url: new URL("http://localhost/mocked"),
+                method: "GET"
+            })
+
+            expect(res).toBe(null)
+        } catch (err: any) {
+            expect(err).toBeInstanceOf(Error)
+            expect(err.message).toBe("Invalid response (504): Gateway Timeout")
         }
     })
 })

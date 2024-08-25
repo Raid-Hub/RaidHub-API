@@ -1,29 +1,8 @@
 import { ZodObject, ZodRawShape, ZodType, z } from "zod"
 import { registry } from "."
 import { ErrorData } from "../RaidHubRouterTypes"
-import { ErrorCode, zErrorCode } from "./errors/ErrorCode"
+import { ErrorCode } from "./errors/ErrorCode"
 import { zISODateString } from "./util"
-
-export const zRaidHubResponse = registry.register(
-    "RaidHubResponse",
-    z.discriminatedUnion("success", [
-        z
-            .object({
-                minted: zISODateString(),
-                success: z.literal(true),
-                response: z.unknown()
-            })
-            .strict(),
-        z
-            .object({
-                minted: zISODateString(),
-                success: z.literal(false),
-                code: zErrorCode,
-                error: z.unknown()
-            })
-            .strict()
-    ])
-)
 
 export const registerResponse = (path: string, schema: ZodType) =>
     z.object({

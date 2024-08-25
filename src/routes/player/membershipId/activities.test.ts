@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import express from "express"
 import request from "supertest"
-import { expectErr, expectOk } from "../../testUtil"
+import { expectErr, expectOk } from "../../../util.test"
 import { playerActivitiesRoute } from "./activities"
 
 describe("player activities 200", () => {

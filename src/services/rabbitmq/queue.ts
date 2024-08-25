@@ -31,11 +31,12 @@ export class RabbitQueue<T> {
 
             return channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(message)))
         } catch (err) {
-            console.error(
-                new Error("Failed to send message via RabbitMQ", {
-                    cause: err
-                })
-            )
+            process.env.NODE_ENV !== "test" &&
+                console.error(
+                    new Error("Failed to send message via RabbitMQ", {
+                        cause: err
+                    })
+                )
         }
     }
 }

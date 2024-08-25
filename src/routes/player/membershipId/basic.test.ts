@@ -1,5 +1,5 @@
 import { describe, test } from "bun:test"
-import { expectErr, expectOk } from "../../testUtil"
+import { expectErr, expectOk } from "../../../util.test"
 import { playerBasicRoute } from "./basic"
 
 describe("player basic 200", () => {

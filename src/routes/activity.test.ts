@@ -1,6 +1,6 @@
 import { describe, test } from "bun:test"
+import { expectErr, expectOk } from "../util.test"
 import { activityRoute } from "./activity"
-import { expectErr, expectOk } from "./testUtil"
 
 describe("activity 200", () => {
     const t = async (instanceId: string) => {
