@@ -19,7 +19,7 @@ export const zVersionDefinition = registry.register(
             examples: [
                 {
                     id: 1,
-                    name: "Normal",
+                    name: "Standard",
                     path: "normal",
                     associatedActivityId: null,
                     isChallengeMode: false
