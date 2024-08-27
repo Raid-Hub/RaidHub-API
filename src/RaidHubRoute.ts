@@ -220,7 +220,15 @@ export class RaidHubRoute<
     private controller: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> =
         async (req, res, next) => {
             try {
-                const result = await this.handler(req)
+                const result = await this.handler(req, callback => {
+                    res.on("finish", () => {
+                        try {
+                            callback()
+                        } catch (err) {
+                            process.env.NODE_ENV !== "test" && console.error(err)
+                        }
+                    })
+                })
                 const response = this.buildResponse(result)
                 if (result.success) {
                     res.status(this.successCode).json(response)
@@ -378,12 +386,18 @@ export class RaidHubRoute<
         body?: unknown
         headers?: IncomingHttpHeaders
     }) {
-        const res = await this.handler({
-            params: this.paramsSchema?.parse(req.params) ?? {},
-            query: this.querySchema?.parse(req.query) ?? {},
-            body: this.bodySchema?.parse(req.body) ?? {},
-            headers: req.headers ?? {}
-        }).then(this.buildResponse)
+        let after: () => Promise<void> = () => Promise.resolve()
+        const res = await this.handler(
+            {
+                params: this.paramsSchema?.parse(req.params) ?? {},
+                query: this.querySchema?.parse(req.query) ?? {},
+                body: this.bodySchema?.parse(req.body) ?? {},
+                headers: req.headers ?? {}
+            },
+            afterCallback => (after = afterCallback)
+        ).then(this.buildResponse)
+
+        await after()
 
         // We essentially can use this type to narrow down the type of res in our unit tests
         // This will guarantee that we are testing the correct type of response and that
@@ -391,7 +405,7 @@ export class RaidHubRoute<
         if (res.success) {
             return {
                 type: "ok",
-                parsed: this.responseSchema.parse(res.response)
+                parsed: this.responseSchema.parse(res.response) as z.infer<ResponseBody>
             } as const
         } else {
             const schema =

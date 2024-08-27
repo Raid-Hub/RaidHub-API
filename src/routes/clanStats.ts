@@ -4,13 +4,14 @@ import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
 import { getClanStats } from "../data/clan"
 import { cacheControl } from "../middlewares/cache-control"
-import { processClanAsync } from "../middlewares/processClanAsync"
 import { zClanStats } from "../schema/components/Clan"
 import { ErrorCode } from "../schema/errors/ErrorCode"
 import { zBigIntString } from "../schema/util"
 import { BungieApiError } from "../services/bungie/error"
 import { getClan } from "../services/bungie/getClan"
 import { getClanMembers } from "../services/bungie/getClanMembers"
+import { clanQueue } from "../services/rabbitmq/queues/clan"
+import { playersQueue } from "../services/rabbitmq/queues/player"
 
 export const clanStatsRoute = new RaidHubRoute({
     method: "get",
@@ -18,7 +19,7 @@ export const clanStatsRoute = new RaidHubRoute({
     params: z.object({
         groupId: zBigIntString()
     }),
-    middleware: [cacheControl(30), processClanAsync],
+    middleware: [cacheControl(30)],
     response: {
         success: {
             statusCode: 200,
@@ -42,7 +43,7 @@ export const clanStatsRoute = new RaidHubRoute({
             }
         ] as const
     },
-    async handler({ params }) {
+    async handler({ params }, after) {
         const groupId = params.groupId
 
         try {
@@ -64,6 +65,17 @@ export const clanStatsRoute = new RaidHubRoute({
         }
 
         const stats = await getClanStats(members.map(m => m.destinyUserInfo.membershipId))
+
+        after(async () => {
+            await clanQueue.send({ groupId })
+            await Promise.all(
+                members.map(member =>
+                    playersQueue.send({
+                        membershipId: BigInt(member.destinyUserInfo.membershipId)
+                    })
+                )
+            )
+        })
 
         return RaidHubRoute.ok(stats)
     }

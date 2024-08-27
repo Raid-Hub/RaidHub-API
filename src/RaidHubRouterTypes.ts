@@ -27,12 +27,15 @@ export type RaidHubHandler<
     Body extends ZodType,
     T,
     ErrorResponse extends ErrorData
-> = (req: {
-    params: z.infer<Params>
-    query: z.infer<Query>
-    body: z.infer<Body>
-    headers: IncomingHttpHeaders
-}) => Promise<RaidHubHandlerReturn<T, ErrorResponse>>
+> = (
+    req: {
+        params: z.infer<Params>
+        query: z.infer<Query>
+        body: z.infer<Body>
+        headers: IncomingHttpHeaders
+    },
+    after: (callback: () => Promise<void>) => void
+) => Promise<RaidHubHandlerReturn<T, ErrorResponse>>
 
 export type RaidHubHandlerReturn<T, E extends ErrorData> =
     | { success: true; response: T }

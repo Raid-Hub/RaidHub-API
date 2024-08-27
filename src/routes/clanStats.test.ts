@@ -1,15 +1,32 @@
-import { describe, expect, spyOn, test } from "bun:test"
+import { beforeEach, describe, expect, spyOn, test } from "bun:test"
 import { PlatformErrorCodes } from "bungie-net-core/enums"
 import { ErrorCode } from "../schema/errors/ErrorCode"
 import { bungiePlatformHttp } from "../services/bungie/client"
 import { BungieApiError } from "../services/bungie/error"
+import { clanQueue } from "../services/rabbitmq/queues/clan"
+import { playersQueue } from "../services/rabbitmq/queues/player"
 import { expectErr, expectOk } from "../util.test"
-import { clanStatsRoute } from "./clan"
+import { clanStatsRoute } from "./clanStats"
 
 describe("clan 200", () => {
+    const spyClanQueueSend = spyOn(clanQueue, "send")
+    const spyPlayersQueueSend = spyOn(playersQueue, "send")
+
+    beforeEach(() => {
+        spyClanQueueSend.mockReset()
+        spyClanQueueSend.mockResolvedValueOnce(true)
+        spyPlayersQueueSend.mockReset()
+        spyPlayersQueueSend.mockResolvedValue(true)
+    })
+
     const t = async (groupId: string) => {
         const result = await clanStatsRoute.$mock({ params: { groupId } })
         expectOk(result)
+        expect(spyClanQueueSend).toHaveBeenCalledTimes(1)
+        if (result.type === "ok") {
+            console.log("test", result.parsed.members.length)
+            expect(spyPlayersQueueSend).toHaveBeenCalledTimes(result.parsed.members.length)
+        }
     }
 
     test("Elysium", () => t("3148408"))
