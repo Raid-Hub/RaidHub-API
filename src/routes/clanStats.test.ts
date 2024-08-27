@@ -15,8 +15,8 @@ describe("clan 200", () => {
     beforeEach(() => {
         spyClanQueueSend.mockReset()
         spyClanQueueSend.mockResolvedValueOnce(true)
-        spyClanQueueSend.mockReset()
-        spyClanQueueSend.mockResolvedValue(true)
+        spyPlayersQueueSend.mockReset()
+        spyPlayersQueueSend.mockResolvedValue(true)
     })
 
     const t = async (groupId: string) => {
@@ -24,6 +24,7 @@ describe("clan 200", () => {
         expectOk(result)
         expect(spyClanQueueSend).toHaveBeenCalledTimes(1)
         if (result.type === "ok") {
+            console.log("test", result.parsed.members.length)
             expect(spyPlayersQueueSend).toHaveBeenCalledTimes(result.parsed.members.length)
         }
     }

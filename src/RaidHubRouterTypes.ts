@@ -34,7 +34,7 @@ export type RaidHubHandler<
         body: z.infer<Body>
         headers: IncomingHttpHeaders
     },
-    after: (callback: () => void) => void
+    after: (callback: () => Promise<void>) => void
 ) => Promise<RaidHubHandlerReturn<T, ErrorResponse>>
 
 export type RaidHubHandlerReturn<T, E extends ErrorData> =
