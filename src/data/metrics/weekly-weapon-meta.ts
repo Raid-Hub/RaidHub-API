@@ -15,44 +15,43 @@ export const getWeeklyWeaponMeta = async ({ sort }: { sort: "usage" | "kills" })
         query_params: {
             sortColumn
         },
-        query: `WITH
-                    week_start AS (
-                        -- Determine the start of the week based on Tuesday at 17:00 UTC
-                        SELECT toStartOfWeek(now()) + INTERVAL 65 HOUR AS week_start
-                    ),
-                    this_week_instances AS (
-                        SELECT *
-                        FROM instance
-                        WHERE date_completed >= (SELECT week_start FROM week_start)
-                        AND date_completed < (SELECT week_start FROM week_start) + INTERVAL 1 WEEK
-                    ),
-                    weapon_usage AS (
-                        SELECT
-                            w.weapon_hash AS weapon_hash,
-                            COUNT(*) AS usage_count,
-                            SUM(w.kills) AS kill_count
-                        FROM this_week_instances AS i
-                        ARRAY JOIN i.players AS p
-                        ARRAY JOIN p.characters AS c
-                        ARRAY JOIN c.weapons AS w
-                        GROUP BY w.weapon_hash
-                        HAVING usage_count >= 100
-                    )
+        query: `WITH the_week AS (
+                    -- Determine the start of the week based on Tuesday at 17:00 UTC
+                    SELECT 
+                        toStartOfWeek(now()) + INTERVAL 65 HOUR AS week_start,
+                        week_start + INTERVAL 1 WEEK AS week_end
+                ),
+                entries AS (
+                    SELECT arrayJoin(flatten(arrayMap(p -> (arrayMap(c -> (
+                        c.weapons
+                    ), p.characters)), i.players))) AS weapon
+                    FROM instance i FINAL
+                    WHERE i.date_completed >= (SELECT week_start FROM the_week)
+                    AND i.date_completed < (SELECT week_end FROM the_week) + INTERVAL 1 WEEK
+                ),
+                weapon_usage AS (
+                    SELECT
+                        e.weapon.weapon_hash as hash,
+                        COUNT(*) AS usage_count,
+                        SUM(e.weapon.kills) AS kill_count
+                    FROM entries e
+                    GROUP BY e.weapon.weapon_hash
+                    HAVING usage_count >= 100
+                )
                 SELECT
-                    wd.hash::Int64 AS hash,
+                    wu.hash,
                     wd.name,
-                    wd.icon_path AS iconPath,
+                    wd.icon_path,
                     wd.element,
                     wd.slot,
-                    wd.ammo_type AS ammoType,
+                    wd.ammo_type,
                     wd.rarity,
-                    wu.usage_count::Int AS usageCount,
-                    wu.kill_count::Int AS killCount
+                    wu.usage_count,
+                    wu.kill_count
                 FROM weapon_usage AS wu
-                INNER JOIN weapon_definition AS wd
-                ON wu.weapon_hash = wd.hash
-                ORDER BY wu.{sortColumn:Identifier} DESC;
-                `
+                LEFT JOIN weapon_definition AS wd
+                ON wu.hash = wd.hash
+                ORDER BY wu.{sortColumn:Identifier} DESC;`
     })
 
     return await results
