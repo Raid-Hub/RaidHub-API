@@ -11,9 +11,7 @@ export const weeklyWeaponMetaRoute = new RaidHubRoute({
     description: "Get the weekly weapon meta",
     query: z.object({
         sort: z.enum(["usage", "kills"]).optional().default("usage"),
-        date: z
-            .date()
-            .optional()
+        date: zISODateString()
             .default(() => new Date())
             .openapi({
                 description:

@@ -5698,8 +5698,8 @@
           {
             "schema": {
               "type": "string",
-              "default": "2024-08-29T17:19:36.316Z",
-              "description": "For best performance, using the start of the Destiny week as the date param, or leave it blank"
+              "description": "For best performance, using the start of the Destiny week as the date param, or leave it blank",
+              "format": "date-time"
             },
             "required": false,
             "name": "date",

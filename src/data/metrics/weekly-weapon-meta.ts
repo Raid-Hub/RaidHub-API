@@ -45,8 +45,8 @@ export const getWeeklyWeaponMeta = async ({
                 weapon_usage AS (
                     SELECT
                         e.weapon.weapon_hash as hash,
-                        COUNT(*) AS usage_count,
-                        SUM(e.weapon.kills) AS kill_count
+                        COUNT(*)::UInt32 AS usage_count,
+                        SUM(e.weapon.kills)::UInt32 AS kill_count
                     FROM entries e
                     GROUP BY e.weapon.weapon_hash
                     HAVING usage_count >= 100
@@ -54,17 +54,18 @@ export const getWeeklyWeaponMeta = async ({
                 SELECT
                     wu.hash AS hash,
                     wd.name,
-                    wd.icon_path,
+                    wd.icon_path AS iconPath,
                     wd.element,
                     wd.slot,
-                    wd.ammo_type,
+                    wd.ammo_type AS ammoType,
                     wd.rarity,
-                    wu.usage_count,
-                    wu.kill_count
+                    wu.usage_count AS usageCount,
+                    wu.kill_count AS killCount
                 FROM weapon_usage AS wu
                 LEFT JOIN weapon_definition AS wd
                 ON wu.hash = wd.hash
-                ORDER BY wu.{sortColumn:Identifier} DESC;`
+                ORDER BY wu.{sortColumn:Identifier} DESC
+                LIMIT 100;`
     })
 
     const metrics = await results
