@@ -3,7 +3,7 @@ import { registry } from ".."
 import { zWholeNumber } from "../util"
 import { zWeapon } from "./Weapon"
 
-export type WeaponMetric = z.infer<typeof zWeaponMetric>
+export type WeaponMetric = z.input<typeof zWeaponMetric>
 export const zWeaponMetric = registry.register(
     "WeaponMetric",
     z.object({

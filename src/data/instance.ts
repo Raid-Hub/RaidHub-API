@@ -8,7 +8,7 @@ export async function getInstance(instanceId: bigint | string): Promise<Instance
     return await postgres.queryRow<Instance>(
         `SELECT 
             instance_id::text AS "instanceId",
-            hash::text AS "hash",
+            hash AS "hash",
             activity_id AS "activityId",
             version_id AS "versionId",
             completed AS "completed",
@@ -63,8 +63,8 @@ export async function getInstanceExtended(
             SELECT JSONB_AGG(
                 JSONB_BUILD_OBJECT(
                     'characterId', "character_id"::text, 
-                    'classHash', "class_hash"::text, 
-                    'emblemHash', "emblem_hash"::text, 
+                    'classHash', "class_hash", 
+                    'emblemHash', "emblem_hash", 
                     'completed', "completed", 
                     'timePlayedSeconds', "time_played_seconds", 
                     'startSeconds', "start_seconds", 
@@ -83,7 +83,7 @@ export async function getInstanceExtended(
             LEFT JOIN LATERAL (
                 SELECT COALESCE(JSONB_AGG(
                     JSONB_BUILD_OBJECT(
-                        'weaponHash', "weapon_hash"::text, 
+                        'weaponHash', "weapon_hash", 
                         'kills', "kills", 
                         'precisionKills', "precision_kills"
                     )
@@ -119,7 +119,7 @@ export async function getInstanceExtended(
     })
 }
 
-export async function getInstanceMetadataByHash(hash: bigint | string): Promise<InstanceMetadata> {
+export async function getInstanceMetadataByHash(hash: number | string): Promise<InstanceMetadata> {
     const metaData = await postgres.queryRow<InstanceMetadata>(
         `SELECT 
             ad.name AS "activityName",
@@ -131,7 +131,7 @@ export async function getInstanceMetadataByHash(hash: bigint | string): Promise<
         WHERE hash = $1::bigint
         LIMIT 1;`,
         {
-            params: [hash]
+            params: [String(hash)]
         }
     )
     if (!metaData) {

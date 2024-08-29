@@ -1,15 +1,15 @@
 import { z } from "zod"
 import { registry } from ".."
 import { zDestinyMembershipType } from "../enums/DestinyMembershipType"
-import { zBigIntString, zISODateString, zNaturalNumber, zWholeNumber } from "../util"
+import { zInt64, zISODateString, zNaturalNumber, zUInt32, zWholeNumber } from "../util"
 
-export type Instance = z.infer<typeof zInstance>
+export type Instance = z.input<typeof zInstance>
 export const zInstance = registry.register(
     "Instance",
     z
         .object({
-            instanceId: zBigIntString(),
-            hash: zBigIntString(),
+            instanceId: zInt64(),
+            hash: zUInt32(),
             activityId: zNaturalNumber(),
             versionId: zNaturalNumber(),
             completed: z.boolean(),

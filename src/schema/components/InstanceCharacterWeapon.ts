@@ -1,12 +1,13 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zBigIntString, zWholeNumber } from "../util"
+import { zUInt32, zWholeNumber } from "../util"
 
+export type InstanceCharacterWeapon = z.input<typeof zInstanceCharacterWeapon>
 export const zInstanceCharacterWeapon = registry.register(
     "InstanceCharacterWeapon",
     z
         .object({
-            weaponHash: zBigIntString(),
+            weaponHash: zUInt32(),
             kills: zWholeNumber(),
             precisionKills: zWholeNumber()
         })

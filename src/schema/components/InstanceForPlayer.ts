@@ -3,7 +3,7 @@ import { registry } from ".."
 import { zInstance } from "./Instance"
 import { zInstancePlayer } from "./InstancePlayer"
 
-export type InstanceForPlayer = z.infer<typeof zInstanceForPlayer>
+export type InstanceForPlayer = z.input<typeof zInstanceForPlayer>
 export const zInstanceForPlayer = registry.register(
     "InstanceForPlayer",
     zInstance

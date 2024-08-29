@@ -13,6 +13,7 @@ describe("getClanLeaderboard", () => {
 
         const parsed = z.array(zClanLeaderboardEntry).safeParse(data)
         if (!parsed.success) {
+            console.error(parsed.error.errors)
             expect(parsed.error.errors).toHaveLength(0)
         } else {
             expect(parsed.data).toHaveLength(10)

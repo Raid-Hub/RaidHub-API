@@ -1,8 +1,8 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zBigIntString, zISODateString, zNaturalNumber } from "../util"
+import { zISODateString, zNaturalNumber, zUInt32 } from "../util"
 
-export type ActivityDefinition = z.infer<typeof zActivityDefinition>
+export type ActivityDefinition = z.input<typeof zActivityDefinition>
 export const zActivityDefinition = registry.register(
     "ActivityDefinition",
     z
@@ -16,7 +16,7 @@ export const zActivityDefinition = registry.register(
             dayOneEnd: zISODateString().nullable(),
             contestEnd: zISODateString().nullable(),
             weekOneEnd: zISODateString().nullable(),
-            milestoneHash: zBigIntString().nullable()
+            milestoneHash: zUInt32().nullable()
         })
         .strict()
         .openapi({
@@ -31,7 +31,7 @@ export const zActivityDefinition = registry.register(
                 dayOneEnd: new Date("2021-05-23T00:00:00Z"),
                 contestEnd: new Date("2021-05-23T00:00:00Z"),
                 weekOneEnd: new Date("2021-05-25T00:00:00Z"),
-                milestoneHash: "1888320892"
+                milestoneHash: 1888320892
             }
         })
 )

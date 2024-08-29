@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test"
 import { z } from "zod"
 import { zActivityDefinition } from "../../schema/components/ActivityDefinition"
 import { zVersionDefinition } from "../../schema/components/VersionDefinition"
-import { zBigIntString, zNaturalNumber } from "../../schema/util"
+import { zNaturalNumber, zUInt32 } from "../../schema/util"
 import {
     getActivityVersion,
     getRaidId,
@@ -59,6 +59,7 @@ describe("listActivityDefinitions", () => {
 
         const parsed = z.array(zActivityDefinition).safeParse(data)
         if (!parsed.success) {
+            console.error(parsed.error.errors)
             expect(parsed.error.errors).toHaveLength(0)
         } else {
             expect(parsed.data.length).toBeGreaterThan(0)
@@ -89,7 +90,7 @@ describe("listHashes", () => {
             .array(
                 z
                     .object({
-                        hash: zBigIntString(),
+                        hash: zUInt32(),
                         activityId: zNaturalNumber(),
                         versionId: zNaturalNumber()
                     })

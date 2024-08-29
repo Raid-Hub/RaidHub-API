@@ -42,7 +42,7 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
                     CASE WHEN fastest_instance_id IS NOT NULL 
                         THEN JSONB_BUILD_OBJECT(
                             'instanceId', fastest.instance_id::text,
-                            'hash', fastest.hash::text,
+                            'hash', fastest.hash,
                             'activityId', fastest_ah.activity_id,
                             'versionId', fastest_ah.version_id,
                             'completed', fastest.completed,

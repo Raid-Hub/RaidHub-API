@@ -11,12 +11,12 @@ import {
 } from "./RaidHubRouterTypes"
 import { RaidHubResponse, registerError, registerResponse } from "./schema/RaidHubResponse"
 import { zApiKeyError } from "./schema/errors/ApiKeyError"
-import { zBodyValidationError } from "./schema/errors/BodyValidationError"
+import { BodyValidationError, zBodyValidationError } from "./schema/errors/BodyValidationError"
 import { ErrorCode } from "./schema/errors/ErrorCode"
 import { zInsufficientPermissionsError } from "./schema/errors/InsufficientPermissionsError"
 import { zInternalServerError } from "./schema/errors/InternalServerError"
-import { zPathValidationError } from "./schema/errors/PathValidationError"
-import { zQueryValidationError } from "./schema/errors/QueryValidationError"
+import { PathValidationError, zPathValidationError } from "./schema/errors/PathValidationError"
+import { QueryValidationError, zQueryValidationError } from "./schema/errors/QueryValidationError"
 import { httpRequestTimer } from "./services/prometheus/metrics"
 
 // This class is used to define type-safe a route in the RaidHub API
@@ -53,16 +53,16 @@ export class RaidHubRoute<
     private readonly isAdministratorRoute: boolean = false
     private readonly isProtectedPlayerRoute: boolean = false
     private readonly middlewares: RequestHandler<
-        z.infer<Params>,
+        z.output<Params>,
         any,
-        z.infer<Body>,
-        z.infer<Query>
+        z.output<Body>,
+        z.output<Query>
     >[]
     private readonly handler: RaidHubHandler<
         Params,
         Query,
         Body,
-        ResponseBody["_input"],
+        z.input<ResponseBody>,
         ErrorResponse
     >
     private readonly router: Router
@@ -76,12 +76,12 @@ export class RaidHubRoute<
         body?: Body
         isAdministratorRoute?: boolean
         isProtectedPlayerRoute?: boolean
-        middleware?: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>>[]
+        middleware?: RequestHandler<z.output<Params>, any, z.output<Body>, z.output<Query>>[]
         handler: RaidHubHandler<
             Params,
             Query,
             Body,
-            NoInfer<ResponseBody["_input"]>,
+            NoInfer<z.input<ResponseBody>>,
             NoInfer<ErrorResponse>
         >
         response: {
@@ -125,59 +125,53 @@ export class RaidHubRoute<
         }
     }
 
-    private validateParams: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
-        req,
-        res,
-        next
-    ) => {
-        if (!this.paramsSchema) {
-            req.params = {}
-            return next()
-        }
-        const parsed = this.paramsSchema.safeParse(req.params)
-        if (parsed.success) {
-            req.params = parsed.data
-            next()
-        } else {
-            const result: (typeof zPathValidationError)["_input"] = {
-                minted: new Date(),
-                success: false,
-                code: ErrorCode.PathValidationError,
-                error: {
-                    issues: parsed.error.issues
-                }
+    private validateParams: RequestHandler<z.output<Params>, any, z.output<Body>, z.output<Query>> =
+        (req, res, next) => {
+            if (!this.paramsSchema) {
+                req.params = {}
+                return next()
             }
-            res.status(404).json(result)
-        }
-    }
-
-    private validateQuery: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
-        req,
-        res,
-        next
-    ) => {
-        if (!this.querySchema) {
-            req.query = {}
-            return next()
-        }
-        const parsed = this.querySchema.safeParse(req.query)
-        if (parsed.success) {
-            req.query = parsed.data
-            next()
-        } else {
-            const result: (typeof zQueryValidationError)["_input"] = {
-                minted: new Date(),
-                success: false,
-                code: ErrorCode.QueryValidationError,
-                error: {
-                    issues: parsed.error.issues
+            const parsed = this.paramsSchema.safeParse(req.params)
+            if (parsed.success) {
+                req.params = parsed.data
+                next()
+            } else {
+                const result: PathValidationError = {
+                    minted: new Date(),
+                    success: false,
+                    code: ErrorCode.PathValidationError,
+                    error: {
+                        issues: parsed.error.issues
+                    }
                 }
+                res.status(404).json(result)
             }
-            res.status(400).json(result)
         }
-    }
 
-    private validateBody: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
+    private validateQuery: RequestHandler<z.output<Params>, any, z.output<Body>, z.output<Query>> =
+        (req, res, next) => {
+            if (!this.querySchema) {
+                req.query = {}
+                return next()
+            }
+            const parsed = this.querySchema.safeParse(req.query)
+            if (parsed.success) {
+                req.query = parsed.data
+                next()
+            } else {
+                const result: QueryValidationError = {
+                    minted: new Date(),
+                    success: false,
+                    code: ErrorCode.QueryValidationError,
+                    error: {
+                        issues: parsed.error.issues
+                    }
+                }
+                res.status(400).json(result)
+            }
+        }
+
+    private validateBody: RequestHandler<z.output<Params>, any, z.output<Body>, z.output<Query>> = (
         req,
         res,
         next
@@ -188,7 +182,7 @@ export class RaidHubRoute<
             req.body = parsed.data
             next()
         } else {
-            const result: (typeof zBodyValidationError)["_input"] = {
+            const result: BodyValidationError = {
                 minted: new Date(),
                 success: false,
                 code: ErrorCode.BodyValidationError,
@@ -217,7 +211,7 @@ export class RaidHubRoute<
     }
 
     // This is the actual controller that is passed to express as a handler
-    private controller: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> =
+    private controller: RequestHandler<z.output<Params>, any, z.output<Body>, z.output<Query>> =
         async (req, res, next) => {
             try {
                 const result = await this.handler(req, callback => {
@@ -243,8 +237,8 @@ export class RaidHubRoute<
         }
 
     private buildResponse(
-        result: RaidHubHandlerReturn<ResponseBody["_input"], ErrorResponse>
-    ): RaidHubResponse<ResponseBody["_input"], ErrorData> {
+        result: RaidHubHandlerReturn<z.input<ResponseBody>, ErrorResponse>
+    ): RaidHubResponse<z.input<ResponseBody>, ErrorData> {
         const minted = new Date()
         if (result.success) {
             return {
@@ -262,11 +256,12 @@ export class RaidHubRoute<
         }
     }
 
-    private measureDuration: RequestHandler<z.infer<Params>, any, z.infer<Body>, z.infer<Query>> = (
-        _,
-        res,
-        next
-    ) => {
+    private measureDuration: RequestHandler<
+        z.output<Params>,
+        any,
+        z.output<Body>,
+        z.output<Query>
+    > = (_, res, next) => {
         const start = Date.now()
         res.on("finish", () => {
             const responseTimeInMs = Date.now() - start
@@ -405,7 +400,7 @@ export class RaidHubRoute<
         if (res.success) {
             return {
                 type: "ok",
-                parsed: this.responseSchema.parse(res.response) as z.infer<ResponseBody>
+                parsed: this.responseSchema.parse(res.response) as z.output<ResponseBody>
             } as const
         } else {
             const schema =

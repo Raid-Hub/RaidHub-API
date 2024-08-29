@@ -7,18 +7,31 @@ import {
 } from "../../schema/components/Weapon"
 import { clickhouse } from "../../services/clickhouse/client"
 
-export const getWeeklyWeaponMeta = async ({ sort }: { sort: "usage" | "kills" }) => {
+export const getWeeklyWeaponMeta = async ({
+    sort,
+    date
+}: {
+    sort: "usage" | "kills"
+    date: Date
+}) => {
     const sortColumn = sort === "usage" ? "usage_count" : "kill_count"
+    // Determine the start of the week based on Tuesday at 17:00 UTC
+    const weekStart = new Date(date)
+    if (weekStart.getUTCDay() < 2 || (weekStart.getUTCDay() == 2 && weekStart.getUTCHours() < 17)) {
+        weekStart.setUTCDate(weekStart.getUTCDate() - 7)
+    }
+    weekStart.setUTCHours(17, 0, 0, 0)
+    weekStart.setUTCDate(weekStart.getUTCDate() - weekStart.getUTCDay() + 2)
 
     const results = await clickhouse.query({
         format: "JSON",
         query_params: {
-            sortColumn
+            sortColumn,
+            date: weekStart
         },
         query: `WITH the_week AS (
-                    -- Determine the start of the week based on Tuesday at 17:00 UTC
                     SELECT 
-                        toStartOfWeek(now()) + INTERVAL 65 HOUR AS week_start,
+                        {date:DateTime} AS week_start,
                         week_start + INTERVAL 1 WEEK AS week_end
                 ),
                 entries AS (
@@ -39,7 +52,7 @@ export const getWeeklyWeaponMeta = async ({ sort }: { sort: "usage" | "kills" })
                     HAVING usage_count >= 100
                 )
                 SELECT
-                    wu.hash,
+                    wu.hash AS hash,
                     wd.name,
                     wd.icon_path,
                     wd.element,
@@ -54,9 +67,9 @@ export const getWeeklyWeaponMeta = async ({ sort }: { sort: "usage" | "kills" })
                 ORDER BY wu.{sortColumn:Identifier} DESC;`
     })
 
-    return await results
+    const metrics = await results
         .json<{
-            hash: bigint
+            hash: number
             name: string
             iconPath: string
             element: WeaponElement
@@ -73,4 +86,9 @@ export const getWeeklyWeaponMeta = async ({ sort }: { sort: "usage" | "kills" })
                 killCount
             }))
         )
+
+    return {
+        metrics,
+        weekStart
+    }
 }

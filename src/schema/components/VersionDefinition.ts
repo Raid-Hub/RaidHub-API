@@ -2,7 +2,7 @@ import { z } from "zod"
 import { registry } from ".."
 import { zNaturalNumber } from "../util"
 
-export type VersionDefinition = z.infer<typeof zVersionDefinition>
+export type VersionDefinition = z.input<typeof zVersionDefinition>
 export const zVersionDefinition = registry.register(
     "VersionDefinition",
     z

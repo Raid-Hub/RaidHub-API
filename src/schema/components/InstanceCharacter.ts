@@ -1,15 +1,16 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zBigIntString, zWholeNumber } from "../util"
+import { zInt64, zUInt32, zWholeNumber } from "../util"
 import { zInstanceCharacterWeapon } from "./InstanceCharacterWeapon"
 
+export type InstanceCharacter = z.input<typeof zInstanceCharacter>
 export const zInstanceCharacter = registry.register(
     "InstanceCharacter",
     z
         .object({
-            characterId: zBigIntString(),
-            classHash: zBigIntString().nullable(),
-            emblemHash: zBigIntString().nullable(),
+            characterId: zInt64(),
+            classHash: zUInt32().nullable(),
+            emblemHash: zUInt32().nullable(),
             completed: z.boolean(),
             timePlayedSeconds: zWholeNumber(),
             startSeconds: zWholeNumber(),

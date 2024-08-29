@@ -2,9 +2,7 @@ import { DestinyActivityModeType } from "bungie-net-core/enums"
 import { z } from "zod"
 import { registry } from ".."
 import { zDestinyMembershipType } from "../enums/DestinyMembershipType"
-import { zBigIntString, zISODateString } from "../util"
-
-export type RaidHubPostGameCarnageReport = z.infer<typeof zRaidHubPostGameCarnageReport>
+import { zInt64, zISODateString, zUInt32 } from "../util"
 
 const zDestinyHistoricalStatsValuePair = z
     .object({
@@ -17,6 +15,7 @@ const zDestinyHistoricalStatsValuePair = z
     })
     .strip()
 
+export type RaidHubPostGameCarnageReport = z.input<typeof zRaidHubPostGameCarnageReport>
 export const zRaidHubPostGameCarnageReport = registry.register(
     "RaidHubPostGameCarnageReport",
     z
@@ -26,8 +25,8 @@ export const zRaidHubPostGameCarnageReport = registry.register(
             activityWasStartedFromBeginning: z.boolean().optional(),
             activityDetails: z
                 .object({
-                    directorActivityHash: zBigIntString(),
-                    instanceId: zBigIntString(),
+                    directorActivityHash: zUInt32(),
+                    instanceId: zInt64(),
                     mode: z.nativeEnum(DestinyActivityModeType),
                     modes: z.array(z.nativeEnum(DestinyActivityModeType)),
                     membershipType: zDestinyMembershipType
@@ -59,12 +58,12 @@ export const zRaidHubPostGameCarnageReport = registry.register(
                                     })
                                     .strip(),
                                 characterClass: z.string().nullable().optional(),
-                                classHash: z.number(),
-                                raceHash: z.number(),
-                                genderHash: z.number(),
+                                classHash: zUInt32(),
+                                raceHash: zUInt32(),
+                                genderHash: zUInt32(),
                                 characterLevel: z.number(),
                                 lightLevel: z.number(),
-                                emblemHash: z.number()
+                                emblemHash: zUInt32()
                             })
                             .strip(),
                         characterId: z.string(),

@@ -2,6 +2,7 @@ import { z } from "zod"
 import { registerError } from "../RaidHubResponse"
 import { ErrorCode } from "./ErrorCode"
 
+export type ApiKeyError = z.input<typeof zApiKeyError>
 export const zApiKeyError = registerError(
     ErrorCode.ApiKeyError,
     z.object({

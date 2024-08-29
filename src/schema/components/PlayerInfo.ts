@@ -1,14 +1,14 @@
 import { z } from "zod"
 import { registry } from ".."
 import { zDestinyMembershipType } from "../enums/DestinyMembershipType"
-import { zBigIntString, zISODateString } from "../util"
+import { zInt64, zISODateString } from "../util"
 
-export type PlayerInfo = z.infer<typeof zPlayerInfo>
+export type PlayerInfo = z.input<typeof zPlayerInfo>
 export const zPlayerInfo = registry.register(
     "PlayerInfo",
     z
         .object({
-            membershipId: zBigIntString(),
+            membershipId: zInt64(),
             membershipType: zDestinyMembershipType.nullable().openapi({
                 param: {
                     schema: {
