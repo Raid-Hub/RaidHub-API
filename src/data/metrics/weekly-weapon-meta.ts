@@ -3,7 +3,8 @@ import {
     WeaponAmmoType,
     WeaponElement,
     WeaponRarity,
-    WeaponSlot
+    WeaponSlot,
+    WeaponType
 } from "../../schema/components/Weapon"
 import { clickhouse } from "../../services/clickhouse/client"
 
@@ -55,6 +56,7 @@ export const getWeeklyWeaponMeta = async ({
                     wu.hash AS hash,
                     wd.name,
                     wd.icon_path AS iconPath,
+                    wd.weapon_type AS weaponType,
                     wd.element,
                     wd.slot,
                     wd.ammo_type AS ammoType,
@@ -73,6 +75,7 @@ export const getWeeklyWeaponMeta = async ({
             hash: number
             name: string
             iconPath: string
+            weaponType: WeaponType
             element: WeaponElement
             slot: WeaponSlot
             ammoType: WeaponAmmoType

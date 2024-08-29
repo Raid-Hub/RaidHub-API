@@ -2,6 +2,30 @@ import { z } from "zod"
 import { registry } from ".."
 import { zUInt32 } from "../util"
 
+export type WeaponType = z.input<typeof zWeaponType>
+export const zWeaponType = registry.register(
+    "WeaponElement",
+    z.enum([
+        "Auto Rifle",
+        "Shotgun",
+        "Machine Gun",
+        "Hand Cannon",
+        "Rocket Launcher",
+        "Fusion Rifle",
+        "Sniper Rifle",
+        "Pulse Rifle",
+        "Scout Rifle",
+        "Sidearm",
+        "Sword",
+        "Linear Fusion Rifle",
+        "Grenade Launcher",
+        "Submachine Gun",
+        "Trace Rifle",
+        "Bow",
+        "Glaive"
+    ])
+)
+
 export type WeaponElement = z.input<typeof zWeaponElement>
 export const zWeaponElement = registry.register(
     "WeaponElement",
@@ -30,6 +54,7 @@ export const zWeapon = registry.register(
         hash: zUInt32(),
         name: z.string(),
         iconPath: z.string(),
+        weaponType: zWeaponType,
         element: zWeaponElement,
         slot: zWeaponSlot,
         ammoType: zWeaponAmmoType,
