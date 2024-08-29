@@ -1110,7 +1110,25 @@
       },
       "WeaponElement": {
         "type": "string",
-        "enum": ["Kinetic", "Solar", "Arc", "Void", "Stasis", "Strand"]
+        "enum": [
+          "Auto Rifle",
+          "Shotgun",
+          "Machine Gun",
+          "Hand Cannon",
+          "Rocket Launcher",
+          "Fusion Rifle",
+          "Sniper Rifle",
+          "Pulse Rifle",
+          "Scout Rifle",
+          "Sidearm",
+          "Sword",
+          "Linear Fusion Rifle",
+          "Grenade Launcher",
+          "Submachine Gun",
+          "Trace Rifle",
+          "Bow",
+          "Glaive"
+        ]
       },
       "WeaponSlot": {
         "type": "string",
@@ -1138,8 +1156,18 @@
           "iconPath": {
             "type": "string"
           },
-          "element": {
+          "weaponType": {
             "$ref": "#/components/schemas/WeaponElement"
+          },
+          "element": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WeaponElement"
+              },
+              {
+                "enum": ["Kinetic", "Solar", "Arc", "Void", "Stasis", "Strand"]
+              }
+            ]
           },
           "slot": {
             "$ref": "#/components/schemas/WeaponSlot"
@@ -1155,6 +1183,7 @@
           "hash",
           "name",
           "iconPath",
+          "weaponType",
           "element",
           "slot",
           "ammoType",
