@@ -1,19 +1,20 @@
 import { describe, expect, it } from "bun:test"
 import { z } from "zod"
 import { zWeaponMetric } from "../../../schema/components/Metrics"
-import { getWeeklyWeaponMeta } from "../../metrics/weekly-weapon-meta"
+import { getRollingWeaponMeta } from "../../metrics/rolling-weapon-meta"
 
-describe("getWeeklyWeaponMeta", () => {
+describe("getRollingWeaponMeta", () => {
     it("returns the correct shape", async () => {
-        const data = await getWeeklyWeaponMeta({
+        const data = await getRollingWeaponMeta({
             sort: "usage",
-            date: new Date()
+            count: 10
         })
 
         const parsed = z
             .object({
-                metrics: z.array(zWeaponMetric),
-                weekStart: z.date()
+                kinetic: z.array(zWeaponMetric),
+                energy: z.array(zWeaponMetric),
+                power: z.array(zWeaponMetric)
             })
             .safeParse(data)
         if (!parsed.success) {

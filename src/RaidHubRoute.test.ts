@@ -19,12 +19,10 @@ const testGetRoute = new RaidHubRoute({
             testId: zDigitString()
         })
         .strict(),
-    query: z
-        .object({
-            hello: z.string().optional(),
-            count: z.coerce.number()
-        })
-        .strict(),
+    query: z.object({
+        hello: z.string().optional(),
+        count: z.coerce.number()
+    }),
     handler: async () => {
         return RaidHubRoute.ok({
             woo: "hoo"
@@ -152,12 +150,11 @@ describe("raidhub route middleware validators", () => {
 
     test("fails query parsing", async () => {
         const res = await request(app).get("/test/123").query({ hello: "world", yolo: 2 })
+        console.error(res.body.error.issues)
         expect(res.body.code).toBe("QueryValidationError")
         expect(res.body.error).toHaveProperty("issues")
         expect(res.body.error.issues).toHaveProperty("0")
         expect(res.body.error.issues[0].path).toEqual(["count"])
-        expect(res.body.error.issues).toHaveProperty("1")
-        expect(res.body.error.issues[1].keys).toEqual(["yolo"])
         expect(res.status).toBe(400)
     })
 

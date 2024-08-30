@@ -1108,41 +1108,7 @@
           }
         ]
       },
-      "WeaponElement": {
-        "type": "string",
-        "enum": [
-          "Auto Rifle",
-          "Shotgun",
-          "Machine Gun",
-          "Hand Cannon",
-          "Rocket Launcher",
-          "Fusion Rifle",
-          "Sniper Rifle",
-          "Pulse Rifle",
-          "Scout Rifle",
-          "Sidearm",
-          "Sword",
-          "Linear Fusion Rifle",
-          "Grenade Launcher",
-          "Submachine Gun",
-          "Trace Rifle",
-          "Bow",
-          "Glaive"
-        ]
-      },
-      "WeaponSlot": {
-        "type": "string",
-        "enum": ["Kinetic", "Energy", "Power"]
-      },
-      "WeaponAmmoType": {
-        "type": "string",
-        "enum": ["Primary", "Special", "Heavy"]
-      },
-      "WeaponRarity": {
-        "type": "string",
-        "enum": ["Common", "Uncommon", "Rare", "Legendary", "Exotic"]
-      },
-      "Weapon": {
+      "WeaponMetric": {
         "type": "object",
         "properties": {
           "hash": {
@@ -1150,62 +1116,28 @@
             "minimum": 0,
             "format": "uint32"
           },
-          "name": {
-            "type": "string"
+          "totalUsage": {
+            "type": "integer",
+            "minimum": 0
           },
-          "iconPath": {
-            "type": "string"
+          "totalKills": {
+            "type": "integer",
+            "minimum": 0
           },
-          "weaponType": {
-            "$ref": "#/components/schemas/WeaponElement"
-          },
-          "element": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/WeaponElement"
-              },
-              {
-                "enum": ["Kinetic", "Solar", "Arc", "Void", "Stasis", "Strand"]
-              }
-            ]
-          },
-          "slot": {
-            "$ref": "#/components/schemas/WeaponSlot"
-          },
-          "ammoType": {
-            "$ref": "#/components/schemas/WeaponAmmoType"
-          },
-          "rarity": {
-            "$ref": "#/components/schemas/WeaponRarity"
+          "totalPrecisionKills": {
+            "type": "integer",
+            "minimum": 0
           }
         },
-        "required": [
-          "hash",
-          "name",
-          "iconPath",
-          "weaponType",
-          "element",
-          "slot",
-          "ammoType",
-          "rarity"
-        ]
+        "required": ["hash", "totalUsage", "totalKills", "totalPrecisionKills"]
       },
-      "WeaponMetric": {
+      "PopulationByRaidMetric": {
         "type": "object",
-        "properties": {
-          "weapon": {
-            "$ref": "#/components/schemas/Weapon"
-          },
-          "usageCount": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "killCount": {
-            "type": "integer",
-            "minimum": 0
-          }
+        "additionalProperties": {
+          "type": "integer",
+          "minimum": 0
         },
-        "required": ["weapon", "usageCount", "killCount"]
+        "description": "A map of each activity Id to player counts"
       },
       "RaidHubPostGameCarnageReport": {
         "type": "object",
@@ -2732,26 +2664,45 @@
         },
         "required": ["message", "route"]
       },
-      "MetricsWeeklyWeaponsResponse": {
+      "MetricsWeaponsRollingWeekResponse": {
         "type": "object",
         "properties": {
-          "weapons": {
+          "energy": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WeaponMetric"
             }
           },
-          "weekStart": {
-            "type": "string",
-            "format": "date-time"
+          "kinetic": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeaponMetric"
+            }
           },
-          "weekNumber": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
+          "power": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeaponMetric"
+            }
           }
         },
-        "required": ["weapons", "weekStart", "weekNumber"]
+        "required": ["energy", "kinetic", "power"]
+      },
+      "MetricsPopulationRollingDayResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "hour": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "population": {
+              "$ref": "#/components/schemas/PopulationByRaidMetric"
+            }
+          },
+          "required": ["hour", "population"]
+        }
       },
       "AdminQueryResponse": {
         "oneOf": [
@@ -5709,10 +5660,10 @@
         }
       }
     },
-    "/metrics/weekly/weapons": {
+    "/metrics/weapons/rolling-week": {
       "get": {
-        "summary": "/metrics/weekly/weapons",
-        "description": "Get the weekly weapon meta",
+        "summary": "/metrics/weapons/rolling-week",
+        "description": "Wet the top weapons in each slot over the past 168 hours (7 days)",
         "parameters": [
           {
             "schema": {
@@ -5726,12 +5677,15 @@
           },
           {
             "schema": {
-              "type": "string",
-              "description": "For best performance, using the start of the Destiny week as the date param, or leave it blank",
-              "format": "date-time"
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "maximum": 100,
+              "default": 25,
+              "description": "The number of weapons to return per slot"
             },
             "required": false,
-            "name": "date",
+            "name": "count",
             "in": "query"
           }
         ],
@@ -5752,7 +5706,7 @@
                       "enum": [true]
                     },
                     "response": {
-                      "$ref": "#/components/schemas/MetricsWeeklyWeaponsResponse"
+                      "$ref": "#/components/schemas/MetricsWeaponsRollingWeekResponse"
                     }
                   },
                   "required": ["minted", "success", "response"]
@@ -5784,6 +5738,94 @@
                     }
                   },
                   "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InternalServerError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InternalServerError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics/population/rolling-day": {
+      "get": {
+        "summary": "/metrics/population/rolling-day",
+        "description": "Get the daily player population by raid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/MetricsPopulationRollingDayResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
                 }
               }
             }

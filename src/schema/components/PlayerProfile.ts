@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zInt64, zNaturalNumber, zWholeNumber } from "../util"
+import { zInt64, zNaturalNumber, zNumericalRecordKey, zWholeNumber } from "../util"
 import { zInstance } from "./Instance"
 import { zPlayerInfo } from "./PlayerInfo"
 
@@ -57,8 +57,8 @@ export const zPlayerProfile = registry.register(
         playerInfo: zPlayerInfo,
         stats: z.object({
             global: zPlayerProfileGlobalStats,
-            activity: z.record(zPlayerProfileActivityStats)
+            activity: z.record(zNumericalRecordKey(), zPlayerProfileActivityStats)
         }),
-        worldFirstEntries: z.record(zWorldFirstEntry.nullable())
+        worldFirstEntries: z.record(zNumericalRecordKey(), zWorldFirstEntry.nullable())
     })
 )

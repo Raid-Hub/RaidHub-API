@@ -32,7 +32,7 @@ export const registerResponse = (path: string, schema: ZodType) =>
         response: registry.register(
             path
                 .replace(/\/{[^/]+}/g, "")
-                .split("/")
+                .split(/\/|-/)
                 .filter(Boolean)
                 .map(str => str.charAt(0).toUpperCase() + str.slice(1))
                 .join("") + "Response",

@@ -1,4 +1,4 @@
-import { ZodStringDef, ZodType, z } from "zod"
+import { ZodDateDef, ZodStringDef, ZodType, z } from "zod"
 
 export const zNaturalNumber = () => z.number().int().positive()
 
@@ -10,11 +10,11 @@ export const zISODateString = () =>
     z.coerce.date().openapi({
         type: "string",
         format: "date-time"
-    })
+    }) as ZodType<Date, ZodDateDef, string | number | Date>
 
 // Intended to be used as an input param
 export const zDigitString = () =>
-    z.coerce.string().regex(/^\d+n?$/) as ZodType<string, ZodStringDef, bigint | number | string>
+    z.coerce.string().regex(/^\d+n?$/) as ZodType<string, ZodStringDef, number | string | bigint>
 
 // Intended to be used as an input param that will be coerced to a BigInt
 export const zBigIntString = () => zDigitString().pipe(z.coerce.bigint())
@@ -30,4 +30,10 @@ export const zInt64 = () =>
 export const zUInt32 = () =>
     z.number().int().nonnegative().openapi({
         format: "uint32"
+    })
+
+// Intended to be used as an output param for a record key
+export const zNumericalRecordKey = (format: "integer" | "uint32" | "uint64" = "integer") =>
+    z.coerce.number().int().nonnegative().openapi({
+        format
     })

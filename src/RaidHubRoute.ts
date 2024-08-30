@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any */
 import { RequestHandler, Router } from "express"
 import { IncomingHttpHeaders } from "http"
 import { ZodObject, ZodType, ZodTypeAny, ZodUnknown, z } from "zod"
@@ -30,14 +30,14 @@ export class RaidHubRoute<
         any,
         { [x: string]: any },
         { [x: string]: any }
-    > = ZodObject<any>,
+    > = z.ZodObject<{}>,
     Query extends ZodObject<
         any,
         any,
         any,
         { [x: string]: any },
         { [x: string]: any }
-    > = ZodObject<any>,
+    > = z.ZodObject<{}>,
     Body extends ZodType = ZodUnknown
 > implements IRaidHubRoute
 {
@@ -131,7 +131,7 @@ export class RaidHubRoute<
                 req.params = {}
                 return next()
             }
-            const parsed = this.paramsSchema.safeParse(req.params)
+            const parsed = this.paramsSchema.strict().safeParse(req.params)
             if (parsed.success) {
                 req.params = parsed.data
                 next()
@@ -154,7 +154,7 @@ export class RaidHubRoute<
                 req.query = {}
                 return next()
             }
-            const parsed = this.querySchema.safeParse(req.query)
+            const parsed = this.querySchema.strip().safeParse(req.query)
             if (parsed.success) {
                 req.query = parsed.data
                 next()
@@ -176,7 +176,10 @@ export class RaidHubRoute<
         res,
         next
     ) => {
-        if (!this.bodySchema) return next()
+        if (!this.bodySchema) {
+            req.body = null
+            return next()
+        }
         const parsed = this.bodySchema.safeParse(req.body)
         if (parsed.success) {
             req.body = parsed.data
@@ -196,45 +199,38 @@ export class RaidHubRoute<
 
     // This is the express router that is returned and used to create the actual express route
     get express() {
-        const args = [
+        return this.router[this.method === "get" ? "get" : "post"](
+            "/",
             this.measureDuration,
             this.validateParams,
             this.validateQuery,
             this.validateBody,
             ...this.middlewares,
-            this.controller
-        ] as const
-
-        return this.method === "get"
-            ? this.router.get("/", ...args)
-            : this.router.post("/", ...args)
-    }
-
-    // This is the actual controller that is passed to express as a handler
-    private controller: RequestHandler<z.output<Params>, any, z.output<Body>, z.output<Query>> =
-        async (req, res, next) => {
-            try {
-                const result = await this.handler(req, callback => {
-                    res.on("finish", () => {
-                        try {
-                            callback()
-                        } catch (err) {
-                            process.env.NODE_ENV !== "test" && console.error(err)
-                        }
+            async (req, res, next) => {
+                try {
+                    const result = await this.handler(req, function after(callback) {
+                        res.on("finish", async () => {
+                            try {
+                                await callback()
+                            } catch (err) {
+                                process.env.NODE_ENV !== "test" && console.error(err)
+                            }
+                        })
                     })
-                })
-                const response = this.buildResponse(result)
-                if (result.success) {
-                    res.status(this.successCode).json(response)
-                } else {
-                    res.status(
-                        this.errors.find(({ code }) => code === result.code)!.statusCode
-                    ).json(response)
+                    const response = this.buildResponse(result)
+                    if (result.success) {
+                        res.status(this.successCode).json(response)
+                    } else {
+                        res.status(
+                            this.errors.find(err => err.code === result.code)!.statusCode
+                        ).json(response)
+                    }
+                } catch (e) {
+                    next(e)
                 }
-            } catch (e) {
-                next(e)
             }
-        }
+        )
+    }
 
     private buildResponse(
         result: RaidHubHandlerReturn<z.input<ResponseBody>, ErrorResponse>
@@ -375,12 +371,14 @@ export class RaidHubRoute<
     }
 
     // Used for testing to mock a request by passing the data directly to the handler
-    async $mock(req: {
-        params?: unknown
-        query?: unknown
-        body?: unknown
-        headers?: IncomingHttpHeaders
-    }) {
+    async $mock(
+        req: {
+            params?: unknown
+            query?: unknown
+            body?: unknown
+            headers?: IncomingHttpHeaders
+        } = {}
+    ) {
         let after: () => Promise<void> = () => Promise.resolve()
         const res = await this.handler(
             {

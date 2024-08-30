@@ -1,6 +1,13 @@
 import { RaidHubRouter } from "../../RaidHubRouter"
-import { weeklyWeaponMetaRoute } from "./weeklyWeaponMeta"
+import { dailyPlayerPopulationRoute } from "./dailyPlayerPopulation"
+import { weaponsRollingWeekRoute } from "./weaponsRollingWeek"
 
 export const metricsRouter = new RaidHubRouter({
-    routes: [{ path: "/weekly/weapons", route: weeklyWeaponMetaRoute }]
+    routes: [
+        { path: "/weapons/rolling-week", route: weaponsRollingWeekRoute },
+        {
+            path: "/population/rolling-day",
+            route: dailyPlayerPopulationRoute
+        }
+    ]
 })
