@@ -1137,7 +1137,7 @@
           "type": "integer",
           "minimum": 0
         },
-        "description": "A map of each activity Id to player counts"
+        "description": "A map of each activity Id to its player count"
       },
       "RaidHubPostGameCarnageReport": {
         "type": "object",
