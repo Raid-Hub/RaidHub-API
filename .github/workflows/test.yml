@@ -44,7 +44,7 @@ jobs:
                   TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_GHA_CLIENT_ID }}
                   TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_GHA_CLIENT_SECRET }}
               run: |
-                  ssh -N -L 5432:localhost:5432 -L 8123:localhost:8123 -L 8080:localhost:8080 -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io &
+                  ssh -N -L 5432:localhost:5432 -L 8123:localhost:8123 -L 9090:localhost:9090 -o ProxyCommand="cloudflared access ssh --hostname %h" root@ssh.raidhub.io &
 
             - name: Run Tests
               env:
