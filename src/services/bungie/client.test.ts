@@ -1,15 +1,10 @@
-import { afterEach, describe, expect, spyOn, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { getDestinyManifest, transferItem } from "bungie-net-core/endpoints/Destiny2"
+import { spyOnFetch } from "../../util.test"
 import { bungiePlatformHttp } from "./client"
 import { BungieApiError } from "./error"
 
 describe("bungie http client", () => {
-    const spyFetch = spyOn(globalThis, "fetch")
-
-    afterEach(() => {
-        spyFetch.mockRestore()
-    })
-
     test("ok", async () => {
         const res = await getDestinyManifest(bungiePlatformHttp)
 
@@ -46,6 +41,10 @@ describe("bungie http client", () => {
             expect(err.cause).toContain("html")
         }
     })
+})
+
+describe("bungie http client with mocks", () => {
+    const spyFetch = spyOnFetch()
 
     test("json error", async () => {
         const mockResponse = new Response(JSON.stringify({ ok: true }), {
