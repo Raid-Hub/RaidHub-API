@@ -1782,7 +1782,6 @@
               },
               "latestActivity": {
                 "type": "object",
-                "nullable": true,
                 "properties": {
                   "dateCompleted": {
                     "type": "string",

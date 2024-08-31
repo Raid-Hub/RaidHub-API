@@ -49,12 +49,10 @@ export const statusRoute = new RaidHubRoute({
                 AtlasPGCR: z.object({
                     status: z.enum(["Crawling", "Idle", "Offline"]),
                     medianSecondsBehindNow: z.number().nullable(),
-                    latestActivity: z
-                        .object({
-                            dateCompleted: zISODateString(),
-                            instanceId: z.string()
-                        })
-                        .nullable()
+                    latestActivity: z.object({
+                        dateCompleted: zISODateString(),
+                        instanceId: z.string()
+                    })
                 })
             })
         }
