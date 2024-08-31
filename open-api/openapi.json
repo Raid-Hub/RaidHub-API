@@ -1769,14 +1769,14 @@
       "StatusResponse": {
         "type": "object",
         "properties": {
-          "ActivityHistoryCrawling": {
+          "AtlasPGCR": {
             "type": "object",
             "properties": {
               "status": {
                 "type": "string",
                 "enum": ["Crawling", "Idle", "Offline"]
               },
-              "lag": {
+              "medianSecondsBehindNow": {
                 "type": "number",
                 "nullable": true
               },
@@ -1795,10 +1795,10 @@
                 "required": ["dateCompleted", "instanceId"]
               }
             },
-            "required": ["status", "lag", "latestActivity"]
+            "required": ["status", "medianSecondsBehindNow", "latestActivity"]
           }
         },
-        "required": ["ActivityHistoryCrawling"]
+        "required": ["AtlasPGCR"]
       },
       "PlayerSearchResponse": {
         "type": "object",
