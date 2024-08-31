@@ -1,3 +1,4 @@
+import { file } from "bun"
 import { RequestHandler } from "express"
 import { z } from "zod"
 import { ApiKeyError } from "../schema/errors/ApiKeyError"
@@ -10,8 +11,7 @@ const KeySchema = z.object({
     key: z.string()
 })
 
-const readKeys = async () =>
-    Bun.file(process.env.API_KEYS_PATH!, { type: "application/json" }).json()
+const readKeys = async () => file(process.env.API_KEYS_PATH!, { type: "application/json" }).json()
 
 const apiKeys = readKeys()
     .then(data =>

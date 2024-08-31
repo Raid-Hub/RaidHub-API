@@ -38,7 +38,6 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "bun-types": "^1.0.35",
-    "bungie-net-core": "2.1.3",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
@@ -53,12 +52,12 @@
   "dependencies": {
     "@clickhouse/client": "^1.5.0",
     "amqplib": "^0.10.3",
+    "bungie-net-core": "2.1.3",
     "compression": "^1.7.4",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "postgresql-client": "^2.11.0",
+    "postgrejs": "^2.19.0",
     "prom-client": "^15.1.1",
-    "zlib": "^1.0.5",
     "zod": "^3.22.4"
   },
   "resolutions": {
