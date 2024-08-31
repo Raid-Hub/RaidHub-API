@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, spyOn, test } from "bun:test"
 import * as BungieCoreEndpoints from "bungie-net-core/endpoints/Core"
 import { BungieNetResponse } from "bungie-net-core/interfaces"
 import { CoreSettingsConfiguration } from "bungie-net-core/models"
-import * as GetAtlasStatus from "../services/prometheus/getAtlasStatus"
+import * as GetAtlasStatusModule from "../services/prometheus/getAtlasStatus"
 import { expectOk } from "../util.test"
 import { statusRoute, statusState } from "./status"
 
 describe("status 200", async () => {
-    const spyGetAtlasStatus = spyOn(GetAtlasStatus, "getAtlasStatus")
+    const spyGetAtlasStatus = spyOn(GetAtlasStatusModule, "getAtlasStatus")
     const spyGetCommonSettings = spyOn(BungieCoreEndpoints, "getCommonSettings")
 
     beforeEach(() => {

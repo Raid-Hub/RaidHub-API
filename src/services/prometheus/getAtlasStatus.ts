@@ -1,19 +1,14 @@
-type QueryRangeResponse =
-    | {
-          status: "success"
-          data: {
-              resultType: "success"
-              result?: [
-                  {
-                      metric: unknown
-                      values: [number, string][]
-                  }
-              ]
-          }
-      }
-    | {
-          status: "error"
-      }
+type QueryRangeResponse = {
+    status: "success"
+    data: {
+        result?: [
+            {
+                metric: unknown
+                values: [number, string][]
+            }
+        ]
+    }
+}
 
 const baseUrl = `http://localhost:${process.env.PROMETHEUS_HTTP_PORT ?? 9090}/api/v1/query_range?query=histogram_quantile(0.50, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))`
 const intervalMins = 5
@@ -36,13 +31,7 @@ export const getAtlasStatus = async (): Promise<
     const response = await fetch(url)
     const queryRangeResponse = (await response.json()) as QueryRangeResponse
 
-    if (queryRangeResponse.status !== "success") {
-        throw new Error("Prometheus query failed", {
-            cause: queryRangeResponse
-        })
-    }
-
-    if (!queryRangeResponse.data.result?.[0].values.length) {
+    if (!queryRangeResponse.data?.result?.[0]?.values.length) {
         return { isCrawling: false, lag: null }
     }
 

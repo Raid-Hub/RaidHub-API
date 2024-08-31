@@ -1,9 +1,15 @@
-import { describe, expect, spyOn, test } from "bun:test"
+import { afterEach, describe, expect, spyOn, test } from "bun:test"
 import { getDestinyManifest, transferItem } from "bungie-net-core/endpoints/Destiny2"
 import { bungiePlatformHttp } from "./client"
 import { BungieApiError } from "./error"
 
 describe("bungie http client", () => {
+    const spyFetch = spyOn(globalThis, "fetch")
+
+    afterEach(() => {
+        spyFetch.mockRestore()
+    })
+
     test("ok", async () => {
         const res = await getDestinyManifest(bungiePlatformHttp)
 
@@ -47,7 +53,7 @@ describe("bungie http client", () => {
                 "Content-Type": "application/json"
             }
         })
-        spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResponse)
+        spyFetch.mockResolvedValueOnce(mockResponse)
 
         try {
             const res = await bungiePlatformHttp.fetch({
@@ -67,7 +73,7 @@ describe("bungie http client", () => {
             status: 504,
             statusText: "Gateway Timeout"
         })
-        spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResponse)
+        spyFetch.mockResolvedValueOnce(mockResponse)
 
         try {
             const res = await bungiePlatformHttp.fetch({

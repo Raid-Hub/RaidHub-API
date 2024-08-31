@@ -109,13 +109,14 @@ const getLatestActivityByDate = async () => {
     }>(
         `SELECT * FROM (
             SELECT 
-                date_completed AS dateCompleted, 
-                instance_id::text AS instanceId
+                date_completed AS "dateCompleted", 
+                instance_id::text AS "instanceId"
             FROM activity 
-            ORDER BY instance_id DESC LIMIT 50
+            ORDER BY instance_id DESC 
+            LIMIT 50
         ) AS t1 
-        ORDER BY dateCompleted 
-        DESC LIMIT 1`
+        ORDER BY "dateCompleted" DESC 
+        LIMIT 1`
     )
 
     if (!latestActivity) {

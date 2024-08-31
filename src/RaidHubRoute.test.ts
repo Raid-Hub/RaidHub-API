@@ -150,7 +150,6 @@ describe("raidhub route middleware validators", () => {
 
     test("fails query parsing", async () => {
         const res = await request(app).get("/test/123").query({ hello: "world", yolo: 2 })
-        console.error(res.body.error.issues)
         expect(res.body.code).toBe("QueryValidationError")
         expect(res.body.error).toHaveProperty("issues")
         expect(res.body.error.issues).toHaveProperty("0")
