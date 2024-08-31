@@ -1,4 +1,4 @@
-import { afterAll, afterEach, expect, spyOn } from "bun:test"
+import { expect } from "bun:test"
 
 export const expectOk = (
     result:
@@ -32,18 +32,4 @@ export const expectErr = (
         expect(result.parsed).toBe(null)
     }
     expect(result.type).toBe("err")
-}
-
-export const spyOnFetch = () => {
-    const spyFetch = spyOn(globalThis, "fetch")
-
-    afterEach(() => {
-        spyFetch.mockReset()
-    })
-
-    afterAll(() => {
-        spyFetch.mockRestore()
-    })
-
-    return spyFetch
 }

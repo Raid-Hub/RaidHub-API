@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { beforeEach, describe, expect, mock, test } from "bun:test"
 import express from "express"
 import request from "supertest"
 import { z } from "zod"
@@ -10,6 +10,8 @@ import { zBigIntString, zDigitString } from "./schema/util"
 const app = express()
 
 app.use(express.json())
+
+const mockCallback = mock<(arg: number) => Promise<void>>()
 
 const testGetRoute = new RaidHubRoute({
     method: "get",
@@ -23,7 +25,8 @@ const testGetRoute = new RaidHubRoute({
         hello: z.string().optional(),
         count: z.coerce.number()
     }),
-    handler: async () => {
+    handler: async ({ query }, after) => {
+        after(() => mockCallback(query.count ** 2))
         return RaidHubRoute.ok({
             woo: "hoo"
         })
@@ -137,6 +140,10 @@ app.use("/test/:testId", testGetRoute.express)
 
 app.use(errorHandler)
 
+beforeEach(() => {
+    mockCallback.mockClear()
+})
+
 describe("raidhub route middleware validators", () => {
     test("body is right shape", async () => {
         const res = await request(app).get("/test/123").query({ hello: "world" })
@@ -231,6 +238,15 @@ describe("raidhub route middleware validators", () => {
             }
         })
         expect(res.status).toBe(200)
+    })
+})
+
+describe("after callback", () => {
+    test("after callback called", async () => {
+        await request(app).get("/test/123").query({ count: 10 })
+
+        expect(mockCallback).toHaveBeenCalledTimes(1)
+        expect(mockCallback).toHaveBeenCalledWith(100)
     })
 })
 

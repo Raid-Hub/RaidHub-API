@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import express from "express"
 import request from "supertest"
 import { playersQueue } from "../services/rabbitmq/queues/player"
@@ -20,9 +20,14 @@ describe("player", () => {
     })
 
     const spyPlayersQueueSend = spyOn(playersQueue, "send")
+
     beforeEach(() => {
         spyPlayersQueueSend.mockReset()
         spyPlayersQueueSend.mockResolvedValueOnce(true)
+    })
+
+    afterAll(() => {
+        spyPlayersQueueSend.mockRestore()
     })
 
     test("sends on 200", async () => {

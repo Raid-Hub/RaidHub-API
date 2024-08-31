@@ -10,8 +10,8 @@ type QueryRangeResponse = {
     }
 }
 
-const baseUrl = `http://localhost:${process.env.PROMETHEUS_HTTP_PORT ?? 9090}/api/v1/query_range?query=histogram_quantile(0.50, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))`
-const intervalMins = 5
+const baseUrl = `http://localhost:${process.env.PROMETHEUS_HTTP_PORT ?? 9090}/api/v1/query_range?query=histogram_quantile(0.50, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))&?query=histogram_quantile(0.25, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))`
+const intervalMins = 2
 
 export const getAtlasStatus = async (): Promise<
     | {
@@ -26,7 +26,7 @@ export const getAtlasStatus = async (): Promise<
     const url = new URL(baseUrl)
     url.searchParams.set("start", new Date(Date.now() - intervalMins * 60000).toISOString())
     url.searchParams.set("end", new Date().toISOString())
-    url.searchParams.set("step", "30s")
+    url.searchParams.set("step", "15s")
 
     const response = await fetch(url)
     const queryRangeResponse = (await response.json()) as QueryRangeResponse
@@ -51,6 +51,6 @@ export const getAtlasStatus = async (): Promise<
 
     return {
         isCrawling: true,
-        lag: sum / totalWeight
+        lag: Math.round((1000 * sum) / totalWeight) / 1000
     }
 }

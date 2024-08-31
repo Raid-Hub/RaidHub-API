@@ -46,9 +46,9 @@ export const statusRoute = new RaidHubRoute({
         success: {
             statusCode: 200,
             schema: z.object({
-                ActivityHistoryCrawling: z.object({
+                AtlasPGCR: z.object({
                     status: z.enum(["Crawling", "Idle", "Offline"]),
-                    lag: z.number().nullable(),
+                    medianSecondsBehindNow: z.number().nullable(),
                     latestActivity: z
                         .object({
                             dateCompleted: zISODateString(),
@@ -74,9 +74,9 @@ export const statusRoute = new RaidHubRoute({
 
         if (!statusState.isDestinyApiEnabled) {
             return RaidHubRoute.ok({
-                ActivityHistoryCrawling: {
+                AtlasPGCR: {
                     status: "Idle" as const,
-                    lag: atlasStatus.lag,
+                    medianSecondsBehindNow: atlasStatus.lag,
                     latestActivity
                 }
             })
@@ -84,18 +84,18 @@ export const statusRoute = new RaidHubRoute({
 
         if (!atlasStatus.isCrawling) {
             return RaidHubRoute.ok({
-                ActivityHistoryCrawling: {
+                AtlasPGCR: {
                     status: "Offline" as const,
-                    lag: null,
+                    medianSecondsBehindNow: null,
                     latestActivity
                 }
             })
         }
 
         return RaidHubRoute.ok({
-            ActivityHistoryCrawling: {
+            AtlasPGCR: {
                 status: "Crawling" as const,
-                lag: atlasStatus.lag,
+                medianSecondsBehindNow: atlasStatus.lag,
                 latestActivity
             }
         })

@@ -56,7 +56,7 @@ jobs:
                   CLICKHOUSE_USER: readonly
                   CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_READONLY_PASSWORD }}
                   BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
-              run: bun test  --coverage --bail=1 --timeout=30000
+              run: bun test --coverage --bail=5 --timeout=20000
 
             #  Compares two code coverage files and generates report as a comment
             - name: Generate Code Coverage report

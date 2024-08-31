@@ -1,9 +1,16 @@
-import { describe, expect, test } from "bun:test"
-import { spyOnFetch } from "../../util.test"
+import { afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import { getAtlasStatus } from "./getAtlasStatus"
 
 describe("getAtlasStatus with mock", () => {
-    const spyFetch = spyOnFetch()
+    const spyFetch = spyOn(globalThis, "fetch")
+
+    beforeEach(() => {
+        spyFetch.mockReset()
+    })
+
+    afterAll(() => {
+        spyFetch.mockRestore()
+    })
 
     test("should return isCrawling: false and lag: null", async () => {
         spyFetch.mockResolvedValueOnce(

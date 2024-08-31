@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, spyOn, test } from "bun:test"
+import { afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import * as BungieCoreEndpoints from "bungie-net-core/endpoints/Core"
 import { BungieNetResponse } from "bungie-net-core/interfaces"
 import { CoreSettingsConfiguration } from "bungie-net-core/models"
@@ -24,6 +24,11 @@ describe("status 200", async () => {
         } as unknown as BungieNetResponse<CoreSettingsConfiguration>)
     })
 
+    afterAll(() => {
+        spyGetAtlasStatus.mockRestore()
+        spyGetCommonSettings.mockRestore()
+    })
+
     const t = async () => {
         const result = await statusRoute.$mock()
         expectOk(result)
@@ -42,7 +47,7 @@ describe("status 200", async () => {
             lag: 30
         })
         const data = await t()
-        expect(data.ActivityHistoryCrawling.status).toBe("Crawling")
+        expect(data.AtlasPGCR.status).toBe("Crawling")
     })
 
     test("offline", async () => {
@@ -52,7 +57,7 @@ describe("status 200", async () => {
             lag: null
         })
         const data = await t()
-        expect(data.ActivityHistoryCrawling.status).toBe("Offline")
+        expect(data.AtlasPGCR.status).toBe("Offline")
     })
 
     test("idle", async () => {
@@ -62,6 +67,6 @@ describe("status 200", async () => {
             lag: null
         })
         const data = await t()
-        expect(data.ActivityHistoryCrawling.status).toBe("Idle")
+        expect(data.AtlasPGCR.status).toBe("Idle")
     })
 })

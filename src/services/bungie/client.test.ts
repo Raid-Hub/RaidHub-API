@@ -1,6 +1,5 @@
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import { getDestinyManifest, transferItem } from "bungie-net-core/endpoints/Destiny2"
-import { spyOnFetch } from "../../util.test"
 import { bungiePlatformHttp } from "./client"
 import { BungieApiError } from "./error"
 
@@ -44,7 +43,15 @@ describe("bungie http client", () => {
 })
 
 describe("bungie http client with mocks", () => {
-    const spyFetch = spyOnFetch()
+    const spyFetch = spyOn(globalThis, "fetch")
+
+    beforeEach(() => {
+        spyFetch.mockReset()
+    })
+
+    afterAll(() => {
+        spyFetch.mockRestore()
+    })
 
     test("json error", async () => {
         const mockResponse = new Response(JSON.stringify({ ok: true }), {
@@ -60,8 +67,9 @@ describe("bungie http client with mocks", () => {
                 method: "GET"
             })
 
-            expect(res).toBe(null)
+            expect(res).toBeNull()
         } catch (err: any) {
+            expect(spyFetch).toHaveBeenCalledTimes(1)
             expect(err).toBeInstanceOf(Error)
             expect(err.message).toBe("Invalid JSON response")
         }
@@ -80,8 +88,9 @@ describe("bungie http client with mocks", () => {
                 method: "GET"
             })
 
-            expect(res).toBe(null)
+            expect(res).toBeNull()
         } catch (err: any) {
+            expect(spyFetch).toHaveBeenCalledTimes(1)
             expect(err).toBeInstanceOf(Error)
             expect(err.message).toBe("Invalid response (504): Gateway Timeout")
         }
