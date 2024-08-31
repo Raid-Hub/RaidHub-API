@@ -1,4 +1,4 @@
-import { DatabaseError } from "postgrejs"
+import { DatabaseError } from "postgresql-client"
 import { z } from "zod"
 import { RaidHubRoute } from "../../RaidHubRoute"
 import { cacheControl } from "../../middlewares/cache-control"

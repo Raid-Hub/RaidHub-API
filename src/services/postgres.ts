@@ -1,4 +1,4 @@
-import { Pool, PoolConfiguration, QueryOptions } from "postgrejs"
+import { Pool, PoolConfiguration, QueryOptions } from "postgresql-client"
 
 class RaidHubPool extends Pool {
     constructor(config?: PoolConfiguration | string) {
