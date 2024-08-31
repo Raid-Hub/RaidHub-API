@@ -1,21 +1,21 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zBigIntString, zNaturalNumber } from "../util"
+import { zInt64, zNaturalNumber } from "../util"
 import { zPlayerInfo } from "./PlayerInfo"
 
-export type TeamLeaderboardEntry = z.infer<typeof zTeamLeaderboardEntry>
+export type TeamLeaderboardEntry = z.input<typeof zTeamLeaderboardEntry>
 export const zTeamLeaderboardEntry = registry.register(
     "TeamLeaderboardEntry",
     z.object({
         position: zNaturalNumber(),
         rank: zNaturalNumber(),
         value: z.number(),
-        instanceId: zBigIntString(),
+        instanceId: zInt64(),
         players: z.array(zPlayerInfo)
     })
 )
 
-export type IndividualLeaderboardEntry = z.infer<typeof zIndividualLeaderboardEntry>
+export type IndividualLeaderboardEntry = z.input<typeof zIndividualLeaderboardEntry>
 export const zIndividualLeaderboardEntry = registry.register(
     "IndividualLeaderboardEntry",
     z.object({
@@ -26,7 +26,7 @@ export const zIndividualLeaderboardEntry = registry.register(
     })
 )
 
-export type LeaderboardData<T extends "team" | "individual"> = z.infer<typeof zLeaderboardData> & {
+export type LeaderboardData<T extends "team" | "individual"> = z.input<typeof zLeaderboardData> & {
     type: T
 }
 export const zLeaderboardData = registry.register(

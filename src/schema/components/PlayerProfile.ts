@@ -1,14 +1,14 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zBigIntString, zNaturalNumber, zWholeNumber } from "../util"
+import { zInt64, zNaturalNumber, zNumericalRecordKey, zWholeNumber } from "../util"
 import { zInstance } from "./Instance"
 import { zPlayerInfo } from "./PlayerInfo"
 
-export type PlayerProfileActivityStats = z.infer<typeof zPlayerProfileActivityStats>
+export type PlayerProfileActivityStats = z.input<typeof zPlayerProfileActivityStats>
 export const zPlayerProfileActivityStats = registry.register(
     "PlayerProfileActivityStats",
     z.object({
-        activityId: zBigIntString(),
+        activityId: zNaturalNumber(),
         freshClears: zWholeNumber(),
         clears: zWholeNumber(),
         sherpas: zWholeNumber(),
@@ -24,7 +24,7 @@ export const zGlobalStat = registry.register(
     })
 )
 
-export type PlayerProfileGlobalStats = z.infer<typeof zPlayerProfileGlobalStats>
+export type PlayerProfileGlobalStats = z.input<typeof zPlayerProfileGlobalStats>
 export const zPlayerProfileGlobalStats = registry.register(
     "PlayerProfileGlobalStats",
     z.object({
@@ -35,12 +35,12 @@ export const zPlayerProfileGlobalStats = registry.register(
     })
 )
 
-export type WorldFirstEntry = z.infer<typeof zWorldFirstEntry>
+export type WorldFirstEntry = z.input<typeof zWorldFirstEntry>
 export const zWorldFirstEntry = registry.register(
     "WorldFirstEntry",
     z.object({
         activityId: zNaturalNumber(),
-        instanceId: zBigIntString(),
+        instanceId: zInt64(),
         timeAfterLaunch: zWholeNumber(),
         rank: zNaturalNumber(),
         isDayOne: z.boolean(),
@@ -50,15 +50,15 @@ export const zWorldFirstEntry = registry.register(
     })
 )
 
-export type PlayerProfile = z.infer<typeof zPlayerProfile>
+export type PlayerProfile = z.input<typeof zPlayerProfile>
 export const zPlayerProfile = registry.register(
     "PlayerProfile",
     z.object({
         playerInfo: zPlayerInfo,
         stats: z.object({
             global: zPlayerProfileGlobalStats,
-            activity: z.record(zPlayerProfileActivityStats)
+            activity: z.record(zNumericalRecordKey(), zPlayerProfileActivityStats)
         }),
-        worldFirstEntries: z.record(zWorldFirstEntry.nullable())
+        worldFirstEntries: z.record(zNumericalRecordKey(), zWorldFirstEntry.nullable())
     })
 )

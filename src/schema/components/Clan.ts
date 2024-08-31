@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { registry } from ".."
-import { zBigIntString, zISODateString, zNaturalNumber, zWholeNumber } from "../util"
+import { zInt64, zISODateString, zNaturalNumber, zWholeNumber } from "../util"
 import { zPlayerInfo } from "./PlayerInfo"
 
-export type ClanBannerData = z.infer<typeof zClanBannerData>
+export type ClanBannerData = z.input<typeof zClanBannerData>
 export const zClanBannerData = registry.register(
     "ClanBannerData",
     z
@@ -19,11 +19,11 @@ export const zClanBannerData = registry.register(
         .strict()
 )
 
-export type Clan = z.infer<typeof zClan>
+export type Clan = z.input<typeof zClan>
 export const zClan = registry.register(
     "Clan",
     z.object({
-        groupId: zBigIntString(),
+        groupId: zInt64(),
         name: z.string(),
         callSign: z.string(),
         motto: z.string(),
@@ -33,7 +33,7 @@ export const zClan = registry.register(
     })
 )
 
-export type ClanAggregateStats = z.infer<typeof zClanAggregateStats>
+export type ClanAggregateStats = z.input<typeof zClanAggregateStats>
 export const zClanAggregateStats = registry.register(
     "ClanAggregateStats",
     z.object({
@@ -50,7 +50,7 @@ export const zClanAggregateStats = registry.register(
     })
 )
 
-export type ClanLeaderboardEntry = z.infer<typeof zClanLeaderboardEntry>
+export type ClanLeaderboardEntry = z.input<typeof zClanLeaderboardEntry>
 export const zClanLeaderboardEntry = registry.register(
     "ClanLeaderboardEntry",
     z
@@ -60,7 +60,7 @@ export const zClanLeaderboardEntry = registry.register(
         .merge(zClanAggregateStats)
 )
 
-export type ClanMemberStats = z.infer<typeof zClanMemberStats>
+export type ClanMemberStats = z.input<typeof zClanMemberStats>
 export const zClanMemberStats = registry.register(
     "ClanMemberStats",
     z.object({
@@ -72,7 +72,7 @@ export const zClanMemberStats = registry.register(
     })
 )
 
-export type ClanStats = z.infer<typeof zClanStats>
+export type ClanStats = z.input<typeof zClanStats>
 export const zClanStats = registry.register(
     "ClanStats",
     z.object({

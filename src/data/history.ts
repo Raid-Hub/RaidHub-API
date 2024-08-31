@@ -31,7 +31,7 @@ export const getActivities = async (
                 `SELECT * FROM (
                     SELECT 
                         instance_id::text AS "instanceId",
-                        hash::text AS "hash",
+                        hash AS "hash",
                         activity_id AS "activityId",
                         version_id AS "versionId",
                         activity.completed AS "completed",

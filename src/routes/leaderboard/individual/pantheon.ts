@@ -8,8 +8,8 @@ import {
 } from "../../../data/leaderboard/individual/pantheon"
 import { cacheControl } from "../../../middlewares/cache-control"
 import { zLeaderboardData } from "../../../schema/components/LeaderboardData"
-import { zLeaderboardPagination } from "../../../schema/components/LeaderboardPagination"
 import { ErrorCode } from "../../../schema/errors/ErrorCode"
+import { zLeaderboardPagination } from "../../../schema/query/LeaderboardPagination"
 import { zBigIntString } from "../../../schema/util"
 
 const zCategory = z.enum(["clears", "freshClears", "score"])

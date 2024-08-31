@@ -6,14 +6,20 @@ import { userAuthorizationRoute } from "./authorize/user"
 import { clanStatsRoute } from "./clanStats"
 import { leaderboardRouter } from "./leaderboard"
 import { manifestRoute } from "./manifest"
+import { metricsRouter } from "./metrics"
 import { pgcrRoute } from "./pgcr"
 import { playerRouter } from "./player"
+import { statusRoute } from "./status"
 
 export const router = new RaidHubRouter({
     routes: [
         {
             path: "/manifest",
             route: manifestRoute
+        },
+        {
+            path: "/status",
+            route: statusRoute
         },
         {
             path: "/player",
@@ -34,6 +40,10 @@ export const router = new RaidHubRouter({
         {
             path: "/clan/:groupId",
             route: clanStatsRoute
+        },
+        {
+            path: "/metrics",
+            route: metricsRouter
         },
         {
             path: "/admin",

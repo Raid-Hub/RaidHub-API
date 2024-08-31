@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { beforeEach, describe, expect, mock, test } from "bun:test"
 import express from "express"
 import request from "supertest"
 import { z } from "zod"
@@ -11,6 +11,8 @@ const app = express()
 
 app.use(express.json())
 
+const mockCallback = mock<(arg: number) => Promise<void>>()
+
 const testGetRoute = new RaidHubRoute({
     method: "get",
     description: "test route",
@@ -19,13 +21,12 @@ const testGetRoute = new RaidHubRoute({
             testId: zDigitString()
         })
         .strict(),
-    query: z
-        .object({
-            hello: z.string().optional(),
-            count: z.coerce.number()
-        })
-        .strict(),
-    handler: async () => {
+    query: z.object({
+        hello: z.string().optional(),
+        count: z.coerce.number()
+    }),
+    handler: async ({ query }, after) => {
+        after(() => mockCallback(query.count ** 2))
         return RaidHubRoute.ok({
             woo: "hoo"
         })
@@ -139,6 +140,10 @@ app.use("/test/:testId", testGetRoute.express)
 
 app.use(errorHandler)
 
+beforeEach(() => {
+    mockCallback.mockClear()
+})
+
 describe("raidhub route middleware validators", () => {
     test("body is right shape", async () => {
         const res = await request(app).get("/test/123").query({ hello: "world" })
@@ -156,8 +161,6 @@ describe("raidhub route middleware validators", () => {
         expect(res.body.error).toHaveProperty("issues")
         expect(res.body.error.issues).toHaveProperty("0")
         expect(res.body.error.issues[0].path).toEqual(["count"])
-        expect(res.body.error.issues).toHaveProperty("1")
-        expect(res.body.error.issues[1].keys).toEqual(["yolo"])
         expect(res.status).toBe(400)
     })
 
@@ -235,6 +238,15 @@ describe("raidhub route middleware validators", () => {
             }
         })
         expect(res.status).toBe(200)
+    })
+})
+
+describe("after callback", () => {
+    test("after callback called", async () => {
+        await request(app).get("/test/123").query({ count: 10 })
+
+        expect(mockCallback).toHaveBeenCalledTimes(1)
+        expect(mockCallback).toHaveBeenCalledWith(100)
     })
 })
 

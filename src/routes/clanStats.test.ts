@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, spyOn, test } from "bun:test"
+import { afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import { PlatformErrorCodes } from "bungie-net-core/enums"
 import { ErrorCode } from "../schema/errors/ErrorCode"
 import { bungiePlatformHttp } from "../services/bungie/client"
@@ -19,12 +19,16 @@ describe("clan 200", () => {
         spyPlayersQueueSend.mockResolvedValue(true)
     })
 
+    afterAll(() => {
+        spyClanQueueSend.mockRestore()
+        spyPlayersQueueSend.mockRestore()
+    })
+
     const t = async (groupId: string) => {
         const result = await clanStatsRoute.$mock({ params: { groupId } })
         expectOk(result)
         expect(spyClanQueueSend).toHaveBeenCalledTimes(1)
         if (result.type === "ok") {
-            console.log("test", result.parsed.members.length)
             expect(spyPlayersQueueSend).toHaveBeenCalledTimes(result.parsed.members.length)
         }
     }
@@ -51,27 +55,35 @@ describe("clan 404", () => {
 })
 
 test("clan 503", async () => {
-    spyOn(bungiePlatformHttp, "fetch").mockRejectedValueOnce(
-        new BungieApiError({
-            cause: {
-                ErrorCode: PlatformErrorCodes.SystemDisabled,
-                Message: "System Disabled",
-                ThrottleSeconds: 0,
-                Response: undefined,
-                ErrorStatus: "",
-                MessageData: {},
-                DetailedErrorTrace: ""
-            },
-            url: new URL("http://localhost/mocked")
-        })
-    )
+    const spyBungieFetch = spyOn(bungiePlatformHttp, "fetch")
 
-    const result = await clanStatsRoute.$mock({
-        params: {
-            groupId: "3148408"
-        }
+    afterAll(() => {
+        spyBungieFetch.mockRestore()
     })
 
-    expectErr(result)
-    expect(result.code).toBe(ErrorCode.BungieServiceOffline)
+    test("system disabled", async () => {
+        spyBungieFetch.mockRejectedValueOnce(
+            new BungieApiError({
+                cause: {
+                    ErrorCode: PlatformErrorCodes.SystemDisabled,
+                    Message: "System Disabled",
+                    ThrottleSeconds: 0,
+                    Response: undefined,
+                    ErrorStatus: "",
+                    MessageData: {},
+                    DetailedErrorTrace: ""
+                },
+                url: new URL("http://localhost/mocked")
+            })
+        )
+
+        const result = await clanStatsRoute.$mock({
+            params: {
+                groupId: "3148408"
+            }
+        })
+
+        expectErr(result)
+        expect(result.code).toBe(ErrorCode.BungieServiceOffline)
+    })
 })

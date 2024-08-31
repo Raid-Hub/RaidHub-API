@@ -29,9 +29,9 @@ export type RaidHubHandler<
     ErrorResponse extends ErrorData
 > = (
     req: {
-        params: z.infer<Params>
-        query: z.infer<Query>
-        body: z.infer<Body>
+        params: z.output<Params>
+        query: z.output<Query>
+        body: z.output<Body>
         headers: IncomingHttpHeaders
     },
     after: (callback: () => Promise<void>) => void
@@ -42,7 +42,7 @@ export type RaidHubHandlerReturn<T, E extends ErrorData> =
     | {
           [K in keyof E]: {
               success: false
-              error: E[K]["schema"]["_input"]
+              error: z.input<E[K]["schema"]>
               code: E[K]["code"]
           }
       }[number]

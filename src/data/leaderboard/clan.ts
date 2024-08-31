@@ -35,7 +35,7 @@ export const getClanLeaderboard = async ({
     return await postgres.queryRows<ClanLeaderboardEntry>(
         `SELECT
             JSONB_BUILD_OBJECT(
-                'groupId', clan."group_id",
+                'groupId', clan."group_id"::text,
                 'name', clan.name,
                 'callSign', clan.call_sign,
                 'motto', clan."motto",

@@ -1,9 +1,9 @@
 import { RequestHandler } from "express"
 import jwt from "jsonwebtoken"
 import { ErrorCode } from "../schema/errors/ErrorCode"
-import { zInsufficientPermissionsError } from "../schema/errors/InsufficientPermissionsError"
+import { InsufficientPermissionsError } from "../schema/errors/InsufficientPermissionsError"
 
-const error = (): (typeof zInsufficientPermissionsError)["_input"] => ({
+const error = (): InsufficientPermissionsError => ({
     minted: new Date(),
     success: false,
     code: ErrorCode.InsufficientPermissionsError,

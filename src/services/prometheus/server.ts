@@ -1,8 +1,9 @@
+import { serve } from "bun"
 import { prometheusRegistry } from "./registry"
 
 const port = process.env.METRICS_PORT || 8082
 export const servePrometheus = () => {
-    Bun.serve({
+    serve({
         port: port,
         async fetch(req) {
             try {

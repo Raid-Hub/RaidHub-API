@@ -12,6 +12,7 @@ describe("getClanStats", () => {
 
         const parsed = zClanStats.safeParse(data)
         if (!parsed.success) {
+            console.error(parsed.error.errors)
             expect(parsed.error.errors).toHaveLength(0)
         } else {
             expect(parsed.success).toBe(true)

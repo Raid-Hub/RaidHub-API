@@ -1,6 +1,7 @@
+import { file } from "bun"
 import { RequestHandler } from "express"
 import { z } from "zod"
-import { zApiKeyError } from "../schema/errors/ApiKeyError"
+import { ApiKeyError } from "../schema/errors/ApiKeyError"
 import { ErrorCode } from "../schema/errors/ErrorCode"
 
 const KeySchema = z.object({
@@ -10,8 +11,7 @@ const KeySchema = z.object({
     key: z.string()
 })
 
-const readKeys = async () =>
-    Bun.file(process.env.API_KEYS_PATH!, { type: "application/json" }).json()
+const readKeys = async () => file(process.env.API_KEYS_PATH!, { type: "application/json" }).json()
 
 const apiKeys = readKeys()
     .then(data =>
@@ -22,7 +22,7 @@ const apiKeys = readKeys()
                 .map(k => [k.key, k])
         )
     )
-    .catch((e): Record<string, z.infer<typeof KeySchema>> => {
+    .catch((e): Record<string, z.output<typeof KeySchema>> => {
         if (process.env.PROD) {
             console.error("Failed to load API keys", e)
             process.exit(1)
@@ -61,7 +61,7 @@ export const verifyApiKey: RequestHandler = async (req, res, next) => {
         res.set("Access-Control-Allow-Origin", (req.headers.origin || "*").toString())
         next()
     } else {
-        res.status(401).send({
+        const err: ApiKeyError = {
             code: ErrorCode.ApiKeyError,
             minted: new Date(),
             success: false,
@@ -70,6 +70,7 @@ export const verifyApiKey: RequestHandler = async (req, res, next) => {
                 origin: req.headers.origin || null,
                 apiKey: req.headers["x-api-key"]?.toString() || null
             }
-        } satisfies (typeof zApiKeyError)["_input"])
+        }
+        res.status(401).send(err)
     }
 }

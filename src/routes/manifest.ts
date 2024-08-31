@@ -4,7 +4,7 @@ import { listActivityDefinitions, listHashes, listVersionDefinitions } from "../
 import { cacheControl } from "../middlewares/cache-control"
 import { zActivityDefinition } from "../schema/components/ActivityDefinition"
 import { zVersionDefinition } from "../schema/components/VersionDefinition"
-import { zNaturalNumber } from "../schema/util"
+import { zNaturalNumber, zNumericalRecordKey } from "../schema/util"
 
 export const manifestRoute = new RaidHubRoute({
     method: "get",
@@ -17,6 +17,7 @@ export const manifestRoute = new RaidHubRoute({
                 .object({
                     hashes: z
                         .record(
+                            zNumericalRecordKey("uint32"),
                             z.object({
                                 activityId: zNaturalNumber(),
                                 versionId: zNaturalNumber()
@@ -26,12 +27,16 @@ export const manifestRoute = new RaidHubRoute({
                             description:
                                 "The mapping of each Bungie.net hash to a RaidHub activityId and versionId"
                         }),
-                    activityDefinitions: z.record(zActivityDefinition).openapi({
-                        description: "The mapping of each RaidHub activityId to its definition"
-                    }),
-                    versionDefinitions: z.record(zVersionDefinition).openapi({
-                        description: "The mapping of each RaidHub versionId to its definition"
-                    }),
+                    activityDefinitions: z
+                        .record(zNumericalRecordKey(), zActivityDefinition)
+                        .openapi({
+                            description: "The mapping of each RaidHub activityId to its definition"
+                        }),
+                    versionDefinitions: z
+                        .record(zNumericalRecordKey(), zVersionDefinition)
+                        .openapi({
+                            description: "The mapping of each RaidHub versionId to its definition"
+                        }),
                     listedRaidIds: z
                         .array(zNaturalNumber())
                         .openapi({

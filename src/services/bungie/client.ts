@@ -1,11 +1,25 @@
-import { BungieClientProtocol, BungieFetchConfig } from "bungie-net-core"
+import { BungieFetchConfig } from "bungie-net-core"
 import { BungieNetResponse } from "bungie-net-core/interfaces"
 import { BungieApiError } from "./error"
 
 const htmlRegex = /<title>(.*?)<\/title>/
 
-export const bungiePlatformHttp: BungieClientProtocol = {
+const cacheTTL = 10000
+const inMemoryCache = new Map<
+    string,
+    {
+        data: unknown
+        timer: Timer
+    }
+>()
+
+export const bungiePlatformHttp = {
     fetch: async <T>(config: BungieFetchConfig) => {
+        const cacheKey = config.url.toString()
+        if (inMemoryCache.has(cacheKey)) {
+            return inMemoryCache.get(cacheKey)!.data as T
+        }
+
         const apiKey = process.env.BUNGIE_API_KEY
         if (!apiKey) {
             throw new Error("Missing Bungie API Key")
@@ -35,6 +49,17 @@ export const bungiePlatformHttp: BungieClientProtocol = {
                     url: config.url
                 })
             } else {
+                // This is needed because we could have fired multiple requests to the same URL simultaneously
+                if (inMemoryCache.has(cacheKey)) {
+                    clearTimeout(inMemoryCache.get(cacheKey)!.timer)
+                }
+                inMemoryCache.set(cacheKey, {
+                    data,
+                    timer: setTimeout(() => {
+                        inMemoryCache.delete(cacheKey)
+                    }, cacheTTL)
+                })
+
                 return data as T
             }
         } else {

@@ -1,4 +1,4 @@
-import { describe, expect, spyOn, test } from "bun:test"
+import { afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import { getDestinyManifest, transferItem } from "bungie-net-core/endpoints/Destiny2"
 import { bungiePlatformHttp } from "./client"
 import { BungieApiError } from "./error"
@@ -40,6 +40,18 @@ describe("bungie http client", () => {
             expect(err.cause).toContain("html")
         }
     })
+})
+
+describe("bungie http client with mocks", () => {
+    const spyFetch = spyOn(globalThis, "fetch")
+
+    beforeEach(() => {
+        spyFetch.mockReset()
+    })
+
+    afterAll(() => {
+        spyFetch.mockRestore()
+    })
 
     test("json error", async () => {
         const mockResponse = new Response(JSON.stringify({ ok: true }), {
@@ -47,7 +59,7 @@ describe("bungie http client", () => {
                 "Content-Type": "application/json"
             }
         })
-        spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResponse)
+        spyFetch.mockResolvedValueOnce(mockResponse)
 
         try {
             const res = await bungiePlatformHttp.fetch({
@@ -55,8 +67,9 @@ describe("bungie http client", () => {
                 method: "GET"
             })
 
-            expect(res).toBe(null)
+            expect(res).toBeNull()
         } catch (err: any) {
+            expect(spyFetch).toHaveBeenCalledTimes(1)
             expect(err).toBeInstanceOf(Error)
             expect(err.message).toBe("Invalid JSON response")
         }
@@ -67,7 +80,7 @@ describe("bungie http client", () => {
             status: 504,
             statusText: "Gateway Timeout"
         })
-        spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResponse)
+        spyFetch.mockResolvedValueOnce(mockResponse)
 
         try {
             const res = await bungiePlatformHttp.fetch({
@@ -75,8 +88,9 @@ describe("bungie http client", () => {
                 method: "GET"
             })
 
-            expect(res).toBe(null)
+            expect(res).toBeNull()
         } catch (err: any) {
+            expect(spyFetch).toHaveBeenCalledTimes(1)
             expect(err).toBeInstanceOf(Error)
             expect(err.message).toBe("Invalid response (504): Gateway Timeout")
         }

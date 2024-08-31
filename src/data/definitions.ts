@@ -68,12 +68,12 @@ export const listVersionDefinitions = async () => {
 
 export const listHashes = async () => {
     return await postgres.queryRows<{
-        hash: string
+        hash: number
         activityId: number
         versionId: number
     }>(
         `SELECT 
-            hash::text,
+            hash,
             activity_id AS "activityId",
             version_id AS "versionId"
         FROM activity_hash`

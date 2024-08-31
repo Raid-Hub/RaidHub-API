@@ -32,7 +32,7 @@ export const registerResponse = (path: string, schema: ZodType) =>
         response: registry.register(
             path
                 .replace(/\/{[^/]+}/g, "")
-                .split("/")
+                .split(/\/|-/)
                 .filter(Boolean)
                 .map(str => str.charAt(0).toUpperCase() + str.slice(1))
                 .join("") + "Response",
@@ -55,7 +55,7 @@ export type RaidHubResponse<T, E extends ErrorData> = {
     | {
           [K in keyof E]: {
               success: false
-              error: E[K]["schema"]["_input"]
+              error: z.input<E[K]["schema"]>
               code: E[K]["code"]
           }
       }[number]

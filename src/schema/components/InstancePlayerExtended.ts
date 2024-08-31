@@ -4,7 +4,7 @@ import { zInstanceCharacter } from "./InstanceCharacter"
 import { zInstancePlayer } from "./InstancePlayer"
 import { zPlayerInfo } from "./PlayerInfo"
 
-export type InstancePlayerExtended = z.infer<typeof zInstancePlayerExtended>
+export type InstancePlayerExtended = z.input<typeof zInstancePlayerExtended>
 export const zInstancePlayerExtended = registry.register(
     "InstancePlayerExtended",
     zInstancePlayer

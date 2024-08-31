@@ -5,7 +5,7 @@ import { zInstance } from "./Instance"
 import { zInstanceMetadata } from "./InstanceMetadata"
 import { zInstancePlayerExtended } from "./InstancePlayerExtended"
 
-export type InstanceExtended = z.infer<typeof zInstanceExtended>
+export type InstanceExtended = z.input<typeof zInstanceExtended>
 export const zInstanceExtended = registry.register(
     "InstanceExtended",
     zInstance

@@ -1,4 +1,4 @@
-import { gunzipSync } from "zlib"
+import { gunzipSync } from "bun"
 import { z } from "zod"
 import { RaidHubRoute } from "../RaidHubRoute"
 import { getRawCompressedPGCR } from "../data/pgcr"

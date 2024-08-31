@@ -21,15 +21,22 @@ Note: you will need to clone the [RaidHub-Services](https://github.com/Raid-Hub/
 ### Turning the API On
 
 1. Run `cp example.env .env` and make any changes
-2. Run `yarn db:migrate` -- This will apply the current database schema to your local database
-3. Run `yarn dev`
-4. By default the API is available at `http://localhost:8000`
+2. Run `bun dev`
+3. By default the API is available at `http://localhost:8000`
 
-Note: `yarn build`, `yarn start`, `yarn stop`, and `yarn restart` are production commands and do not need to be used in the dev environment
+### Open API
+
+You can regenerate the Open API schema doc with `bun docs`
+
+### Testing
+
+Static linting and typescript compliation checks can be run with `bun lint` and `bun tsc` respectively. Running integration tests locally is not yet fully supported, but you can run basic unit tests with `bun:test`
 
 ## Resources and Tools
 
 -   TypeScript https://www.typescriptlang.org/docs/
 -   Express.js (Framework) https://expressjs.com/
+-   Bun (Runtime & Package manager) https://bun.sh/docs
 -   Zod (Schema Validation) https://zod.dev/
 -   Zod to OpenAPI https://github.com/asteasolutions/zod-to-openapi
+-   postgrejs https://www.npmjs.com/package/postgrejs
