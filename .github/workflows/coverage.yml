@@ -44,7 +44,7 @@ jobs:
                   JWT_SECRET: "jwt-secret"
                   POSTGRES_USER: readonly
                   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
-                  CLICKHOUSE_USER: readonly
+                  CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_READONLY_USER }}
                   CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_READONLY_PASSWORD }}
                   BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
               run: bun test --timeout=30000 --coverage
