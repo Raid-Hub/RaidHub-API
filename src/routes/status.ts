@@ -49,14 +49,19 @@ export const statusRoute = new RaidHubRoute({
                 ActivityHistoryCrawling: z.object({
                     status: z.enum(["Crawling", "Idle", "Offline"]),
                     lag: z.number().nullable(),
-                    latestActivityDate: zISODateString()
+                    latestActivity: z
+                        .object({
+                            dateCompleted: zISODateString(),
+                            instanceId: z.string()
+                        })
+                        .nullable()
                 })
             })
         }
     },
     async handler() {
-        const [latestActivityDate, atlasStatus, isDestinyApiEnabled] = await Promise.all([
-            getLatestActivityDate(),
+        const [latestActivity, atlasStatus, isDestinyApiEnabled] = await Promise.all([
+            getLatestActivityByDate(),
             getAtlasStatus(),
             getCommonSettings(bungiePlatformHttp).then(res => res.Response.systems.Destiny2.enabled)
         ])
@@ -71,8 +76,8 @@ export const statusRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 ActivityHistoryCrawling: {
                     status: "Idle" as const,
-                    latestActivityDate: latestActivityDate.toISOString(),
-                    lag: atlasStatus.lag
+                    lag: atlasStatus.lag,
+                    latestActivity
                 }
             })
         }
@@ -81,8 +86,8 @@ export const statusRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 ActivityHistoryCrawling: {
                     status: "Offline" as const,
-                    latestActivityDate: latestActivityDate.toISOString(),
-                    lag: null
+                    lag: null,
+                    latestActivity
                 }
             })
         }
@@ -91,19 +96,25 @@ export const statusRoute = new RaidHubRoute({
             ActivityHistoryCrawling: {
                 status: "Crawling" as const,
                 lag: atlasStatus.lag,
-                latestActivityDate: latestActivityDate.toISOString()
+                latestActivity
             }
         })
     }
 })
 
-const getLatestActivityDate = async () => {
+const getLatestActivityByDate = async () => {
     const latestActivity = await postgres.queryRow<{
-        date_completed: Date
+        dateCompleted: Date
+        instanceId: string
     }>(
-        `SELECT * FROM 
-            (SELECT date_completed FROM activity ORDER BY instance_id DESC LIMIT 50) AS t1 
-        ORDER BY date_completed 
+        `SELECT * FROM (
+            SELECT 
+                date_completed AS dateCompleted, 
+                instance_id::text AS instanceId
+            FROM activity 
+            ORDER BY instance_id DESC LIMIT 50
+        ) AS t1 
+        ORDER BY dateCompleted 
         DESC LIMIT 1`
     )
 
@@ -111,5 +122,5 @@ const getLatestActivityDate = async () => {
         throw new Error("Postgres query failed")
     }
 
-    return latestActivity.date_completed
+    return latestActivity
 }

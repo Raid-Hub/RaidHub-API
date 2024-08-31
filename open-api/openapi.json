@@ -1780,12 +1780,22 @@
                 "type": "number",
                 "nullable": true
               },
-              "latestActivityDate": {
-                "type": "string",
-                "format": "date-time"
+              "latestActivity": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "dateCompleted": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "instanceId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["dateCompleted", "instanceId"]
               }
             },
-            "required": ["status", "lag", "latestActivityDate"]
+            "required": ["status", "lag", "latestActivity"]
           }
         },
         "required": ["ActivityHistoryCrawling"]
