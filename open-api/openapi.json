@@ -1766,6 +1766,30 @@
         ],
         "additionalProperties": false
       },
+      "StatusResponse": {
+        "type": "object",
+        "properties": {
+          "ActivityHistoryCrawling": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["Crawling", "Idle", "Offline"]
+              },
+              "lag": {
+                "type": "number",
+                "nullable": true
+              },
+              "latestActivityDate": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": ["status", "lag", "latestActivityDate"]
+          }
+        },
+        "required": ["ActivityHistoryCrawling"]
+      },
       "PlayerSearchResponse": {
         "type": "object",
         "properties": {
@@ -2857,6 +2881,94 @@
                     },
                     "response": {
                       "$ref": "#/components/schemas/ManifestResponse"
+                    }
+                  },
+                  "required": ["minted", "success", "response"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["ApiKeyError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/ApiKeyError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["InternalServerError"]
+                    },
+                    "error": {
+                      "$ref": "#/components/schemas/InternalServerError"
+                    }
+                  },
+                  "required": ["minted", "success", "code", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "/status",
+        "description": "Get the status of the RaidHub Services.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minted": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/StatusResponse"
                     }
                   },
                   "required": ["minted", "success", "response"]

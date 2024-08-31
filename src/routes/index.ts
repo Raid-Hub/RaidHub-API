@@ -9,12 +9,17 @@ import { manifestRoute } from "./manifest"
 import { metricsRouter } from "./metrics"
 import { pgcrRoute } from "./pgcr"
 import { playerRouter } from "./player"
+import { statusRoute } from "./status"
 
 export const router = new RaidHubRouter({
     routes: [
         {
             path: "/manifest",
             route: manifestRoute
+        },
+        {
+            path: "/status",
+            route: statusRoute
         },
         {
             path: "/player",

@@ -1,15 +1,16 @@
 declare module "bun" {
     interface Env {
-        POSTGRES_USER: string
-        POSTGRES_PASSWORD: string
-        CLICKHOUSE_USER: string
-        CLICKHOUSE_PASSWORD: string
+        NODE_ENV: "development" | "production" | "test"
+        PROD?: boolean
+        PORT?: number
         API_KEYS_PATH: string
         ADMIN_CLIENT_SECRET: string
         CLIENT_SECRET: string
         JWT_SECRET: string
-        PROD?: boolean
-        PORT?: number
-        NODE_ENV: "development" | "production" | "test"
+        POSTGRES_USER: string
+        POSTGRES_PASSWORD: string
+        CLICKHOUSE_USER: string
+        CLICKHOUSE_PASSWORD: string
+        PROMETHEUS_HTTP_PORT?: number
     }
 }
