@@ -12,7 +12,7 @@ describe("getAtlasStatus with mock", () => {
         spyFetch.mockRestore()
     })
 
-    test("should return isCrawling: false and lag: null", async () => {
+    test("not crawling", async () => {
         spyFetch.mockResolvedValueOnce(
             new Response(
                 JSON.stringify({
@@ -33,13 +33,85 @@ describe("getAtlasStatus with mock", () => {
         expect(result.isCrawling).toEqual(false)
         expect(result.lag).toBeNull()
     })
+
+    test("crawling with catchup needed", async () => {
+        const nowS = Date.now() / 1000
+        const countValues = 10
+        spyFetch.mockResolvedValueOnce(
+            new Response(
+                JSON.stringify({
+                    status: "success",
+                    data: {
+                        result: [
+                            {
+                                values: Array.from({ length: countValues }, (_, idx) => [
+                                    nowS - 15 * (countValues - (idx + 1)),
+                                    String(1200 - 5 * idx ** 1.85)
+                                ])
+                            }
+                        ]
+                    }
+                }),
+                {
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            )
+        )
+
+        const result = await getAtlasStatus()
+
+        expect(spyFetch).toHaveBeenCalledTimes(1)
+        expect(result.isCrawling).toBeTrue()
+        if (result.isCrawling) {
+            expect(result.lag).toBeCloseTo(994.048, 3)
+            expect(result.estimatedCatchUpTime).toBeCloseTo(269.144, 3)
+        }
+    })
+
+    test("crawling but regressing", async () => {
+        const nowS = Date.now() / 1000
+        const countValues = 10
+        spyFetch.mockResolvedValueOnce(
+            new Response(
+                JSON.stringify({
+                    status: "success",
+                    data: {
+                        result: [
+                            {
+                                values: Array.from({ length: countValues }, (_, idx) => [
+                                    nowS - 15 * (countValues - (idx + 1)),
+                                    String(1200 + 20 * idx ** 1.2)
+                                ])
+                            }
+                        ]
+                    }
+                }),
+                {
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            )
+        )
+
+        const result = await getAtlasStatus()
+
+        expect(spyFetch).toHaveBeenCalledTimes(1)
+        expect(result.isCrawling).toBeTrue()
+        if (result.isCrawling) {
+            expect(result.lag).toBeCloseTo(1419.603, 3)
+            expect(result.estimatedCatchUpTime).toBe(-1)
+        }
+    })
 })
 
 describe("getAtlasStatus no mock", () => {
-    test("returns isCrawling: true and lag: 0", async () => {
+    test("is crawling normally", async () => {
         const result = await getAtlasStatus()
 
-        expect(result.isCrawling).toBe(true)
+        expect(result.isCrawling).toBeTrue()
         expect(result.lag).toBeWithin(25, 45)
     })
 })

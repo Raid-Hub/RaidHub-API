@@ -30,7 +30,7 @@ You can regenerate the Open API schema doc with `bun docs`
 
 ### Testing
 
-Static linting and typescript compliation checks can be run with `bun lint` and `bun tsc` respectively. Running integration tests locally is not yet fully supported, but you can run basic unit tests with `bun:test`
+Static linting and typescript compliation checks can be run with `bun lint` and `bun types` respectively. Running integration tests locally is not yet fully supported, but you can run basic unit tests with `bun:test`
 
 ## Resources and Tools
 
