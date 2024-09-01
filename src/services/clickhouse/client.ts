@@ -68,6 +68,11 @@ export const clickhouse = createClient({
     request_timeout: 5000,
     log: {
         LoggerClass: ClickhouseLogger,
-        level: process.env.PROD ? ClickHouseLogLevel.WARN : ClickHouseLogLevel.DEBUG
+        level:
+            process.env.NODE_ENV === "test"
+                ? ClickHouseLogLevel.OFF
+                : process.env.PROD
+                  ? ClickHouseLogLevel.WARN
+                  : ClickHouseLogLevel.DEBUG
     }
 })

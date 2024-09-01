@@ -1,6 +1,6 @@
 declare module "bun" {
     interface Env {
-        NODE_ENV: "development" | "production" | "test"
+        NODE_ENV?: "test"
         PROD?: boolean
         PORT?: number
         API_KEYS_PATH: string
