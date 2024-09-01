@@ -44,7 +44,8 @@ describe("status 200", async () => {
         statusState.isDestinyApiEnabled = true
         spyGetAtlasStatus.mockResolvedValueOnce({
             isCrawling: true,
-            lag: 30
+            lag: 32,
+            estimatedCatchUpTime: 0
         })
         const data = await t()
         expect(data.AtlasPGCR.status).toBe("Crawling")
