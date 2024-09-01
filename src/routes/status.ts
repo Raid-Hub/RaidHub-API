@@ -49,6 +49,7 @@ export const statusRoute = new RaidHubRoute({
                 AtlasPGCR: z.object({
                     status: z.enum(["Crawling", "Idle", "Offline"]),
                     medianSecondsBehindNow: z.number().nullable(),
+                    estimatedCatchUpTimestamp: zISODateString().nullable(),
                     latestActivity: z.object({
                         dateCompleted: zISODateString(),
                         instanceId: z.string()
@@ -74,7 +75,9 @@ export const statusRoute = new RaidHubRoute({
             return RaidHubRoute.ok({
                 AtlasPGCR: {
                     status: "Idle" as const,
-                    medianSecondsBehindNow: atlasStatus.lag,
+                    medianSecondsBehindNow:
+                        atlasStatus.lag !== null ? Math.round(1000 * atlasStatus.lag) / 1000 : null,
+                    estimatedCatchUpTimestamp: null,
                     latestActivity
                 }
             })
@@ -85,6 +88,7 @@ export const statusRoute = new RaidHubRoute({
                 AtlasPGCR: {
                     status: "Offline" as const,
                     medianSecondsBehindNow: null,
+                    estimatedCatchUpTimestamp: null,
                     latestActivity
                 }
             })
@@ -93,7 +97,11 @@ export const statusRoute = new RaidHubRoute({
         return RaidHubRoute.ok({
             AtlasPGCR: {
                 status: "Crawling" as const,
-                medianSecondsBehindNow: atlasStatus.lag,
+                medianSecondsBehindNow: Math.round(1000 * atlasStatus.lag) / 1000,
+                estimatedCatchUpTimestamp:
+                    atlasStatus.estimatedCatchUpTime <= 0
+                        ? null
+                        : new Date(Date.now() + atlasStatus.estimatedCatchUpTime * 1000),
                 latestActivity
             }
         })
@@ -107,7 +115,7 @@ const getLatestActivityByDate = async () => {
     }>(
         `SELECT * FROM (
             SELECT 
-                date_completed AS "dateCompleted", 
+                date_completed AT TIME ZONE 'UTC' AS "dateCompleted", 
                 instance_id::text AS "instanceId"
             FROM activity 
             ORDER BY instance_id DESC 

@@ -1780,6 +1780,10 @@
                 "type": "number",
                 "nullable": true
               },
+              "estimatedCatchUpTimestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
               "latestActivity": {
                 "type": "object",
                 "properties": {
@@ -1794,7 +1798,12 @@
                 "required": ["dateCompleted", "instanceId"]
               }
             },
-            "required": ["status", "medianSecondsBehindNow", "latestActivity"]
+            "required": [
+              "status",
+              "medianSecondsBehindNow",
+              "estimatedCatchUpTimestamp",
+              "latestActivity"
+            ]
           }
         },
         "required": ["AtlasPGCR"]
