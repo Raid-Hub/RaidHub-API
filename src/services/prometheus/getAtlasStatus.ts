@@ -10,7 +10,7 @@ type QueryRangeResponse = {
     }
 }
 
-const baseUrl = `http://localhost:${process.env.PROMETHEUS_HTTP_PORT ?? 9090}/api/v1/query_range?query=histogram_quantile(0.50, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))&?query=histogram_quantile(0.25, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))`
+const baseUrl = `http://localhost:${process.env.PROMETHEUS_HTTP_PORT ?? 9090}/api/v1/query_range?query=histogram_quantile(0.50, sum(rate(pgcr_crawl_summary_lag_bucket[2m])) by (le))`
 const intervalMins = 5
 const step = "15s"
 
