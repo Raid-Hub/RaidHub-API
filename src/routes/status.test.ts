@@ -71,3 +71,79 @@ describe("status 200", async () => {
         expect(data.AtlasPGCR.status).toBe("Idle")
     })
 })
+
+describe("status state machine", async () => {
+    statusState.timeoutDuration = 15
+    const wait = (ms: number) =>
+        new Promise<void>(resolve => {
+            setTimeout(resolve, ms)
+        })
+
+    test("api online when previously offline", async () => {
+        statusState.isDestinyApiEnabled = false
+
+        statusState.queueApiOnlineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeFalse()
+        expect(statusState.timer).not.toBeNull()
+
+        await wait(10)
+        statusState.queueApiOnlineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeFalse()
+        expect(statusState.timer).not.toBeNull()
+
+        await wait(10)
+        expect(statusState.isDestinyApiEnabled).toBeTrue()
+        expect(statusState.timer).toBeNull()
+    })
+
+    test("api offline when previously online", async () => {
+        statusState.isDestinyApiEnabled = true
+
+        statusState.queueApiOfflineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeTrue()
+        expect(statusState.timer).not.toBeNull()
+
+        await wait(10)
+        statusState.queueApiOfflineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeTrue()
+        expect(statusState.timer).not.toBeNull()
+
+        await wait(10)
+        expect(statusState.isDestinyApiEnabled).toBeFalse()
+        expect(statusState.timer).toBeNull()
+    })
+
+    test("api offline even then online event", async () => {
+        statusState.isDestinyApiEnabled = true
+
+        statusState.queueApiOfflineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeTrue()
+        expect(statusState.timer).not.toBeNull()
+
+        await wait(10)
+        statusState.queueApiOnlineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeTrue()
+        expect(statusState.timer).toBeNull()
+
+        await wait(10)
+        expect(statusState.isDestinyApiEnabled).toBeTrue()
+        expect(statusState.timer).toBeNull()
+    })
+
+    test("api online even then offline event", async () => {
+        statusState.isDestinyApiEnabled = false
+
+        statusState.queueApiOnlineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeFalse()
+        expect(statusState.timer).not.toBeNull()
+
+        await wait(10)
+        statusState.queueApiOfflineEvent()
+        expect(statusState.isDestinyApiEnabled).toBeFalse()
+        expect(statusState.timer).toBeNull()
+
+        await wait(10)
+        expect(statusState.isDestinyApiEnabled).toBeFalse()
+        expect(statusState.timer).toBeNull()
+    })
+})

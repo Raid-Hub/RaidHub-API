@@ -13,11 +13,18 @@ export const statusState = {
     isDestinyApiEnabled: true,
     timer: null as Timer | null,
     queueApiOfflineEvent: function () {
-        if (this.timer) {
-            clearTimeout(this.timer)
+        if (!this.isDestinyApiEnabled) {
+            if (this.timer) {
+                // API is already offline but there is a timer set to bring it back online.
+                this.clearTimer()
+            }
+            return
         }
 
-        if (!this.isDestinyApiEnabled) return
+        if (this.timer) {
+            // API is online and there is already a timer set to bring it offline.
+            return
+        }
 
         this.timer = setTimeout(() => {
             this.isDestinyApiEnabled = false
@@ -25,16 +32,29 @@ export const statusState = {
         }, this.timeoutDuration)
     },
     queueApiOnlineEvent: function () {
-        if (this.timer) {
-            clearTimeout(this.timer)
+        if (this.isDestinyApiEnabled) {
+            if (this.timer) {
+                // API is already ofline but there is a timer set to bring it offline.
+                this.clearTimer()
+            }
+            return
         }
 
-        if (this.isDestinyApiEnabled) return
+        if (this.timer) {
+            // API is offline and there is already a timer set to bring it online.
+            return
+        }
 
         this.timer = setTimeout(() => {
             this.isDestinyApiEnabled = true
             this.timer = null
         }, this.timeoutDuration)
+    },
+    clearTimer: function () {
+        if (this.timer) {
+            clearTimeout(this.timer)
+            this.timer = null
+        }
     }
 }
 
