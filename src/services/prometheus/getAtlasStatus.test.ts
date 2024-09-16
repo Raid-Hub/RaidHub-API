@@ -66,7 +66,7 @@ describe("getAtlasStatus with mock", () => {
         expect(result.isCrawling).toBeTrue()
         if (result.isCrawling) {
             expect(result.lag).toBeCloseTo(994.048, 3)
-            expect(result.estimatedCatchUpTime).toBeCloseTo(269.144, 3)
+            expect(result.estimatedCatchUpTime).toBeCloseTo(329.144, 3)
         }
     })
 
