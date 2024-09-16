@@ -9,10 +9,10 @@ import { getAtlasStatus } from "../services/prometheus/getAtlasStatus"
 
 // This state tracks the status of the Destiny API and debounces it with a grace period of 60 seconds.
 export const statusState = {
-    timeoutDuration: 60000,
+    debounce: 60000,
     isDestinyApiEnabled: true,
     timer: null as Timer | null,
-    queueApiOfflineEvent: function () {
+    debounceOfflineEvent: function () {
         if (!this.isDestinyApiEnabled) {
             if (this.timer) {
                 // API is already offline but there is a timer set to bring it back online.
@@ -29,9 +29,9 @@ export const statusState = {
         this.timer = setTimeout(() => {
             this.isDestinyApiEnabled = false
             this.timer = null
-        }, this.timeoutDuration)
+        }, this.debounce)
     },
-    queueApiOnlineEvent: function () {
+    debounceOnlineEvent: function () {
         if (this.isDestinyApiEnabled) {
             if (this.timer) {
                 // API is already ofline but there is a timer set to bring it offline.
@@ -48,7 +48,7 @@ export const statusState = {
         this.timer = setTimeout(() => {
             this.isDestinyApiEnabled = true
             this.timer = null
-        }, this.timeoutDuration)
+        }, this.debounce)
     },
     clearTimer: function () {
         if (this.timer) {
@@ -86,9 +86,9 @@ export const statusRoute = new RaidHubRoute({
         ])
 
         if (isDestinyApiEnabled) {
-            statusState.queueApiOnlineEvent()
+            statusState.debounceOnlineEvent()
         } else {
-            statusState.queueApiOfflineEvent()
+            statusState.debounceOfflineEvent()
         }
 
         if (!statusState.isDestinyApiEnabled) {

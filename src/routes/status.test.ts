@@ -73,7 +73,7 @@ describe("status 200", async () => {
 })
 
 describe("status state machine", async () => {
-    statusState.timeoutDuration = 15
+    statusState.debounce = 15
     const wait = (ms: number) =>
         new Promise<void>(resolve => {
             setTimeout(resolve, ms)
@@ -82,12 +82,12 @@ describe("status state machine", async () => {
     test("api online when previously offline", async () => {
         statusState.isDestinyApiEnabled = false
 
-        statusState.queueApiOnlineEvent()
+        statusState.debounceOnlineEvent()
         expect(statusState.isDestinyApiEnabled).toBeFalse()
         expect(statusState.timer).not.toBeNull()
 
         await wait(10)
-        statusState.queueApiOnlineEvent()
+        statusState.debounceOnlineEvent()
         expect(statusState.isDestinyApiEnabled).toBeFalse()
         expect(statusState.timer).not.toBeNull()
 
@@ -99,12 +99,12 @@ describe("status state machine", async () => {
     test("api offline when previously online", async () => {
         statusState.isDestinyApiEnabled = true
 
-        statusState.queueApiOfflineEvent()
+        statusState.debounceOfflineEvent()
         expect(statusState.isDestinyApiEnabled).toBeTrue()
         expect(statusState.timer).not.toBeNull()
 
         await wait(10)
-        statusState.queueApiOfflineEvent()
+        statusState.debounceOfflineEvent()
         expect(statusState.isDestinyApiEnabled).toBeTrue()
         expect(statusState.timer).not.toBeNull()
 
@@ -116,12 +116,12 @@ describe("status state machine", async () => {
     test("api offline even then online event", async () => {
         statusState.isDestinyApiEnabled = true
 
-        statusState.queueApiOfflineEvent()
+        statusState.debounceOfflineEvent()
         expect(statusState.isDestinyApiEnabled).toBeTrue()
         expect(statusState.timer).not.toBeNull()
 
         await wait(10)
-        statusState.queueApiOnlineEvent()
+        statusState.debounceOnlineEvent()
         expect(statusState.isDestinyApiEnabled).toBeTrue()
         expect(statusState.timer).toBeNull()
 
@@ -133,12 +133,12 @@ describe("status state machine", async () => {
     test("api online even then offline event", async () => {
         statusState.isDestinyApiEnabled = false
 
-        statusState.queueApiOnlineEvent()
+        statusState.debounceOnlineEvent()
         expect(statusState.isDestinyApiEnabled).toBeFalse()
         expect(statusState.timer).not.toBeNull()
 
         await wait(10)
-        statusState.queueApiOfflineEvent()
+        statusState.debounceOfflineEvent()
         expect(statusState.isDestinyApiEnabled).toBeFalse()
         expect(statusState.timer).toBeNull()
 
