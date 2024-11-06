@@ -137,7 +137,7 @@ const getLatestActivityByDate = async () => {
             SELECT 
                 date_completed AT TIME ZONE 'UTC' AS "dateCompleted", 
                 instance_id::text AS "instanceId"
-            FROM activity 
+            FROM instance 
             ORDER BY instance_id DESC 
             LIMIT 50
         ) AS t1 

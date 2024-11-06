@@ -63,8 +63,8 @@ export const getPlayerActivityStats = async (membershipId: bigint | string) => {
                 FROM activity_definition 
                 LEFT JOIN player_stats ON activity_definition.id = player_stats.activity_id
                     AND player_stats.membership_id = $1::bigint 
-                LEFT JOIN activity fastest ON player_stats.fastest_instance_id = fastest.instance_id
-                LEFT JOIN activity_hash fastest_ah ON fastest.hash = fastest_ah.hash
+                LEFT JOIN instance fastest ON player_stats.fastest_instance_id = fastest.instance_id
+                LEFT JOIN activity_version fastest_ah ON fastest.hash = fastest_ah.hash
                 ORDER BY activity_definition.id`,
                 {
                     params: [membershipId],

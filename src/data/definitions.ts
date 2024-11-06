@@ -26,9 +26,9 @@ export const getVersionId = async (
 export const getActivityVersion = async (activityPath: string, versionPath: string) => {
     return await postgres.queryRow<{ activityId: number; versionId: number }>(
         `SELECT activity_id AS "activityId", version_id AS "versionId"
-        FROM activity_hash 
-        JOIN activity_definition ON activity_hash.activity_id = activity_definition.id
-        JOIN version_definition ON activity_hash.version_id = version_definition.id
+        FROM activity_version 
+        JOIN activity_definition ON activity_version.activity_id = activity_definition.id
+        JOIN version_definition ON activity_version.version_id = version_definition.id
         WHERE activity_definition.path = $1 AND version_definition.path = $2
         LIMIT 1`,
         {
@@ -76,6 +76,6 @@ export const listHashes = async () => {
             hash,
             activity_id AS "activityId",
             version_id AS "versionId"
-        FROM activity_hash`
+        FROM activity_version`
     )
 }

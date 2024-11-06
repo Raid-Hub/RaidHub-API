@@ -34,7 +34,7 @@ export const getActivities = async (
                         hash AS "hash",
                         activity_id AS "activityId",
                         version_id AS "versionId",
-                        activity.completed AS "completed",
+                        instance.completed AS "completed",
                         player_count AS "playerCount",
                         score AS "score",
                         fresh AS "fresh",
@@ -47,15 +47,15 @@ export const getActivities = async (
                         date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isContest",
                         date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') AS "isWeekOne",
                         JSONB_BUILD_OBJECT(
-                            'completed', activity_player.completed,
-                            'sherpas', activity_player.sherpas,
-                            'isFirstClear', activity_player.is_first_clear,
-                            'timePlayedSeconds', activity_player.time_played_seconds
+                            'completed', instance_player.completed,
+                            'sherpas', instance_player.sherpas,
+                            'isFirstClear', instance_player.is_first_clear,
+                            'timePlayedSeconds', instance_player.time_played_seconds
                         ) as player
-                    FROM activity_player
-                    INNER JOIN activity USING (instance_id)
-                    INNER JOIN activity_hash USING (hash)
-                    INNER JOIN activity_definition ON activity_definition.id = activity_hash.activity_id
+                    FROM instance_player
+                    INNER JOIN instance USING (instance_id)
+                    INNER JOIN activity_version USING (hash)
+                    INNER JOIN activity_definition ON activity_definition.id = activity_version.activity_id
                     WHERE membership_id = $1::bigint
                     AND date_completed < ${cursor ? "$3" : "(SELECT last_seen + interval '1 second' FROM player WHERE membership_id = $1::bigint)"}
                     ${cutoff ? `AND date_completed > ${cursor ? "$4" : "$3"}` : ""}

@@ -23,9 +23,9 @@ export async function getInstance(instanceId: bigint | string): Promise<Instance
             date_completed < COALESCE(day_one_end, TIMESTAMP 'epoch') AS "isDayOne",
             date_completed < COALESCE(contest_end, TIMESTAMP 'epoch') AS "isContest",
             date_completed < COALESCE(week_one_end, TIMESTAMP 'epoch') AS "isWeekOne"
-        FROM activity
-        INNER JOIN activity_hash USING (hash)
-        INNER JOIN activity_definition ON activity_definition.id = activity_hash.activity_id
+        FROM instance
+        INNER JOIN activity_version USING (hash)
+        INNER JOIN activity_definition ON activity_definition.id = activity_version.activity_id
         WHERE instance_id = $1::bigint
         LIMIT 1;`,
         {
@@ -57,7 +57,7 @@ export async function getInstanceExtended(
                 'isPrivate', "is_private"
             ) AS "playerInfo", 
             "t1"."characters_json" AS "characters"
-        FROM "activity_player" "ap"
+        FROM "instance_player" "ap"
         LEFT JOIN "player" USING (membership_id)
         LEFT JOIN LATERAL (
             SELECT JSONB_AGG(
@@ -79,7 +79,7 @@ export async function getInstanceExtended(
                     'weapons', "t2"."weapons_json"
                 )
             ) AS "characters_json"
-            FROM "activity_character" "ac"  
+            FROM "instance_character" "ac"  
             LEFT JOIN LATERAL (
                 SELECT COALESCE(JSONB_AGG(
                     JSONB_BUILD_OBJECT(
@@ -88,7 +88,7 @@ export async function getInstanceExtended(
                         'precisionKills', "precision_kills"
                     )
                 ), '[]'::jsonb) AS "weapons_json"
-                FROM "activity_character_weapon" AS "acw"
+                FROM "instance_character_weapon" AS "acw"
                 WHERE "acw"."character_id" = "ac"."character_id"
                     AND "acw"."membership_id" = "ac"."membership_id" 
                     AND "acw"."instance_id" = "ac"."instance_id" 
@@ -125,7 +125,7 @@ export async function getInstanceMetadataByHash(hash: number | string): Promise<
             ad.name AS "activityName",
             vd.name AS "versionName",
             ad.is_raid AS "isRaid"
-        FROM activity_hash ah
+        FROM activity_version ah
         INNER JOIN activity_definition ad ON ad.id = ah.activity_id
         INNER JOIN version_definition vd ON vd.id = ah.version_id
         WHERE hash = $1::bigint

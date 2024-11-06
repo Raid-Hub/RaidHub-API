@@ -32,10 +32,10 @@ export const getContestTeamLeaderboard = async ({
                         'isPrivate', is_private
                     )
                 ) as "players"
-            FROM activity_player
+            FROM instance_player
             INNER JOIN player USING (membership_id)
-            WHERE activity_player.instance_id = world_first_contest_leaderboard.instance_id
-                AND activity_player.completed
+            WHERE instance_player.instance_id = world_first_contest_leaderboard.instance_id
+                AND instance_player.completed
         ) as "lateral" ON true
         WHERE position > $1 AND position <= ($1 + $2)
             AND activity_id = $3

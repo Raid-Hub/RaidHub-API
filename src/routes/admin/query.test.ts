@@ -11,12 +11,12 @@ describe("admin query 200", () => {
 
     test("SELECT 1", () => t("SELECT 1", "SELECT"))
 
-    test("EXPLAIN", () => t("SELECT * FROM activity;", "EXPLAIN"))
+    test("EXPLAIN", () => t("SELECT * FROM instance;", "EXPLAIN"))
 
-    test("SELECT * ", () => t("SELECT * FROM activity_player LIMIT 10;", "SELECT"))
+    test("SELECT * ", () => t("SELECT * FROM instance_player LIMIT 10;", "SELECT"))
 
     test("SELECT with ignore cost ", () =>
-        t("SELECT * FROM activity_player LIMIT 100000;", "SELECT", true))
+        t("SELECT * FROM instance_player LIMIT 100000;", "SELECT", true))
 
     test(
         "Complex",
@@ -34,11 +34,11 @@ describe("admin query 200", () => {
             ARRAY_AGG(p.bungie_global_display_name ORDER BY p.bungie_global_display_name) AS players_concatenated,
             a.date_completed
         FROM 
-            activity a 
+            instance a 
         JOIN 
-            activity_player pa ON a.instance_id = pa.instance_id
+            instance_player pa ON a.instance_id = pa.instance_id
         JOIN 
-            activity_hash ah ON ah.hash = a.hash
+            activity_version ah ON ah.hash = a.hash
         JOIN 
             player p ON p.membership_id = pa.membership_id
         WHERE 
@@ -63,7 +63,7 @@ describe("admin query syntax error", () => {
 
     test("Bad table", () => t("SELECT * from fasdhfahfuiasdf", "SELECT"))
 
-    test("Bad syntax", () => t("SELECT * FROM activity LIMIT 10 WHERE 1 = 1;", "EXPLAIN"))
+    test("Bad syntax", () => t("SELECT * FROM instance LIMIT 10 WHERE 1 = 1;", "EXPLAIN"))
 
     test("Bad keywords", () => t("SELECTFRO FROM abc;", "SELECT"))
 
