@@ -6,7 +6,7 @@ export const getTeammates = async (membershipId: bigint | string, { count }: { c
         `WITH self AS (
             SELECT 
                 instance_id, time_played_seconds, completed
-            FROM activity_player
+            FROM instance_player
             WHERE membership_id = $1::bigint
         ), agg_data AS (
             SELECT 
@@ -15,7 +15,7 @@ export const getTeammates = async (membershipId: bigint | string, { count }: { c
                 SUM(CASE WHEN teammate.completed AND self.completed THEN 1 ELSE 0 END) AS clears,
                 COUNT(*) AS count 
             FROM self
-            JOIN activity_player AS teammate USING (instance_id)
+            JOIN instance_player AS teammate USING (instance_id)
             WHERE membership_id <> $1::bigint
             GROUP BY (membership_id)
             ORDER BY clears DESC, time_played DESC
