@@ -10,7 +10,7 @@ export const getDailyPlayerPopulation = async () => {
                         activity_id, 
                         SUM(player_count)::UInt32 AS total_player_count
                     FROM player_population_by_hour
-                    WHERE hour >= toStartOfHour(now() - INTERVAL 1 DAY)
+                    WHERE hour BETWEEN toStartOfHour(now() - INTERVAL 1 DAY) AND toStartOfHour(now())
                     GROUP BY hour, activity_id
                 )
                 SELECT

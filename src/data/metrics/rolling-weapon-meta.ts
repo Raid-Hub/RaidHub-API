@@ -25,7 +25,7 @@ export const getRollingWeaponMeta = async ({
                     SUM(wm.precision_kill_count)::Int AS totalPrecisionKills
                 FROM weapon_meta_by_hour AS wm
                 INNER JOIN weapon_definition AS wd ON wm.weapon_hash = wd.hash
-                WHERE wm.hour >= toStartOfHour(now() - INTERVAL 1 WEEK)
+                WHERE wm.hour BETWEEN toStartOfHour(now() - INTERVAL 1 WEEK) AND toStartOfHour(now())
                 GROUP BY wd.slot, wd.hash
                 ORDER BY wd.slot, {sortColumn:Identifier} DESC
                 LIMIT {count:Int} BY wd.slot;`
